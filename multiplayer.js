@@ -689,6 +689,11 @@ class MultiplayerManager {
       window.authManager.recordRace(isWinner, myResult ? myResult.wpm : 0);
     }
 
+    // G'alaba shohsupasi jarangi
+    if (window.soundManager) {
+      window.soundManager.playVictory();
+    }
+
     // Shohsupa (Podium top 3) elementlarini to'ldirish
     const step1 = document.getElementById('podium-step-1');
     const step2 = document.getElementById('podium-step-2');
@@ -731,7 +736,7 @@ class MultiplayerManager {
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <span style="font-size: 1.5rem;">${player.avatar || '⌨️'}</span>
           <div>
-            <div style="font-weight: 700; color: var(--text-color);">${escapeHtml(player.name)} ${player.id === this.myId ? '(siz)' : ''}</div>
+            <div style="font-weight: 700; color: var(--text-color);">${escapeHtml(player.name)} ${player.id === this.myId ? '<span style="color:var(--main-color);">(siz)</span>' : ''}</div>
             <div style="font-size: 0.8rem; color: var(--main-color);">${rankText}</div>
           </div>
         </div>
@@ -802,14 +807,16 @@ class MultiplayerManager {
     container.innerHTML = '';
 
     Object.values(this.players).forEach(player => {
+      const isMe = player.id === this.myId;
       const track = document.createElement('div');
-      track.className = 'race-track-row';
+      track.className = 'race-track-row' + (isMe ? ' is-me' : '');
       track.id = 'track-' + player.id;
       track.innerHTML = `
         <div class="player-info-badge">
           <div style="display: flex; align-items: center; gap: 0.4rem;">
             <span class="p-avatar">${player.avatar || '⌨️'}</span>
-            <span class="p-name">${escapeHtml(player.name)}</span>
+            <span class="p-name">${escapeHtml(player.name)}${isMe ? ' <span style="font-size:0.75rem; color:var(--main-color);">(siz)</span>' : ''}</span>
+            <span class="leader-crown" id="crown-${player.id}" style="display: none;">👑</span>
           </div>
           <span class="p-wpm" id="wpm-tag-${player.id}">${player.wpm || 0} WPM • 0%</span>
         </div>
@@ -826,10 +833,24 @@ class MultiplayerManager {
   }
 
   updateRaceTrackUI() {
-    Object.values(this.players).forEach(player => {
+    const playerList = Object.values(this.players);
+    let leaderId = null;
+    let maxProg = -1;
+
+    playerList.forEach(p => {
+      const prog = p.progress || 0;
+      if (prog > maxProg && prog > 5) {
+        maxProg = prog;
+        leaderId = p.id;
+      }
+    });
+
+    playerList.forEach(player => {
       const fillEl = document.getElementById('track-fill-' + player.id);
       const carEl = document.getElementById('car-' + player.id);
       const wpmTag = document.getElementById('wpm-tag-' + player.id);
+      const crownEl = document.getElementById('crown-' + player.id);
+      const trackRow = document.getElementById('track-' + player.id);
 
       const percent = Math.min(Math.max(player.progress || 0, 0), 100);
 
@@ -841,7 +862,21 @@ class MultiplayerManager {
         carEl.style.left = `${runnerLeft}%`;
       }
       if (wpmTag) {
-        wpmTag.textContent = `${player.wpm || 0} WPM • ${percent}%`;
+        if (player.finished) {
+          wpmTag.innerHTML = `🏁 <span style="color:#a3e635; font-weight:700;">Marrada: ${player.wpm || 0} WPM (${player.accuracy || 100}%)</span>`;
+        } else {
+          wpmTag.textContent = `${player.wpm || 0} WPM • ${percent}%`;
+        }
+      }
+      if (crownEl) {
+        crownEl.style.display = (player.id === leaderId && leaderId) ? 'inline-block' : 'none';
+      }
+      if (trackRow) {
+        if (player.id === leaderId && leaderId) {
+          trackRow.classList.add('is-leading');
+        } else {
+          trackRow.classList.remove('is-leading');
+        }
       }
     });
   }
