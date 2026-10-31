@@ -1215,36 +1215,319 @@ footer {
   font-weight: 600;
 }
 
-/* Host Parametrlari */
-.lobby-config-card {
-  background-color: rgba(255, 255, 255, 0.02);
-  border: 1px dashed var(--sub-color);
-  padding: 0.75rem 1rem;
-  border-radius: 10px;
-  margin-top: 0.85rem;
+/* MONKEYTYPE TRIBE TABS & CONTROLS */
+.tribe-nav-tabs {
+  display: flex;
+  background-color: var(--sub-alt-color);
+  padding: 4px;
+  border-radius: 8px;
+  gap: 4px;
+  margin-bottom: 1.25rem;
 }
 
-.lobby-cfg-title {
-  font-size: 0.78rem;
+.tribe-tab-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  background: transparent;
+  color: var(--sub-color);
+  border: none;
+  padding: 0.55rem 0.75rem;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-transform: lowercase;
+}
+
+.tribe-tab-btn:hover {
+  color: var(--text-color);
+}
+
+.tribe-tab-btn.active {
+  background-color: var(--bg-color);
+  color: var(--main-color);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.tribe-config-capsule {
+  background-color: var(--sub-alt-color);
+  border-radius: 10px;
+  padding: 0.85rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.tribe-config-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tribe-cfg-label {
+  font-size: 0.8rem;
   color: var(--sub-color);
   font-weight: 600;
-  margin-bottom: 0.45rem;
+  text-transform: lowercase;
 }
 
-.lobby-cfg-buttons {
+.tribe-cfg-pills {
   display: flex;
-  gap: 0.4rem;
+  gap: 0.35rem;
+}
+
+.tribe-cfg-pill {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--sub-color);
+  font-family: inherit;
+  font-size: 0.8rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.tribe-cfg-pill:hover {
+  color: var(--text-color);
+}
+
+.tribe-cfg-pill.active {
+  background: var(--bg-color);
+  color: var(--main-color);
+  font-weight: 700;
+  border-color: rgba(226, 183, 20, 0.3);
+}
+
+.tribe-code-wrapper {
+  background-color: var(--sub-alt-color);
+  border-radius: 10px;
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  justify-content: center;
+}
+
+.tribe-code-input {
+  background: var(--bg-color);
+  color: var(--main-color);
+  border: 1px dashed var(--main-color);
+  font-family: inherit;
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: 6px;
+  text-align: center;
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  width: 220px;
+  outline: none;
+}
+
+.arena-live-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: var(--sub-alt-color);
+  padding: 0.6rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  color: var(--sub-color);
+}
+
+.live-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #a3e635;
+  box-shadow: 0 0 8px #a3e635;
+  animation: pulse 1.5s infinite;
+}
+
+/* TRIBE LOBBY HEADER & PILLS */
+.tribe-lobby-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 1rem 1.4rem;
+  border-bottom: 1px solid var(--sub-alt-color);
+}
+
+.tribe-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.tribe-logo-text {
+  font-weight: 800;
+  color: var(--main-color);
+  font-size: 1.15rem;
+  letter-spacing: 0.5px;
+}
+
+.tribe-room-code-tag {
+  background: var(--sub-alt-color);
+  color: var(--text-color);
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.tribe-copy-pill {
+  background: transparent;
+  color: var(--sub-color);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-family: inherit;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.15s;
+}
+
+.tribe-copy-pill:hover {
+  color: var(--text-color);
+  border-color: var(--main-color);
+}
+
+.tribe-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.tribe-status-pill {
+  background: var(--sub-alt-color);
+  color: var(--sub-color);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.55rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+/* TRIBE HOST CONFIG BAR */
+.tribe-cfg-bar {
+  background: var(--sub-alt-color);
+  border-radius: 8px;
+  padding: 0.45rem 0.85rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.tribe-cfg-group {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.tribe-cfg-sub-label {
+  font-size: 0.75rem;
+  color: var(--sub-color);
+}
+
+.tribe-cfg-divider {
+  width: 1px;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 0 0.25rem;
+}
+
+.tribe-key-hint {
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--sub-color);
+  margin-top: 0.5rem;
+}
+
+.tribe-key-hint kbd {
+  background: var(--sub-alt-color);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* IN-RACE: TRIBE DELTA & TRIBE CARETS */
+.tribe-delta {
+  font-size: 1.15rem;
+  font-weight: 700;
+  font-family: inherit;
+  color: #a3e635;
+  transition: color 0.2s;
+  letter-spacing: 0.5px;
+}
+
+.tribe-delta.is-behind {
+  color: #ef4444;
+}
+
+.tribe-carets-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.tribe-caret {
+  position: absolute;
+  width: 2px;
+  height: 28px;
+  border-radius: 1px;
+  transition: left 0.12s ease-out, top 0.12s ease-out;
+  pointer-events: none;
+}
+
+.tribe-caret-tag {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.65rem;
+  font-weight: 700;
+  white-space: nowrap;
+  padding: 1px 5px;
+  border-radius: 4px;
+  color: #fff;
+  margin-bottom: 2px;
+  opacity: 0.9;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+/* Host Parametrlari */
+.lobby-config-card {
+  background-color: transparent;
+  padding: 0;
+  margin-bottom: 0.75rem;
 }
 
 .lobby-cfg-btn {
-  background-color: var(--sub-alt-color);
+  background-color: transparent;
   color: var(--sub-color);
   border: 1px solid transparent;
-  padding: 0.35rem 0.75rem;
+  padding: 0.25rem 0.55rem;
   border-radius: 6px;
   font-family: inherit;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   cursor: pointer;
   transition: all 0.15s;
 }
@@ -1254,9 +1537,10 @@ footer {
 }
 
 .lobby-cfg-btn.active {
-  background-color: var(--main-color);
-  color: var(--bg-color);
+  background-color: var(--bg-color);
+  color: var(--main-color);
   font-weight: 700;
+  border-color: rgba(226, 183, 20, 0.25);
 }
 
 /* Lobby o'yinchilar ro'yxati */
