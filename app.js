@@ -92,6 +92,7 @@ function init() {
   applyTheme(state.theme);
   updateConfigUI();
   resetTest();
+  renderActivityHeatmap('12months');
 }
 
 // LocalStorage dan sozlamalarni yuklash
