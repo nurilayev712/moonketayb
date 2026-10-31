@@ -970,6 +970,21 @@ class MultiplayerManager {
           </div>
           ${statusBadge}
         `;
+
+        if (this.isHost && !p.isHost) {
+          const kickBtn = document.createElement('button');
+          kickBtn.className = 'kick-player-btn';
+          kickBtn.title = "Xonadan chiqarish";
+          kickBtn.innerHTML = '&times;';
+          kickBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (confirm(`${p.name} ni xonadan chiqarishni xohlaysizmi?`)) {
+              this.kickPlayer(p.id);
+            }
+          });
+          card.appendChild(kickBtn);
+        }
+
         playersList.appendChild(card);
       });
     }
@@ -1007,6 +1022,13 @@ class MultiplayerManager {
   }
 
   leaveRoom() {
+    this.stopPingLoop();
+    const pingBadge = document.getElementById('lobby-ping-badge');
+    if (pingBadge) {
+      pingBadge.textContent = '📶 --ms';
+      pingBadge.classList.remove('ping-good', 'ping-medium', 'ping-poor');
+    }
+
     if (this.client) {
       try {
         this.sendMessage({
