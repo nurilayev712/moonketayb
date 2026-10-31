@@ -4,7 +4,7 @@ const soundManager = window.soundManager;
 
 // Holat va Sozlamalar
 const state = {
-  mode: 'time', // 'time', 'words', 'code', 'quote'
+  mode: 'time', // 'time', 'words', 'code', 'quote', 'custom', 'zen'
   timeLimit: 30, // 15, 30, 60, 120
   wordsLimit: 25, // 10, 25, 50, 100
   codeLanguage: 'javascript', // 'javascript', 'python', 'html', 'cpp'
@@ -13,6 +13,13 @@ const state = {
   numbers: false,
   theme: 'serika_dark',
   sound: true,
+
+  // Monkeytype imzo xususiyatlari
+  customWords: [],
+  masterMode: false,
+  noBackspace: false,
+  focusModeEnabled: true,
+  virtualKeyboardEnabled: false,
 
   // Test jarayoni
   words: [],
@@ -30,7 +37,7 @@ const state = {
   incorrectChars: 0,
   extraChars: 0,
   missedChars: 0,
-  historyChartData: [], // Har soniyadagi { second, wpm, errors }
+  historyChartData: [], // Har soniyadagi { second, wpm, raw, errors }
 
   // Chart obyekti
   chartInstance: null
@@ -49,12 +56,22 @@ const elements = {
   retryBtn: document.getElementById('retry-btn'),
   nextTestBtn: document.getElementById('next-test-btn'),
   
+  // Monkeytype HUD & Qo'shimcha elementlar
+  liveStatsHud: document.getElementById('live-stats-hud'),
+  hudTimer: document.getElementById('hud-timer'),
+  hudWpm: document.getElementById('hud-wpm'),
+  hudAcc: document.getElementById('hud-acc'),
+  zenHint: document.getElementById('zen-hint'),
+  virtualKeyboard: document.getElementById('virtual-keyboard-wrapper'),
+  capsLockWarning: document.getElementById('caps-lock-warning'),
+
   // Natija elementlari
   resultWpm: document.getElementById('result-wpm'),
   resultAcc: document.getElementById('result-acc'),
   resultRaw: document.getElementById('result-raw'),
   resultChars: document.getElementById('result-chars'),
   resultTime: document.getElementById('result-time'),
+  resultConsistency: document.getElementById('result-consistency'),
   resultChart: document.getElementById('result-chart'),
 
   // Sozlamalar tugmalari
@@ -71,12 +88,22 @@ const elements = {
   // Modallar
   settingsModal: document.getElementById('settings-modal'),
   historyModal: document.getElementById('history-modal'),
+  customTextModal: document.getElementById('custom-text-modal'),
+  customTextInput: document.getElementById('custom-text-input'),
+  customTextStartBtn: document.getElementById('custom-text-start-btn'),
+  customTextCancelBtn: document.getElementById('custom-text-cancel-btn'),
+  closeCustomTextBtn: document.getElementById('close-custom-text-btn'),
+
   openSettingsBtn: document.getElementById('open-settings-btn'),
   openHistoryBtn: document.getElementById('open-history-btn'),
   closeSettingsBtn: document.getElementById('close-settings-btn'),
   closeHistoryBtn: document.getElementById('close-history-btn'),
   soundToggle: document.getElementById('sound-toggle-btn'),
   languageSelect: document.getElementById('language-select'),
+  focusModeSelect: document.getElementById('focus-mode-select'),
+  virtualKeyboardSelect: document.getElementById('virtual-keyboard-select'),
+  masterModeSelect: document.getElementById('master-mode-select'),
+  noBackspaceSelect: document.getElementById('no-backspace-select'),
   themeButtons: document.querySelectorAll('.theme-btn'),
   historyList: document.getElementById('history-list'),
   clearHistoryBtn: document.getElementById('clear-history-btn'),
