@@ -442,6 +442,23 @@ function resetTest() {
   elements.resultSection.classList.remove('active');
   elements.wordsContainer.scrollTop = 0;
 
+  // Zen mode va Virtual Klaviatura boshqaruvi
+  if (elements.zenHint) {
+    elements.zenHint.style.display = (state.mode === 'zen') ? 'block' : 'none';
+  }
+  if (elements.virtualKeyboard) {
+    elements.virtualKeyboard.classList.toggle('hidden', !state.virtualKeyboardEnabled);
+  }
+
+  // Live HUD boshlang'ich qiymatlari
+  if (elements.hudTimer) {
+    elements.hudTimer.textContent = state.mode === 'time' ? `${state.timeLimit}s` : '0s';
+  }
+  if (elements.hudWpm) elements.hudWpm.textContent = '0';
+  if (elements.hudAcc) elements.hudAcc.textContent = '100%';
+
+  renderWords();
+
   if (state.mode === 'time') {
     elements.liveStats.textContent = state.timeLimit;
     elements.liveStats.classList.remove('hidden');
@@ -454,9 +471,14 @@ function resetTest() {
   } else if (state.mode === 'quote') {
     elements.liveStats.textContent = `quote`;
     elements.liveStats.classList.remove('hidden');
+  } else if (state.mode === 'custom') {
+    elements.liveStats.textContent = `0 / ${state.words.length}`;
+    elements.liveStats.classList.remove('hidden');
+  } else if (state.mode === 'zen') {
+    elements.liveStats.textContent = `zen`;
+    elements.liveStats.classList.remove('hidden');
   }
 
-  renderWords();
   elements.typingInput.value = '';
   elements.typingInput.focus();
 }
@@ -467,7 +489,10 @@ function resetTest() {
 function startTest() {
   if (state.isRunning) return;
   state.isRunning = true;
-  document.body.classList.add('focus-mode');
+  
+  if (state.focusModeEnabled) {
+    document.body.classList.add('focus-mode');
+  }
   elements.caret.classList.remove('blink');
 
   soundManager.init();
@@ -477,35 +502,59 @@ function startTest() {
   state.timer = setInterval(() => {
     state.timeElapsed++;
 
+    const live = calculateLiveStats();
+    if (elements.hudWpm) elements.hudWpm.textContent = live.netWpm;
+    if (elements.hudAcc) elements.hudAcc.textContent = `${live.acc}%`;
+
     if (state.mode === 'time') {
       state.timeRemaining--;
       elements.liveStats.textContent = state.timeRemaining;
+      if (elements.hudTimer) elements.hudTimer.textContent = `${state.timeRemaining}s`;
 
       if (state.timeRemaining <= 0) {
         finishTest();
         return;
       }
+    } else if (state.mode === 'words' || state.mode === 'custom') {
+      const targetCount = state.mode === 'words' ? state.wordsLimit : state.words.length;
+      elements.liveStats.textContent = `${state.currentWordIndex} / ${targetCount}`;
+      if (elements.hudTimer) elements.hudTimer.textContent = `${state.timeElapsed}s`;
     } else {
-      // Words rejimi: vaqtni 1, 2, 3 sanaydi
-      elements.liveStats.textContent = `${state.currentWordIndex} / ${state.wordsLimit}`;
+      elements.liveStats.textContent = `${state.timeElapsed}s`;
+      if (elements.hudTimer) elements.hudTimer.textContent = `${state.timeElapsed}s`;
     }
 
     // Grafik uchun har soniyada WPM saqlash
-    const currentWpm = calculateLiveWpm();
     state.historyChartData.push({
       second: state.timeElapsed,
-      wpm: currentWpm,
+      wpm: live.netWpm,
+      raw: live.rawWpm,
       errors: state.incorrectChars + state.extraChars
     });
 
   }, 1000);
 }
 
-// Joriy WPM hisoblash (Live)
-function calculateLiveWpm() {
+// Joriy jonli statistika (Live WPM, Raw va Aniqlik)
+function calculateLiveStats() {
   const minutes = Math.max(state.timeElapsed / 60, 0.016); // kamida 1 soniya
-  const words = state.correctChars / 5;
-  return Math.round(words / minutes);
+  const totalTyped = state.correctChars + state.incorrectChars + state.extraChars;
+  const netWpm = Math.max(0, Math.round((state.correctChars / 5) / minutes));
+  const rawWpm = Math.max(0, Math.round((totalTyped / 5) / minutes));
+  const acc = totalTyped > 0 ? Math.round((state.correctChars / totalTyped) * 100) : 100;
+  return { netWpm, rawWpm, acc };
+}
+
+// Monkeytype Barqarorlik (Consistency %) hisoblash formulasi
+function calculateConsistency(chartData) {
+  if (!chartData || chartData.length < 2) return 100;
+  const wpms = chartData.map(d => d.wpm);
+  const avg = wpms.reduce((a, b) => a + b, 0) / wpms.length;
+  if (avg === 0) return 0;
+  const squareDiffs = wpms.map(v => Math.pow(v - avg, 2));
+  const avgSquareDiff = squareDiffs.reduce((a, b) => a + b, 0) / squareDiffs.length;
+  const stdDev = Math.sqrt(avgSquareDiff);
+  return Math.max(0, Math.min(100, Math.round(100 * (1 - (stdDev / avg)))));
 }
 
 // ----------------------------------------------------
