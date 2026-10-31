@@ -927,28 +927,48 @@ function setupEventListeners() {
     elements.settingsModal.classList.add('active');
   });
 
+  // Yagona xavfsiz modal ochish va yopish funksiyalari (orqa fondagi testni muzlatish)
+  window.openAppModal = function(modalEl) {
+    if (!modalEl) return;
+    modalEl.classList.add('active');
+    if (elements.typingInput) {
+      elements.typingInput.disabled = true;
+      elements.typingInput.blur();
+    }
+  };
+
+  window.closeAppModal = function(modalEl) {
+    if (!modalEl) return;
+    modalEl.classList.remove('active');
+    if (elements.typingInput) {
+      elements.typingInput.disabled = false;
+      setTimeout(() => { elements.typingInput.focus(); }, 60);
+    }
+  };
+
+  elements.openSettingsBtn.addEventListener('click', () => {
+    window.openAppModal(elements.settingsModal);
+  });
+
   elements.closeSettingsBtn.addEventListener('click', () => {
-    elements.settingsModal.classList.remove('active');
-    elements.typingInput.focus();
+    window.closeAppModal(elements.settingsModal);
   });
 
   elements.openHistoryBtn.addEventListener('click', () => {
     renderHistoryUI();
     updateBestWpmUI();
-    elements.historyModal.classList.add('active');
+    window.openAppModal(elements.historyModal);
   });
 
   elements.closeHistoryBtn.addEventListener('click', () => {
-    elements.historyModal.classList.remove('active');
-    elements.typingInput.focus();
+    window.closeAppModal(elements.historyModal);
   });
 
   // Modal tashqarisiga bosilganda yopish
   [elements.settingsModal, elements.historyModal].forEach(modal => {
     modal.addEventListener('click', (e) => {
       if (e.target === modal) {
-        modal.classList.remove('active');
-        elements.typingInput.focus();
+        window.closeAppModal(modal);
       }
     });
   });
@@ -980,18 +1000,21 @@ function setupEventListeners() {
   const registerForm = document.getElementById('register-form');
   const logoutBtn = document.getElementById('logout-btn');
 
-  let selectedAvatar = '🏎️';
+  let selectedAvatar = '⌨️';
 
   if (authBtn) {
     authBtn.addEventListener('click', () => {
-      authModal.classList.add('active');
+      window.openAppModal(authModal);
+      setTimeout(() => {
+        const uInput = document.getElementById('login-username');
+        if (uInput) uInput.focus();
+      }, 100);
     });
   }
 
   if (closeAuthBtn) {
     closeAuthBtn.addEventListener('click', () => {
-      authModal.classList.remove('active');
-      elements.typingInput.focus();
+      window.closeAppModal(authModal);
     });
   }
 
@@ -1021,14 +1044,13 @@ function setupEventListeners() {
         const mins = Math.floor((u.totalTimeTyping || 0) / 60);
         document.getElementById('prof-time').textContent = `${mins}m`;
       }
-      profileModal.classList.add('active');
+      window.openAppModal(profileModal);
     });
   }
 
   if (closeProfileBtn) {
     closeProfileBtn.addEventListener('click', () => {
-      profileModal.classList.remove('active');
-      elements.typingInput.focus();
+      window.closeAppModal(profileModal);
     });
   }
 
@@ -1038,6 +1060,7 @@ function setupEventListeners() {
       tabRegisterBtn.classList.remove('active');
       loginForm.style.display = 'block';
       registerForm.style.display = 'none';
+      setTimeout(() => { document.getElementById('login-username').focus(); }, 50);
     });
 
     tabRegisterBtn.addEventListener('click', () => {
@@ -1045,6 +1068,7 @@ function setupEventListeners() {
       tabLoginBtn.classList.remove('active');
       loginForm.style.display = 'none';
       registerForm.style.display = 'block';
+      setTimeout(() => { document.getElementById('reg-username').focus(); }, 50);
     });
   }
 
@@ -1065,8 +1089,8 @@ function setupEventListeners() {
       const p = document.getElementById('login-password').value;
       const res = window.authManager.login(u, p);
       if (res.success) {
-        authModal.classList.remove('active');
-        elements.typingInput.focus();
+        window.closeAppModal(authModal);
+        alert("Xush kelibsiz, " + res.user.username + "!");
       } else {
         alert(res.message);
       }
@@ -1081,8 +1105,8 @@ function setupEventListeners() {
       const p = document.getElementById('reg-password').value;
       const res = window.authManager.register(u, p, selectedAvatar);
       if (res.success) {
-        authModal.classList.remove('active');
-        elements.typingInput.focus();
+        window.closeAppModal(authModal);
+        alert("Tabriklaymiz, " + res.user.username + "! Profilingiz yaratildi.");
       } else {
         alert(res.message);
       }
@@ -1092,8 +1116,7 @@ function setupEventListeners() {
   if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
       window.authManager.logout();
-      profileModal.classList.remove('active');
-      elements.typingInput.focus();
+      window.closeAppModal(profileModal);
     });
   }
 
@@ -1131,7 +1154,7 @@ function setupEventListeners() {
     { label: "sound: clicky", action: () => soundManager.setSoundPack('click') },
     { label: "sound: bubble pop", action: () => soundManager.setSoundPack('pop') },
     { label: "sound: off", action: () => soundManager.setSoundPack('off') },
-    { label: "multiplayer: custom room", action: () => document.getElementById('multiplayer-modal').classList.add('active') },
+    { label: "multiplayer: custom room", action: () => window.openAppModal(document.getElementById('multiplayer-modal')) },
     { label: "view: account / profile", action: () => profileBtn.click() },
     { label: "restart test", action: () => resetTest() }
   ];
@@ -1140,12 +1163,19 @@ function setupEventListeners() {
     cmdOverlay.style.display = 'flex';
     cmdInput.value = '';
     renderCommandList('');
+    if (elements.typingInput) {
+      elements.typingInput.disabled = true;
+      elements.typingInput.blur();
+    }
     cmdInput.focus();
   };
 
   window.closeCommandPalette = function() {
     cmdOverlay.style.display = 'none';
-    elements.typingInput.focus();
+    if (elements.typingInput) {
+      elements.typingInput.disabled = false;
+      setTimeout(() => { elements.typingInput.focus(); }, 60);
+    }
   };
 
   function renderCommandList(query) {
@@ -1205,22 +1235,21 @@ function setupEventListeners() {
 
   if (openMultiBtn) {
     openMultiBtn.addEventListener('click', () => {
-      multiModal.classList.add('active');
+      window.openAppModal(multiModal);
     });
   }
 
   if (closeMultiBtn) {
     closeMultiBtn.addEventListener('click', () => {
-      multiModal.classList.remove('active');
-      elements.typingInput.focus();
+      window.closeAppModal(multiModal);
     });
   }
 
   if (createRoomBtn) {
     createRoomBtn.addEventListener('click', () => {
-      const code = window.multiplayerManager.createRoom();
-      multiModal.classList.remove('active');
-      lobbyModal.classList.add('active');
+      window.closeAppModal(multiModal);
+      window.openAppModal(lobbyModal);
+      window.multiplayerManager.createRoom();
     });
   }
 
@@ -1231,18 +1260,20 @@ function setupEventListeners() {
         alert("Iltimos, xona kodini kiriting!");
         return;
       }
+      window.closeAppModal(multiModal);
+      window.openAppModal(lobbyModal);
       window.multiplayerManager.joinRoom(code);
-      multiModal.classList.remove('active');
-      lobbyModal.classList.add('active');
     });
   }
 
   if (copyLinkBtn) {
     copyLinkBtn.addEventListener('click', () => {
-      const url = window.location.origin + window.location.pathname + '?room=' + window.multiplayerManager.roomId;
+      const room = window.multiplayerManager.roomId;
+      if (!room) return;
+      const url = window.location.origin + window.location.pathname + '?room=' + room;
       navigator.clipboard.writeText(url).then(() => {
         copyLinkBtn.textContent = "✅ Nusxalandi!";
-        setTimeout(() => { copyLinkBtn.textContent = "📋 Havolani nusxalash"; }, 2000);
+        setTimeout(() => { copyLinkBtn.textContent = "📋 Copy Room Link"; }, 2000);
       });
     });
   }
@@ -1255,6 +1286,7 @@ function setupEventListeners() {
 
   if (closeLobbyBtn) {
     closeLobbyBtn.addEventListener('click', () => {
+      window.closeAppModal(lobbyModal);
       window.multiplayerManager.leaveRoom();
     });
   }
