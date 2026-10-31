@@ -1695,37 +1695,7 @@ header, .config-bar, footer, .restart-btn-wrapper, #virtual-keyboard-wrapper {
   transition: opacity 0.35s ease;
 }
 
-/* 2. Jonli Ko'rsatkichlar (Live Stats Floating HUD) */
-.live-stats-hud {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1.75rem;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 1.15rem;
-  color: var(--sub-color);
-  margin-bottom: 1.25rem;
-  user-select: none;
-  opacity: 0.85;
-  transition: opacity 0.25s ease;
-}
-
-.live-stats-hud.hidden {
-  display: none !important;
-}
-
-.hud-item {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.hud-accent {
-  color: var(--main-color);
-  font-weight: 700;
-}
-
-/* 3. Zen Mode Hint */
+/* 2. Zen Mode Hint */
 .zen-hint {
   text-align: center;
   font-size: 0.82rem;
