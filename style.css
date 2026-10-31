@@ -1321,6 +1321,173 @@ footer {
   gap: 0.5rem;
 }
 
+/* Multi-choice cards in room select modal */
+.multi-choice-card {
+  background-color: var(--sub-alt-color);
+  padding: 1rem 1.15rem;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.multi-choice-card:hover {
+  border-color: var(--sub-color);
+  transform: translateY(-1px);
+}
+
+.lobby-cfg-lang-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.65rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.lobby-lang-btn {
+  background: var(--bg-color);
+  color: var(--sub-color);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.lobby-lang-btn.active {
+  background: var(--main-color);
+  color: var(--bg-color);
+  font-weight: 700;
+  border-color: var(--main-color);
+}
+
+/* Shohsupa (Podium top 3) */
+.podium-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 1.25rem;
+  margin: 1.5rem 0 2rem 0;
+  min-height: 180px;
+}
+
+.podium-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 130px;
+  position: relative;
+}
+
+.podium-step.step-1 {
+  order: 2;
+}
+
+.podium-step.step-2 {
+  order: 1;
+}
+
+.podium-step.step-3 {
+  order: 3;
+}
+
+.podium-crown {
+  font-size: 2rem;
+  animation: floatCrown 2s ease-in-out infinite;
+  margin-bottom: -6px;
+}
+
+@keyframes floatCrown {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.podium-avatar {
+  font-size: 2.2rem;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--sub-alt-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.35rem;
+  border: 3px solid var(--sub-color);
+}
+
+.step-1 .podium-avatar {
+  width: 72px;
+  height: 72px;
+  font-size: 2.7rem;
+  border-color: #e2b714;
+  box-shadow: 0 0 20px rgba(226, 183, 20, 0.45);
+}
+
+.step-2 .podium-avatar {
+  border-color: #cbd5e1;
+  box-shadow: 0 0 15px rgba(203, 213, 225, 0.35);
+}
+
+.step-3 .podium-avatar {
+  border-color: #b45309;
+  box-shadow: 0 0 15px rgba(180, 83, 9, 0.35);
+}
+
+.podium-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
+.podium-wpm {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--main-color);
+  margin-bottom: 0.5rem;
+}
+
+.podium-pedestal {
+  width: 100%;
+  border-radius: 8px 8px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.25rem;
+  color: #fff;
+}
+
+.podium-pedestal.p-1 {
+  height: 90px;
+  background: linear-gradient(180deg, rgba(226, 183, 20, 0.4), rgba(226, 183, 20, 0.15));
+  border: 1px solid var(--main-color);
+  color: var(--main-color);
+}
+
+.podium-pedestal.p-2 {
+  height: 65px;
+  background: linear-gradient(180deg, rgba(203, 213, 225, 0.3), rgba(203, 213, 225, 0.1));
+  border: 1px solid #94a3b8;
+  color: #e2e8f0;
+}
+
+.podium-pedestal.p-3 {
+  height: 45px;
+  background: linear-gradient(180deg, rgba(180, 83, 9, 0.3), rgba(180, 83, 9, 0.1));
+  border: 1px solid #d97706;
+  color: #f59e0b;
+}
+
 /* Shohsupa (Leaderboard List) */
 .race-leaderboard-list {
   display: flex;
