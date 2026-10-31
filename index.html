@@ -503,29 +503,66 @@
 
   <!-- LOBBY (KUTISH ZALI) MODALI -->
   <div class="modal-overlay" id="multiplayer-lobby-modal">
-    <div class="modal">
+    <div class="modal" style="max-width: 680px; width: 95%;">
       <div class="modal-header">
-        <div class="modal-title">🏁 Poyga Lobbisi</div>
+        <div style="display: flex; align-items: center; gap: 0.65rem;">
+          <div class="modal-title">🏁 Poyga Zali (Room Lounge)</div>
+          <span class="room-live-badge">🟢 Onlayn</span>
+        </div>
         <button class="modal-close" id="close-lobby-btn">&times;</button>
       </div>
       <div class="modal-body">
-        <div style="text-align: center;">
-          <div style="font-size: 0.85rem; color: var(--sub-color); margin-bottom: 0.5rem;">XONA KODI:</div>
-          <div class="room-code-badge" id="lobby-room-code">------</div>
-          <div style="margin-top: 0.5rem;">
-            <button class="action-btn" id="copy-room-link-btn" style="font-size: 0.8rem; margin: 0 auto;">📋 Havolani nusxalash</button>
+        
+        <!-- Xona ma'lumotlari kartasi -->
+        <div class="lobby-header-bar">
+          <div class="lobby-room-info">
+            <span class="lobby-label">XONA KODI:</span>
+            <div class="room-code-badge" id="lobby-room-code">------</div>
+            <button class="action-btn" id="copy-room-link-btn" title="Xona havolasini nusxalash" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;">
+              📋 Nusxalash
+            </button>
+          </div>
+          <div class="lobby-meta-tags">
+            <span class="room-chip" id="lobby-mode-badge">⏱ 30s</span>
+            <span class="room-chip" id="lobby-lang-badge">🌐 O'zbekcha</span>
+            <span class="room-chip" id="lobby-players-badge">👥 1/8 o'yinchi</span>
           </div>
         </div>
 
-        <div style="margin-top: 1.5rem;">
-          <div style="font-weight: 600; font-size: 0.9rem; color: var(--text-color); margin-bottom: 0.5rem;">Loddagi Ishtirokchilar:</div>
+        <!-- Host uchun: Poyga rejimini boshqarish -->
+        <div class="lobby-config-card" id="lobby-config-card" style="display: none;">
+          <div class="lobby-cfg-title">⚙️ Poyga parametrlari (Xona egasi):</div>
+          <div class="lobby-cfg-buttons">
+            <button type="button" class="lobby-cfg-btn active" data-lobby-mode="time" data-lobby-limit="30">⏱ 30 soniya</button>
+            <button type="button" class="lobby-cfg-btn" data-lobby-mode="time" data-lobby-limit="60">⏱ 60 soniya</button>
+            <button type="button" class="lobby-cfg-btn" data-lobby-mode="time" data-lobby-limit="15">⏱ 15 soniya</button>
+            <button type="button" class="lobby-cfg-btn" data-lobby-mode="words" data-lobby-limit="25">📝 25 so'z</button>
+            <button type="button" class="lobby-cfg-btn" data-lobby-mode="words" data-lobby-limit="50">📝 50 so'z</button>
+          </div>
+        </div>
+
+        <!-- O'yinchilar ro'yxati -->
+        <div style="margin-top: 1.25rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <span style="font-weight: 600; font-size: 0.9rem; color: var(--text-color);">Zaldagi ishtirokchilar:</span>
+            <span id="lobby-status-text" style="color: var(--main-color); font-size: 0.8rem; font-weight: 500;">Ishtirokchilar kutilmoqda...</span>
+          </div>
           <div class="lobby-players-grid" id="lobby-players-list">
             <!-- Dinamik o'yinchilar kartasi -->
           </div>
         </div>
 
-        <div id="lobby-status-text" style="text-align: center; color: var(--main-color); font-size: 0.85rem; margin: 0.75rem 0;">
-          Ishtirokchilar kutilmoqda...
+        <!-- Boshqaruv tugmalari (Host uchun boshlash, Guest uchun Tayyorman) -->
+        <div class="lobby-actions-row">
+          <button class="action-btn primary" id="lobby-start-btn" style="display: none; flex: 1; justify-content: center; font-size: 1.05rem; padding: 0.85rem;">
+            🏁 Poygani boshlash
+          </button>
+          <button class="action-btn primary" id="lobby-ready-btn" style="display: none; flex: 1; justify-content: center; font-size: 1.05rem; padding: 0.85rem;">
+            ✅ Tayyorman (Ready)
+          </button>
+          <button class="action-btn" id="lobby-leave-btn" style="padding: 0.85rem 1.25rem;">
+            Chiqish
+          </button>
         </div>
 
         <!-- LOBBY JONLI CHAT VA EMOJILAR -->
@@ -546,16 +583,13 @@
             <div class="chat-hint">Xonadagilar bilan emoji yoki qisqa xabar orqali suhbatlashing!</div>
           </div>
           <form id="lobby-chat-form" class="lobby-chat-form">
-            <input type="text" id="lobby-chat-input" class="form-control" placeholder="Xabar yozing (masalan: Tayyormisiz?)..." maxlength="100">
+            <input type="text" id="lobby-chat-input" class="form-control" placeholder="Xabar yozing (masalan: Hammaga omad!)..." maxlength="100">
             <button type="submit" class="action-btn primary" id="lobby-chat-send-btn" style="padding: 0.5rem 0.9rem;">
               <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: currentColor;"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
             </button>
           </form>
         </div>
 
-        <button class="action-btn primary" id="lobby-start-btn" style="width: 100%; justify-content: center; font-size: 1.1rem; padding: 0.85rem; margin-top: 1rem;">
-          Poygani boshlash
-        </button>
       </div>
     </div>
   </div>
