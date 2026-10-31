@@ -98,13 +98,13 @@ class MultiplayerManager {
   }
 
   // 1. Yangi xona yaratish (Host)
-  createRoom() {
+  createRoom(initialMode, initialLimit, initialLang) {
     this.roomId = this.generateRoomCode();
     this.isHost = true;
     this.isReady = true;
-    this.roomMode = 'time';
-    this.roomLimit = 30;
-    this.roomLang = (window.state && window.state.language) || 'uzbek';
+    this.roomMode = initialMode || 'time';
+    this.roomLimit = initialLimit || (this.roomMode === 'time' ? 30 : 25);
+    this.roomLang = initialLang || (window.state && window.state.language) || 'uzbek';
     this.players = {};
 
     const user = (window.authManager && window.authManager.currentUser) || {
