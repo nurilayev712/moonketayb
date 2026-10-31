@@ -1316,14 +1316,14 @@ function setupEventListeners() {
       if (u) {
         document.getElementById('prof-avatar').textContent = u.avatar || '⌨️';
         document.getElementById('prof-name').textContent = u.username;
-        document.getElementById('prof-joined').textContent = `Joined ${u.joinedDate || 'recently'}`;
+        document.getElementById('prof-joined').textContent = `A'zo bo'lingan: ${u.joinedDate || 'yaqinda'}`;
         
         // XP va Level
         const xpPercent = Math.min(Math.round(((u.xp || 0) / (u.xpToNextLevel || 400)) * 100), 100);
         document.getElementById('prof-xp-bar').style.width = `${xpPercent}%`;
         document.getElementById('prof-xp-text').textContent = `${u.xp || 0} / ${u.xpToNextLevel || 400} XP (lvl ${u.level || 1})`;
 
-        // Rekordlar (All-time bests)
+        // Rekordlar (Barcha davrlar)
         const bests = u.bestWpm || {};
         document.getElementById('best-15s').textContent = bests.time15 || 0;
         document.getElementById('best-30s').textContent = bests.time30 || 0;
@@ -1334,7 +1334,7 @@ function setupEventListeners() {
         document.getElementById('prof-tests').textContent = u.testsCompleted || 0;
         document.getElementById('prof-wins').textContent = u.wins || 0;
         const mins = Math.floor((u.totalTimeTyping || 0) / 60);
-        document.getElementById('prof-time').textContent = `${mins}m`;
+        document.getElementById('prof-time').textContent = `${mins} daq`;
         renderActivityHeatmap('12months');
       } else {
         renderActivityHeatmap('12months');
