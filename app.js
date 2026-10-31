@@ -960,11 +960,6 @@ function setupEventListeners() {
     });
   });
 
-  // Modallar
-  elements.openSettingsBtn.addEventListener('click', () => {
-    elements.settingsModal.classList.add('active');
-  });
-
   // Yagona xavfsiz modal ochish va yopish funksiyalari (orqa fondagi testni muzlatish)
   window.openAppModal = function(modalEl) {
     if (!modalEl) return;
@@ -978,7 +973,9 @@ function setupEventListeners() {
   window.closeAppModal = function(modalEl) {
     if (!modalEl) return;
     modalEl.classList.remove('active');
-    if (elements.typingInput) {
+    const anyModalOpen = document.querySelector('.modal-overlay.active') || 
+                        (document.getElementById('command-palette-overlay') && document.getElementById('command-palette-overlay').style.display === 'flex');
+    if (!anyModalOpen && elements.typingInput) {
       elements.typingInput.disabled = false;
       setTimeout(() => { elements.typingInput.focus(); }, 60);
     }
