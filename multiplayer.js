@@ -17,6 +17,7 @@ class MultiplayerManager {
     this.isReady = false;
     this.roomMode = 'time'; // 'time' yoki 'words'
     this.roomLimit = 30; // 15, 30, 60 yoki 25, 50
+    this.roomLang = 'uzbek'; // 'uzbek', 'english', 'russian'
     this.myId = 'usr_' + Math.random().toString(36).substring(2, 9);
     this.players = {}; // { id: { id, name, avatar, isHost, isReady, progress, wpm, finished, accuracy } }
     this.isInRace = false;
@@ -36,6 +37,7 @@ class MultiplayerManager {
     this.isReady = true;
     this.roomMode = 'time';
     this.roomLimit = 30;
+    this.roomLang = (window.state && window.state.language) || 'uzbek';
     this.players = {};
 
     const user = (window.authManager && window.authManager.currentUser) || {
@@ -114,7 +116,25 @@ class MultiplayerManager {
     this.sendMessage({
       type: 'ROOM_CONFIG',
       roomMode: this.roomMode,
-      roomLimit: this.roomLimit
+      roomLimit: this.roomLimit,
+      roomLang: this.roomLang
+    });
+  }
+
+  // Host: Lug'at tilini o'zgartirish
+  setRoomLang(lang) {
+    if (!this.isHost) return;
+    this.roomLang = lang;
+    if (window.state) {
+      window.state.language = lang;
+    }
+    this.updateLobbyUI();
+
+    this.sendMessage({
+      type: 'ROOM_CONFIG',
+      roomMode: this.roomMode,
+      roomLimit: this.roomLimit,
+      roomLang: this.roomLang
     });
   }
 
@@ -272,7 +292,8 @@ class MultiplayerManager {
           type: 'SYNC_LOBBY',
           players: this.players,
           roomMode: this.roomMode,
-          roomLimit: this.roomLimit
+          roomLimit: this.roomLimit,
+          roomLang: this.roomLang
         });
       }
     }
@@ -282,6 +303,10 @@ class MultiplayerManager {
       this.players = Object.assign({}, this.players, data.players);
       if (data.roomMode) this.roomMode = data.roomMode;
       if (data.roomLimit) this.roomLimit = data.roomLimit;
+      if (data.roomLang) {
+        this.roomLang = data.roomLang;
+        if (window.state) window.state.language = data.roomLang;
+      }
       this.updateLobbyUI();
     }
 
@@ -289,6 +314,10 @@ class MultiplayerManager {
     else if (data.type === 'ROOM_CONFIG') {
       this.roomMode = data.roomMode;
       this.roomLimit = data.roomLimit;
+      if (data.roomLang) {
+        this.roomLang = data.roomLang;
+        if (window.state) window.state.language = data.roomLang;
+      }
       this.updateLobbyUI();
     }
 
@@ -305,6 +334,7 @@ class MultiplayerManager {
       this.raceWords = data.words;
       if (data.roomMode) this.roomMode = data.roomMode;
       if (data.roomLimit) this.roomLimit = data.roomLimit;
+      if (data.roomLang && window.state) window.state.language = data.roomLang;
       this.startCountdownUI();
     }
 
@@ -420,7 +450,7 @@ class MultiplayerManager {
   startRace() {
     if (!this.isHost) return;
 
-    const lang = (window.state && window.state.language) || 'uzbek';
+    const lang = this.roomLang || (window.state && window.state.language) || 'uzbek';
     const source = (window.WORDS && window.WORDS[lang]) || (window.WORDS && window.WORDS.uzbek) || [];
     const words = [];
     
@@ -437,7 +467,8 @@ class MultiplayerManager {
       type: 'START_RACE',
       words: words,
       roomMode: this.roomMode,
-      roomLimit: this.roomLimit
+      roomLimit: this.roomLimit,
+      roomLang: this.roomLang
     });
   }
 
@@ -538,6 +569,38 @@ class MultiplayerManager {
       window.authManager.recordRace(isWinner, myResult ? myResult.wpm : 0);
     }
 
+    // Shohsupa (Podium top 3) elementlarini to'ldirish
+    const step1 = document.getElementById('podium-step-1');
+    const step2 = document.getElementById('podium-step-2');
+    const step3 = document.getElementById('podium-step-3');
+
+    if (leaderboard[0] && step1) {
+      step1.style.display = 'flex';
+      document.getElementById('podium-avatar-1').textContent = leaderboard[0].avatar || '⌨️';
+      document.getElementById('podium-name-1').textContent = leaderboard[0].name;
+      document.getElementById('podium-wpm-1').textContent = `${leaderboard[0].wpm || 0} WPM`;
+    } else if (step1) {
+      step1.style.display = 'none';
+    }
+
+    if (leaderboard[1] && step2) {
+      step2.style.display = 'flex';
+      document.getElementById('podium-avatar-2').textContent = leaderboard[1].avatar || '⌨️';
+      document.getElementById('podium-name-2').textContent = leaderboard[1].name;
+      document.getElementById('podium-wpm-2').textContent = `${leaderboard[1].wpm || 0} WPM`;
+    } else if (step2) {
+      step2.style.display = 'none';
+    }
+
+    if (leaderboard[2] && step3) {
+      step3.style.display = 'flex';
+      document.getElementById('podium-avatar-3').textContent = leaderboard[2].avatar || '⌨️';
+      document.getElementById('podium-name-3').textContent = leaderboard[2].name;
+      document.getElementById('podium-wpm-3').textContent = `${leaderboard[2].wpm || 0} WPM`;
+    } else if (step3) {
+      step3.style.display = 'none';
+    }
+
     leaderboard.forEach((player, idx) => {
       const medals = ["🥇 1-o'rin (G'olib)", "🥈 2-o'rin", "🥉 3-o'rin"];
       const rankText = medals[idx] || `${idx + 1}-o'rin`;
@@ -548,7 +611,7 @@ class MultiplayerManager {
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <span style="font-size: 1.5rem;">${player.avatar || '⌨️'}</span>
           <div>
-            <div style="font-weight: 700; color: var(--text-color);">${escapeHtml(player.name)}</div>
+            <div style="font-weight: 700; color: var(--text-color);">${escapeHtml(player.name)} ${player.id === this.myId ? '(siz)' : ''}</div>
             <div style="font-size: 0.8rem; color: var(--main-color);">${rankText}</div>
           </div>
         </div>
@@ -628,7 +691,7 @@ class MultiplayerManager {
             <span class="p-avatar">${player.avatar || '⌨️'}</span>
             <span class="p-name">${escapeHtml(player.name)}</span>
           </div>
-          <span class="p-wpm" id="wpm-tag-${player.id}">${player.wpm || 0} WPM</span>
+          <span class="p-wpm" id="wpm-tag-${player.id}">${player.wpm || 0} WPM • 0%</span>
         </div>
         <div class="track-line">
           <div class="track-fill" id="track-fill-${player.id}" style="width: 0%;"></div>
@@ -658,7 +721,7 @@ class MultiplayerManager {
         carEl.style.left = `${runnerLeft}%`;
       }
       if (wpmTag) {
-        wpmTag.textContent = `${player.wpm || 0} WPM`;
+        wpmTag.textContent = `${player.wpm || 0} WPM • ${percent}%`;
       }
     });
   }
@@ -691,7 +754,7 @@ class MultiplayerManager {
 
     // Til badge
     if (langBadge) {
-      const curLang = (window.state && window.state.language) || 'uzbek';
+      const curLang = this.roomLang || (window.state && window.state.language) || 'uzbek';
       const langNames = { uzbek: "🌐 O'zbekcha", english: "🌐 English", russian: "🌐 Русский" };
       langBadge.textContent = langNames[curLang] || "🌐 O'zbekcha";
     }
@@ -715,6 +778,14 @@ class MultiplayerManager {
             btn.classList.remove('active');
           }
         });
+
+        document.querySelectorAll('.lobby-lang-btn').forEach(btn => {
+          if (btn.dataset.lobbyLang === (this.roomLang || 'uzbek')) {
+            btn.classList.add('active');
+          } else {
+            btn.classList.remove('active');
+          }
+        });
       }
     }
 
@@ -723,8 +794,9 @@ class MultiplayerManager {
       playersList.innerHTML = '';
       Object.values(this.players).forEach(p => {
         const isMe = p.id === this.myId;
+        const statusClass = p.isHost ? 'is-host' : (p.isReady ? 'is-ready' : '');
         const card = document.createElement('div');
-        card.className = 'lobby-player-card' + (isMe ? ' is-me' : '');
+        card.className = `lobby-player-card ${statusClass} ${isMe ? 'is-me' : ''}`;
 
         let statusBadge = '';
         if (p.isHost) {
