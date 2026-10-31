@@ -806,27 +806,74 @@ footer {
 /* MULTIPLAYER VA AUTHENTIFICATION USLUBLARI */
 /* ==================================================== */
 
-/* Header foydalanuvchi va poyga tugmalari */
+/* Header foydalanuvchi va poyga tugmalari (LED Glow & Neon) */
 .header-badge-btn {
-  background-color: var(--sub-alt-color);
+  background: linear-gradient(135deg, var(--sub-alt-color), rgba(0, 255, 136, 0.08));
   color: var(--text-color);
-  border: 1px solid var(--sub-color);
+  border: 1px solid rgba(0, 255, 136, 0.35);
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.12);
   padding: 0.4rem 0.85rem;
-  border-radius: 8px;
+  border-radius: 9px;
   font-family: inherit;
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  transition: all 0.2s;
+  gap: 0.55rem;
+  transition: all 0.25s ease;
 }
 
 .header-badge-btn:hover {
-  border-color: var(--main-color);
-  color: var(--main-color);
+  border-color: #00ff88;
+  color: #00ff88;
+  box-shadow: 0 0 16px rgba(0, 255, 136, 0.35);
   transform: translateY(-1px);
+}
+
+/* LED Chiroq indikatori */
+.led-indicator {
+  width: 9px;
+  height: 9px;
+  background-color: #00ff88;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 6px #00ff88, 0 0 12px #00ff88;
+  animation: ledPulse 1.8s infinite ease-in-out;
+  flex-shrink: 0;
+}
+
+.led-indicator.large {
+  width: 13px;
+  height: 13px;
+}
+
+@keyframes ledPulse {
+  0% {
+    background-color: #00ff88;
+    box-shadow: 0 0 4px #00ff88, 0 0 8px #00ff88;
+  }
+  50% {
+    background-color: #70ffbe;
+    box-shadow: 0 0 12px #00ff88, 0 0 22px #00ff88, 0 0 32px rgba(0, 255, 136, 0.8);
+  }
+  100% {
+    background-color: #00ff88;
+    box-shadow: 0 0 4px #00ff88, 0 0 8px #00ff88;
+  }
+}
+
+.led-nickname {
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.5px;
+  text-shadow: 0 0 8px rgba(0, 255, 136, 0.5);
+  transition: text-shadow 0.25s, color 0.25s;
+}
+
+.header-badge-btn:hover .led-nickname {
+  color: #00ff88;
+  text-shadow: 0 0 14px #00ff88;
 }
 
 .header-badge-btn.multiplayer-btn {
