@@ -126,6 +126,23 @@ function loadStoredSettings() {
     state.sound = savedSound === 'true';
     soundManager.enabled = state.sound;
   }
+
+  const savedCaret = localStorage.getItem('mk_caret_style') || 'line';
+  state.caretStyle = savedCaret;
+  applyCaretStyle(state.caretStyle);
+}
+
+// ----------------------------------------------------
+// Caret va Kursor Boshqaruvi
+// ----------------------------------------------------
+function applyCaretStyle(style) {
+  state.caretStyle = style;
+  localStorage.setItem('mk_caret_style', style);
+  if (elements.caret) {
+    elements.caret.className = 'caret blink caret-' + style;
+  }
+  const sel = document.getElementById('caret-style-select');
+  if (sel && sel.value !== style) sel.value = style;
 }
 
 // ----------------------------------------------------
