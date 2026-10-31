@@ -200,7 +200,32 @@ function updateConfigUI() {
 // So'zlar generatsiyasi
 // ----------------------------------------------------
 function generateWords() {
-  const source = WORDS[state.language] || WORDS.uzbek;
+  state.currentQuoteAuthor = '';
+
+  // 1. Dasturlash tillari (Code rejimi)
+  if (state.mode === 'code') {
+    const codeObj = (WORDS && WORDS.code) || {};
+    const codeList = codeObj[state.codeLanguage] || codeObj.javascript || [];
+    const count = 25;
+    const result = [];
+    for (let i = 0; i < count; i++) {
+      result.push(codeList[Math.floor(Math.random() * codeList.length)]);
+    }
+    return result;
+  }
+
+  // 2. Mashhur iqtiboslar (Quote rejimi)
+  if (state.mode === 'quote') {
+    const quotesList = (WORDS && WORDS.quotes) || [];
+    const chosen = quotesList[Math.floor(Math.random() * quotesList.length)] || {
+      text: "Bilim o'rganishdan to'xtagan kishi qariydi.",
+      author: "Genri Ford"
+    };
+    state.currentQuoteAuthor = chosen.author;
+    return chosen.text.split(' ');
+  }
+
+  const source = (WORDS && WORDS[state.language]) || (WORDS && WORDS.uzbek) || [];
   const count = state.mode === 'words' ? state.wordsLimit : Math.max(80, state.timeLimit * 3);
   const result = [];
 
@@ -241,7 +266,7 @@ function renderWords() {
 
   state.words.forEach((wordText, wIdx) => {
     const wordEl = document.createElement('div');
-    wordEl.className = 'word' + (wIdx === 0 ? ' active' : '');
+    wordEl.className = 'word' + (wIdx === 0 ? ' active' : '') + (state.mode === 'code' ? ' code-token' : '');
     wordEl.dataset.wordIndex = wIdx;
 
     for (let i = 0; i < wordText.length; i++) {
@@ -253,6 +278,13 @@ function renderWords() {
 
     elements.wordsContainer.appendChild(wordEl);
   });
+
+  if (state.mode === 'quote' && state.currentQuoteAuthor) {
+    const authorEl = document.createElement('div');
+    authorEl.className = 'quote-author';
+    authorEl.textContent = '— ' + state.currentQuoteAuthor;
+    elements.wordsContainer.appendChild(authorEl);
+  }
 
   state.currentWordIndex = 0;
   state.currentLetterIndex = 0;
