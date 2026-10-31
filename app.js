@@ -1431,6 +1431,15 @@ function setupEventListeners() {
     });
   }
 
+  // Caret Style Select (Monkeytype signature)
+  const caretSelect = document.getElementById('caret-style-select');
+  if (caretSelect) {
+    caretSelect.value = state.caretStyle || 'line';
+    caretSelect.addEventListener('change', (e) => {
+      applyCaretStyle(e.target.value);
+    });
+  }
+
   // ===================================================
   // MONKEYTYPE COMMAND PALETTE (ESC BOSILGANDA)
   // ===================================================
