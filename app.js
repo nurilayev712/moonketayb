@@ -515,10 +515,12 @@ function handleKeyDown(e) {
     state.currentWordIndex++;
     state.currentLetterIndex = 0;
 
-    // Words rejimida limit tekshirish
-    if (state.mode === 'words') {
-      elements.liveStats.textContent = `${state.currentWordIndex} / ${state.wordsLimit}`;
-      if (state.currentWordIndex >= state.wordsLimit) {
+    // Words, Code va Quote rejimlarida limit tekshirish
+    const isWordBasedMode = (state.mode === 'words' || state.mode === 'code' || state.mode === 'quote');
+    if (isWordBasedMode) {
+      const targetCount = state.mode === 'words' ? state.wordsLimit : state.words.length;
+      elements.liveStats.textContent = `${state.currentWordIndex} / ${targetCount}`;
+      if (state.currentWordIndex >= targetCount) {
         finishTest();
         return;
       }
