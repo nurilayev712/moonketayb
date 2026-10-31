@@ -1295,9 +1295,16 @@ function setupEventListeners() {
         document.getElementById('prof-tests').textContent = u.testsCompleted || 0;
         document.getElementById('prof-wins').textContent = u.wins || 0;
         const mins = Math.floor((u.totalTimeTyping || 0) / 60);
-        document.getElementById('prof-time').textContent = `${mins}m`;
+        renderActivityHeatmap('12months');
       }
       window.openAppModal(profileModal);
+    });
+  }
+
+  const heatmapSelect = document.getElementById('heatmap-range-select');
+  if (heatmapSelect) {
+    heatmapSelect.addEventListener('change', (e) => {
+      renderActivityHeatmap(e.target.value);
     });
   }
 
