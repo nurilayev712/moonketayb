@@ -1134,6 +1134,11 @@ class MultiplayerManager {
       document.getElementById('multiplayer-lobby-modal').classList.remove('active');
     }
 
+    const caretsContainer = document.getElementById('tribe-carets-container');
+    if (caretsContainer) caretsContainer.innerHTML = '';
+    const deltaEl = document.getElementById('tribe-delta');
+    if (deltaEl) deltaEl.style.display = 'none';
+
     document.getElementById('race-track-section').style.display = 'none';
     document.getElementById('test-section').style.display = 'flex';
     document.getElementById('main-config-bar').style.display = 'flex';
