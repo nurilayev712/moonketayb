@@ -1673,3 +1673,145 @@ footer {
   user-select: none;
 }
 
+/* ==================================================== */
+/* MONKEYTYPE SIGNATURE FEATURES: FOCUS, HUD, KEYBOARD */
+/* ==================================================== */
+
+/* 1. Fokus Rejimi (Focus Mode) */
+body.focus-mode header,
+body.focus-mode .config-bar,
+body.focus-mode footer,
+body.focus-mode .restart-btn-wrapper,
+body.focus-mode #virtual-keyboard-wrapper {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 0.4s ease;
+}
+
+header, .config-bar, footer, .restart-btn-wrapper, #virtual-keyboard-wrapper {
+  transition: opacity 0.35s ease;
+}
+
+/* 2. Jonli Ko'rsatkichlar (Live Stats Floating HUD) */
+.live-stats-hud {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.75rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.15rem;
+  color: var(--sub-color);
+  margin-bottom: 1.25rem;
+  user-select: none;
+  opacity: 0.85;
+  transition: opacity 0.25s ease;
+}
+
+.live-stats-hud.hidden {
+  display: none !important;
+}
+
+.hud-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.hud-accent {
+  color: var(--main-color);
+  font-weight: 700;
+}
+
+/* 3. Zen Mode Hint */
+.zen-hint {
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--sub-color);
+  margin-top: 0.85rem;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.zen-hint kbd {
+  background: var(--sub-alt-color);
+  padding: 3px 7px;
+  border-radius: 4px;
+  color: var(--main-color);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* 4. Ekrandagi Interaktiv Klaviatura (Virtual Keyboard) */
+.virtual-keyboard-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin: 1.75rem auto 0;
+  max-width: 680px;
+  user-select: none;
+}
+
+.virtual-keyboard-wrapper.hidden {
+  display: none !important;
+}
+
+.keyboard-row {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.vkey {
+  width: 38px;
+  height: 38px;
+  background-color: var(--sub-alt-color);
+  color: var(--sub-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+  transition: all 0.08s ease;
+}
+
+.vkey.space-key {
+  width: 250px;
+  font-size: 0.75rem;
+  letter-spacing: 2px;
+}
+
+.vkey.active {
+  background-color: var(--main-color) !important;
+  color: var(--bg-color) !important;
+  transform: translateY(2px);
+  box-shadow: 0 0 12px var(--main-color), 0 0 0 rgba(0, 0, 0, 0);
+  border-color: var(--main-color);
+}
+
+/* 5. Maxsus Matn (Custom Text) Maydoni */
+.custom-textarea {
+  width: 100%;
+  min-height: 180px;
+  background-color: var(--sub-alt-color);
+  color: var(--text-color);
+  border: 1px solid var(--sub-color);
+  border-radius: 8px;
+  padding: 1rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.custom-textarea:focus {
+  border-color: var(--main-color);
+  box-shadow: 0 0 10px rgba(226, 183, 20, 0.2);
+}
+
+
