@@ -906,7 +906,52 @@
             <option value="thock">Thock (To'q mexanik switch)</option>
             <option value="click">Clicky (Cherry MX Blue)</option>
             <option value="pop">Bubble Pop (Pufakcha)</option>
+            <option value="typewriter">Typewriter (Yozuv mashinkasi)</option>
             <option value="off">O'chiq (Tovushsiz)</option>
+          </select>
+        </div>
+
+        <!-- Matn shrifti (Font Family) -->
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-name">Matn shrifti (Font Family)</span>
+            <span class="setting-desc">Yozish matni va tugmalar shriftini tanlang</span>
+          </div>
+          <select id="font-family-select" style="background: var(--sub-alt-color); color: var(--text-color); border: 1px solid var(--sub-color); padding: 6px 12px; border-radius: 6px; font-family: inherit;">
+            <option value="'Roboto Mono', monospace">Roboto Mono (Asosiy)</option>
+            <option value="'JetBrains Mono', monospace">JetBrains Mono (Dasturchi)</option>
+            <option value="'Fira Code', monospace">Fira Code</option>
+            <option value="'Ubuntu Mono', monospace">Ubuntu Mono</option>
+          </select>
+        </div>
+
+        <!-- Soya Kursor (Pace Caret - Target WPM ghost) -->
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-name">Soya kursor (Pace Caret)</span>
+            <span class="setting-desc">Muayyan tezlikda oldinda boruvchi raqib soya kursori</span>
+          </div>
+          <select id="pace-caret-select" style="background: var(--sub-alt-color); color: var(--text-color); border: 1px solid var(--sub-color); padding: 6px 12px; border-radius: 6px; font-family: inherit;">
+            <option value="off">O'chiq</option>
+            <option value="pb">Shaxsiy Rekord (PB)</option>
+            <option value="40">40 WPM</option>
+            <option value="60">60 WPM</option>
+            <option value="80">80 WPM</option>
+            <option value="100">100 WPM</option>
+            <option value="120">120 WPM</option>
+          </select>
+        </div>
+
+        <!-- Kursor harakati (Caret Animation) -->
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-name">Kursor animatsiyasi</span>
+            <span class="setting-desc">Kursor harakatining silliqligi</span>
+          </div>
+          <select id="caret-anim-select" style="background: var(--sub-alt-color); color: var(--text-color); border: 1px solid var(--sub-color); padding: 6px 12px; border-radius: 6px; font-family: inherit;">
+            <option value="smooth">Silliq (Smooth - Tavsiya etiladi)</option>
+            <option value="default">Standart</option>
+            <option value="off">Tezkor (O'chiq)</option>
           </select>
         </div>
 
@@ -914,7 +959,7 @@
         <div class="setting-row">
           <div class="setting-info">
             <span class="setting-name">Kursor uslubi</span>
-            <span class="setting-desc">Matndagi kursor ko'rinishi va animatsiyasi</span>
+            <span class="setting-desc">Matndagi kursor ko'rinishi va shakli</span>
           </div>
           <select id="caret-style-select" style="background: var(--sub-alt-color); color: var(--text-color); border: 1px solid var(--sub-color); padding: 6px 12px; border-radius: 6px; font-family: inherit;">
             <option value="line">Chiziq (Line)</option>
@@ -922,6 +967,18 @@
             <option value="underline">Ostki chiziq (Underline)</option>
             <option value="outline">Ramka (Outline Box)</option>
             <option value="off">O'chiq (Off)</option>
+          </select>
+        </div>
+
+        <!-- Ko'r-ko'rona yozish (Blind Mode) -->
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-name">Ko'r-ko'rona rejim (Blind Mode)</span>
+            <span class="setting-desc">Yozish paytida xatolar ko'rsatilmaydi, faqat sof matn</span>
+          </div>
+          <select id="blind-mode-select" style="background: var(--sub-alt-color); color: var(--text-color); border: 1px solid var(--sub-color); padding: 6px 12px; border-radius: 6px; font-family: inherit;">
+            <option value="off">O'chiq</option>
+            <option value="on">Yoqilgan</option>
           </select>
         </div>
 
