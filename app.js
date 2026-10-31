@@ -375,10 +375,21 @@ function handleKeyDown(e) {
     return;
   }
 
-  // Tab yoki Esc orqali tezkor qayta boshlash
-  if (e.key === 'Tab' || e.key === 'Escape') {
+  // Tab orqali testni qayta boshlash
+  if (e.key === 'Tab') {
     e.preventDefault();
     resetTest();
+    return;
+  }
+
+  // Esc orqali MonkeyType Command Palette ochish
+  if (e.key === 'Escape') {
+    e.preventDefault();
+    if (window.openCommandPalette) {
+      window.openCommandPalette();
+    } else {
+      resetTest();
+    }
     return;
   }
 
