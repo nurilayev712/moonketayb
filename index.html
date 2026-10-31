@@ -215,7 +215,7 @@
 
       <div class="config-group divider"></div>
 
-      <!-- Rejim: vaqt / so'zlar / kod / iqtibos -->
+      <!-- Rejim: vaqt / so'zlar / kod / iqtibos / maxsus / zen -->
       <div class="config-group">
         <button class="config-btn active" data-mode="time" title="Vaqt rejimi">
           <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
@@ -232,6 +232,14 @@
         <button class="config-btn" data-mode="quote" title="Mashhur iqtiboslar rejimi">
           <svg viewBox="0 0 24 24"><path d="M6 17h3l2-4V7H5v6h3zm8 0h3l2-4V7h-6v6h3z"/></svg>
           iqtibos
+        </button>
+        <button class="config-btn" data-mode="custom" title="Maxsus matn rejimi">
+          <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+          maxsus
+        </button>
+        <button class="config-btn" data-mode="zen" title="Zen rejimi (erkin yozish)">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8 0-1.85.63-3.55 1.69-4.9L16.9 18.31C15.55 19.37 13.85 20 12 20zm6.31-3.1L7.1 5.69C8.45 4.63 10.15 4 12 4c4.41 0 8 3.59 8 8 0 1.85-.63 3.55-1.69 4.9z"/></svg>
+          zen
         </button>
       </div>
 
@@ -283,8 +291,14 @@
         <span>CAPS LOCK YONIQ</span>
       </div>
 
-      <!-- Live stats (qolgan soniya yoki so'zlar) -->
-      <div class="live-stats" id="live-stats">30</div>
+      <!-- Live stats Floating HUD (taymer, jonli wpm va aniqlik) -->
+      <div class="live-stats-hud" id="live-stats-hud">
+        <span class="hud-item" id="hud-timer">30</span>
+        <span class="hud-sep">•</span>
+        <span class="hud-item hud-accent" id="hud-wpm">0 wpm</span>
+        <span class="hud-sep">•</span>
+        <span class="hud-item" id="hud-acc">100%</span>
+      </div>
 
       <!-- Yashirin input (klaviatura fokus uchun) -->
       <input type="text" id="typing-input" autocomplete="off" autocapitalize="off" spellcheck="false" autofocus>
@@ -294,6 +308,57 @@
         <div class="caret blink" id="caret"></div>
         <div class="words-container" id="words-container">
           <!-- So'zlar dinamik JS orqali qo'shiladi -->
+        </div>
+      </div>
+
+      <!-- Zen rejimida yakunlash belgisi -->
+      <div class="zen-hint" id="zen-hint" style="display: none;">
+        <kbd>shift</kbd> + <kbd>enter</kbd> — yakunlash
+      </div>
+
+      <!-- Virtual Jonli Klaviatura (Monkeytype Interactive On-Screen Keyboard) -->
+      <div class="virtual-keyboard-wrapper" id="virtual-keyboard-wrapper">
+        <div class="keyboard-row">
+          <div class="vkey" data-key="q">q</div>
+          <div class="vkey" data-key="w">w</div>
+          <div class="vkey" data-key="e">e</div>
+          <div class="vkey" data-key="r">r</div>
+          <div class="vkey" data-key="t">t</div>
+          <div class="vkey" data-key="y">y</div>
+          <div class="vkey" data-key="u">u</div>
+          <div class="vkey" data-key="i">i</div>
+          <div class="vkey" data-key="o">o</div>
+          <div class="vkey" data-key="p">p</div>
+          <div class="vkey" data-key="[">[</div>
+          <div class="vkey" data-key="]">]</div>
+        </div>
+        <div class="keyboard-row">
+          <div class="vkey" data-key="a">a</div>
+          <div class="vkey" data-key="s">s</div>
+          <div class="vkey" data-key="d">d</div>
+          <div class="vkey" data-key="f">f</div>
+          <div class="vkey" data-key="g">g</div>
+          <div class="vkey" data-key="h">h</div>
+          <div class="vkey" data-key="j">j</div>
+          <div class="vkey" data-key="k">k</div>
+          <div class="vkey" data-key="l">l</div>
+          <div class="vkey" data-key=";">;</div>
+          <div class="vkey" data-key="'">'</div>
+        </div>
+        <div class="keyboard-row">
+          <div class="vkey" data-key="z">z</div>
+          <div class="vkey" data-key="x">x</div>
+          <div class="vkey" data-key="c">c</div>
+          <div class="vkey" data-key="v">v</div>
+          <div class="vkey" data-key="b">b</div>
+          <div class="vkey" data-key="n">n</div>
+          <div class="vkey" data-key="m">m</div>
+          <div class="vkey" data-key=",">,</div>
+          <div class="vkey" data-key=".">.</div>
+          <div class="vkey" data-key="/">/</div>
+        </div>
+        <div class="keyboard-row">
+          <div class="vkey space-key" data-key=" ">space</div>
         </div>
       </div>
 
@@ -323,11 +388,26 @@
             <span class="stat-value" id="result-acc">0%</span>
           </div>
 
+          <div class="stat-box secondary">
+            <span class="stat-label">barqarorlik</span>
+            <span class="stat-value" id="result-consistency">0%</span>
+          </div>
+
           <div class="stat-details">
             <div class="detail-item">
               <span class="label">sof wpm</span>
               <span class="val" id="result-raw">0</span>
             </div>
+            <div class="detail-item">
+              <span class="label">vaqt</span>
+              <span class="val" id="result-time">0s</span>
+            </div>
+            <div class="detail-item" style="grid-column: span 2;">
+              <span class="label">belgilar (to'g'ri / xato / ortiqcha / qoldirilgan)</span>
+              <span class="val" id="result-chars">0/0/0/0</span>
+            </div>
+          </div>
+        </div>
             <div class="detail-item">
               <span class="label">vaqt</span>
               <span class="val" id="result-time">0s</span>
