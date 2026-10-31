@@ -1411,15 +1411,65 @@ function setupEventListeners() {
     }
   });
 
-  // Vaqt tanlash (15, 30, 60, 120s)
+  // Vaqt tanlash (15, 30, 60, 120s yoki maxsus)
   elements.timeBtns.forEach(btn => {
     btn.addEventListener('click', () => {
+      if (btn.dataset.time === 'custom') {
+        if (elements.customTimeInput) {
+          elements.customTimeInput.value = state.timeLimit || 45;
+        }
+        window.openAppModal(elements.customTimeModal);
+        setTimeout(() => {
+          if (elements.customTimeInput) {
+            elements.customTimeInput.focus();
+            elements.customTimeInput.select();
+          }
+        }, 100);
+        return;
+      }
       state.timeLimit = parseInt(btn.dataset.time, 10);
       localStorage.setItem('mk_time', state.timeLimit);
       updateConfigUI();
       resetTest();
     });
   });
+
+  // Maxsus vaqtni saqlash va boshqarish
+  if (elements.customTimeSaveBtn) {
+    elements.customTimeSaveBtn.addEventListener('click', () => {
+      const val = parseInt(elements.customTimeInput ? elements.customTimeInput.value : '', 10);
+      if (isNaN(val) || val < 5 || val > 3600) {
+        alert("Iltimos, 5 dan 3600 gacha bo'lgan soniya kiriting!");
+        return;
+      }
+      state.timeLimit = val;
+      localStorage.setItem('mk_time', state.timeLimit);
+      window.closeAppModal(elements.customTimeModal);
+      updateConfigUI();
+      resetTest();
+    });
+  }
+
+  if (elements.customTimeCancelBtn) {
+    elements.customTimeCancelBtn.addEventListener('click', () => {
+      window.closeAppModal(elements.customTimeModal);
+    });
+  }
+
+  if (elements.closeCustomTimeBtn) {
+    elements.closeCustomTimeBtn.addEventListener('click', () => {
+      window.closeAppModal(elements.customTimeModal);
+    });
+  }
+
+  if (elements.customTimeInput) {
+    elements.customTimeInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (elements.customTimeSaveBtn) elements.customTimeSaveBtn.click();
+      }
+    });
+  }
 
   // So'zlar soni tanlash (10, 25, 50, 100)
   elements.wordsBtns.forEach(btn => {
