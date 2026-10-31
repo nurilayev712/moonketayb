@@ -3,10 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MoonKeyType — Tez Yozish Testi</title>
+  <title>MoonKeyType — Tez Yozish Testi & Do'stlar Poygasi</title>
   <link rel="stylesheet" href="style.css">
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- PeerJS (P2P Real-time Multiplayer) -->
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 </head>
 <body data-theme="serika_dark">
   <div class="container">
@@ -22,6 +24,20 @@
       </div>
 
       <div class="header-actions">
+        <!-- DO'STLAR BILAN POYGA TUGMASI -->
+        <button class="header-badge-btn multiplayer-btn" id="open-multiplayer-btn" title="Do'stlar bilan jonli poyga">
+          🏎️ Do'stlar bilan Poyga
+        </button>
+
+        <!-- KIRISH / PROFIL TUGMASI -->
+        <button class="header-badge-btn" id="auth-btn">
+          👤 Kirish / Ro'yxat
+        </button>
+        <button class="header-badge-btn" id="profile-btn" style="display: none;">
+          <span id="user-avatar-display">🏎️</span>
+          <span id="user-name-display">Foydalanuvchi</span>
+        </button>
+
         <!-- Ovoz tugmasi -->
         <button class="icon-btn active" id="sound-toggle-btn" title="Klaviatura tovushini yoqish/o'chirish">
           <svg viewBox="0 0 24 24">
@@ -33,7 +49,6 @@
         <button class="icon-btn" id="open-history-btn" title="Natijalar tarixi va rekordlar">
           <svg viewBox="0 0 24 24">
             <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/>
-            <path d="M11 2v20c-5.52 0-10-4.48-10-10S5.48 2 11 2zm2 0c5.52 0 10 4.48 10 10s-4.48 10-10 10V2z" opacity="0.3"/>
             <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm1 14h-2v-6h2v6zm0-8h-2V6h2v2z"/>
           </svg>
         </button>
@@ -48,7 +63,7 @@
     </header>
 
     <!-- CONFIG BAR (TEPA SOZLAMALAR PANEL) -->
-    <div class="config-bar">
+    <div class="config-bar" id="main-config-bar">
       <!-- Tinish belgilari va raqamlar -->
       <div class="config-group">
         <button class="config-btn" id="punct-toggle">
@@ -91,6 +106,17 @@
         <button class="config-btn active" data-words="25">25</button>
         <button class="config-btn" data-words="50">50</button>
         <button class="config-btn" data-words="100">100</button>
+      </div>
+    </div>
+
+    <!-- POYGA TREKI (MULTIPLAYER RACE TRACK) -->
+    <div class="race-track-section" id="race-track-section">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+        <div style="font-weight: 700; color: var(--main-color); font-size: 1.1rem;">🏎️ Jonli Poyga Treki</div>
+        <button class="action-btn" id="leave-race-btn" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;">Poygadan chiqish</button>
+      </div>
+      <div id="race-tracks-container">
+        <!-- O'yinchilar mashinachalari dinamik JS orqali joylanadi -->
       </div>
     </div>
 
@@ -178,27 +204,211 @@
           <kbd>tab</kbd> + <kbd>enter</kbd> — qayta boshlash
         </span>
         <span class="footer-link">
-          <kbd>esc</kbd> — testni to'xtatish
+          <kbd>esc</kbd> — to'xtatish
         </span>
       </div>
       <div class="footer-links">
         <span class="footer-link" id="best-wpm-display">0 WPM</span>
-        <span class="footer-link">MoonKeyType v1.0</span>
+        <span class="footer-link">MoonKeyType v2.0 (Multiplayer)</span>
       </div>
     </footer>
 
+  </div>
+
+  <!-- 3... 2... 1... COUNTDOWN OVERLAY -->
+  <div class="countdown-overlay" id="race-countdown-overlay">
+    <div class="countdown-number" id="countdown-number">3</div>
+  </div>
+
+  <!-- MULTIPLAYER (XONA TANLASH) MODALI -->
+  <div class="modal-overlay" id="multiplayer-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">🏎️ Do'stlar bilan Poyga (Multiplayer)</div>
+        <button class="modal-close" id="close-multiplayer-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="color: var(--sub-color); font-size: 0.9rem;">
+          Do'stlaringiz bilan real vaqtda kim tezroq yozishini sinang! Xona yarating va do'stlaringizga kodni yuboring.
+        </p>
+        
+        <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem;">
+          <!-- Xona yaratish -->
+          <div style="background-color: var(--sub-alt-color); padding: 1.25rem; border-radius: 12px; display: flex; flex-direction: column; gap: 0.75rem;">
+            <div style="font-weight: 700; color: var(--text-color);">Yangi xona ochish</div>
+            <div style="color: var(--sub-color); font-size: 0.8rem;">O'zingiz xona egasi bo'ling va do'stlaringizni taklif qiling</div>
+            <button class="action-btn primary" id="create-room-btn" style="justify-content: center;">
+              Xona Yaratish (Create Room)
+            </button>
+          </div>
+
+          <div style="text-align: center; color: var(--sub-color); font-weight: 600;">— YOKI —</div>
+
+          <!-- Xonaga qo'shilish -->
+          <div style="background-color: var(--sub-alt-color); padding: 1.25rem; border-radius: 12px; display: flex; flex-direction: column; gap: 0.75rem;">
+            <div style="font-weight: 700; color: var(--text-color);">Xonaga qo'shilish</div>
+            <div style="display: flex; gap: 0.5rem;">
+              <input type="text" class="form-control" id="join-room-input" placeholder="6 xonali xona kodi (masalan: 482910)" style="flex: 1; letter-spacing: 2px;">
+              <button class="action-btn" id="join-room-btn">Ulanish</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOBBY (KUTISH ZALI) MODALI -->
+  <div class="modal-overlay" id="multiplayer-lobby-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">🏁 Poyga Xonasi (Lobby)</div>
+        <button class="modal-close" id="close-lobby-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="text-align: center;">
+          <div style="font-size: 0.85rem; color: var(--sub-color); margin-bottom: 0.5rem;">XONA KODI (DO'STLARINGIZGA YUBORING):</div>
+          <div class="room-code-badge" id="lobby-room-code">------</div>
+          <div style="margin-top: 0.5rem;">
+            <button class="action-btn" id="copy-room-link-btn" style="font-size: 0.8rem; margin: 0 auto;">📋 Havolani nusxalash</button>
+          </div>
+        </div>
+
+        <div style="margin-top: 1.5rem;">
+          <div style="font-weight: 600; font-size: 0.9rem; color: var(--text-color); margin-bottom: 0.5rem;">Qo'shilgan Ishtirokchilar:</div>
+          <div class="lobby-players-grid" id="lobby-players-list">
+            <!-- Dinamik o'yinchilar kartasi -->
+          </div>
+        </div>
+
+        <div id="lobby-status-text" style="text-align: center; color: var(--main-color); font-size: 0.85rem; margin: 1rem 0;">
+          Do'stlaringiz qo'shilishini kuting...
+        </div>
+
+        <button class="action-btn primary" id="lobby-start-btn" style="width: 100%; justify-content: center; font-size: 1.1rem; padding: 0.85rem;">
+          Poygani Boshlash (Start)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- POYGA NATIJALARI (SHOHSUPA) MODALI -->
+  <div class="modal-overlay" id="race-results-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">🏆 Poyga Yakunlandi! Shohsupa</div>
+        <button class="modal-close" id="close-race-results-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="race-leaderboard-list" id="race-leaderboard-list">
+          <!-- G'oliblar ro'yxati -->
+        </div>
+
+        <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem;">
+          <button class="action-btn primary" id="race-again-btn">Yana Poyga O'ynash</button>
+          <button class="action-btn" id="race-exit-btn">Yopish</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AUTH (KIRISH VA RO'YXAT) MODALI -->
+  <div class="modal-overlay" id="auth-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">👤 Profilga Kirish</div>
+        <button class="modal-close" id="close-auth-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="auth-tabs">
+          <button class="auth-tab-btn active" id="tab-login-btn">Kirish</button>
+          <button class="auth-tab-btn" id="tab-register-btn">Ro'yxatdan o'tish</button>
+        </div>
+
+        <!-- Kirish Formasi -->
+        <form id="login-form">
+          <div class="form-group">
+            <label>Foydalanuvchi nomi (Ism)</label>
+            <input type="text" class="form-control" id="login-username" required placeholder="Masalan: Jasur">
+          </div>
+          <div class="form-group">
+            <label>Parol</label>
+            <input type="password" class="form-control" id="login-password" required placeholder="••••••••">
+          </div>
+          <button type="submit" class="action-btn primary" style="width: 100%; justify-content: center; margin-top: 1rem;">
+            Kirish
+          </button>
+        </form>
+
+        <!-- Ro'yxatdan O'tish Formasi -->
+        <form id="register-form" style="display: none;">
+          <div class="form-group">
+            <label>Foydalanuvchi nomi (Ism)</label>
+            <input type="text" class="form-control" id="reg-username" required placeholder="Kamida 3 ta harf">
+          </div>
+          <div class="form-group">
+            <label>Parol</label>
+            <input type="password" class="form-control" id="reg-password" required placeholder="Kamida 4 ta belgi">
+          </div>
+          <div class="form-group">
+            <label>Poyga mashinasi / Avatar tanlang</label>
+            <div class="avatar-selector" id="reg-avatar-selector">
+              <span class="avatar-opt active" data-avatar="🏎️">🏎️</span>
+              <span class="avatar-opt" data-avatar="🚀">🚀</span>
+              <span class="avatar-opt" data-avatar="⚡">⚡</span>
+              <span class="avatar-opt" data-avatar="🚗">🚗</span>
+              <span class="avatar-opt" data-avatar="🏍️">🏍️</span>
+              <span class="avatar-opt" data-avatar="🛸">🛸</span>
+              <span class="avatar-opt" data-avatar="🐆">🐆</span>
+            </div>
+          </div>
+          <button type="submit" class="action-btn primary" style="width: 100%; justify-content: center; margin-top: 1rem;">
+            Ro'yxatdan O'tish
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- SHAXSIY PROFIL MODALI -->
+  <div class="modal-overlay" id="profile-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">🏆 Foydalanuvchi Profili</div>
+        <button class="modal-close" id="close-profile-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+          <div style="font-size: 3.5rem;" id="prof-avatar">🏎️</div>
+          <div style="font-size: 1.5rem; font-weight: 700; color: var(--text-color);" id="prof-name">Foydalanuvchi</div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; text-align: center; margin-bottom: 1.5rem;">
+          <div style="background: var(--sub-alt-color); padding: 1rem; border-radius: 10px;">
+            <div style="font-size: 0.75rem; color: var(--sub-color);">Jami Poygalar</div>
+            <div style="font-size: 1.5rem; font-weight: 700; color: var(--text-color);" id="prof-races">0</div>
+          </div>
+          <div style="background: var(--sub-alt-color); padding: 1rem; border-radius: 10px;">
+            <div style="font-size: 0.75rem; color: var(--sub-color);">G'alabalar (1-o'rin)</div>
+            <div style="font-size: 1.5rem; font-weight: 700; color: var(--main-color);" id="prof-wins">0</div>
+          </div>
+          <div style="background: var(--sub-alt-color); padding: 1rem; border-radius: 10px;">
+            <div style="font-size: 0.75rem; color: var(--sub-color);">Eng Yaxshi WPM</div>
+            <div style="font-size: 1.5rem; font-weight: 700; color: var(--main-color);" id="prof-best-wpm">0</div>
+          </div>
+        </div>
+
+        <button class="action-btn" id="logout-btn" style="width: 100%; justify-content: center; color: var(--error-color);">
+          Profildan Chiqish (Log out)
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- SOZLAMALAR MODALI -->
   <div class="modal-overlay" id="settings-modal">
     <div class="modal">
       <div class="modal-header">
-        <div class="modal-title">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
-          </svg>
-          Sozlamalar
-        </div>
+        <div class="modal-title">⚙️ Sozlamalar</div>
         <button class="modal-close" id="close-settings-btn">&times;</button>
       </div>
       <div class="modal-body">
@@ -253,12 +463,7 @@
   <div class="modal-overlay" id="history-modal">
     <div class="modal">
       <div class="modal-header">
-        <div class="modal-title">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/>
-          </svg>
-          Natijalar Tarixi & Rekordlar
-        </div>
+        <div class="modal-title">📊 Natijalar Tarixi & Rekordlar</div>
         <button class="modal-close" id="close-history-btn">&times;</button>
       </div>
       <div class="modal-body">
@@ -277,6 +482,8 @@
   <!-- Skriptlar -->
   <script src="words.js"></script>
   <script src="sound.js"></script>
+  <script src="auth.js"></script>
+  <script src="multiplayer.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
