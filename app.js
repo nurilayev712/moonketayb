@@ -817,6 +817,17 @@ function setupEventListeners() {
 
   // Mobil virtual klaviatura (input hodisasi)
   elements.typingInput.addEventListener('input', (e) => {
+    if (elements.typingInput.disabled) {
+      elements.typingInput.value = '';
+      return;
+    }
+    const isModalOpen = document.querySelector('.modal-overlay.active') || 
+                        (document.getElementById('command-palette-overlay') && document.getElementById('command-palette-overlay').style.display === 'flex');
+    if (isModalOpen) {
+      elements.typingInput.value = '';
+      return;
+    }
+
     if (e.inputType === 'deleteContentBackward') {
       handleKeyDown({ key: 'Backspace', preventDefault: () => {} });
     } else if (e.data) {
@@ -827,6 +838,21 @@ function setupEventListeners() {
     elements.typingInput.value = '';
   });
 
+  // Barcha modal inputlarida klaviatura hodisalarini testga o'tishidan 100% himoya qilish
+  document.querySelectorAll('input, select, textarea').forEach(inp => {
+    if (inp.id !== 'typing-input') {
+      inp.addEventListener('keydown', (e) => {
+        e.stopPropagation();
+      });
+      inp.addEventListener('focus', () => {
+        if (elements.typingInput) {
+          elements.typingInput.disabled = true;
+          elements.typingInput.blur();
+        }
+      });
+    }
+  });
+
   // Logo bosilganda qayta boshlash
   const logoBtn = document.getElementById('logo-refresh');
   if (logoBtn) {
@@ -835,7 +861,11 @@ function setupEventListeners() {
 
   // Fokusni doimo yashirin inputda ushlab turish (mobil va sichqoncha bosilganda)
   elements.wordsWrapper.addEventListener('click', () => {
-    elements.typingInput.focus();
+    const isModalOpen = document.querySelector('.modal-overlay.active');
+    if (!isModalOpen && elements.typingInput) {
+      elements.typingInput.disabled = false;
+      elements.typingInput.focus();
+    }
   });
 
   document.addEventListener('click', (e) => {
@@ -846,7 +876,10 @@ function setupEventListeners() {
 
     // Agar tugma, select yoki boshqa element bosilmagan bo'lsa, inputga fokus qaytarish
     if (!e.target.closest('button') && !e.target.closest('select') && !e.target.closest('input')) {
-      elements.typingInput.focus();
+      if (elements.typingInput) {
+        elements.typingInput.disabled = false;
+        elements.typingInput.focus();
+      }
     }
   });
 
