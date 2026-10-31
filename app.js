@@ -1302,14 +1302,116 @@ function setupEventListeners() {
   elements.retryBtn.addEventListener('click', resetTest);
   elements.nextTestBtn.addEventListener('click', resetTest);
 
-  // Rejim tanlash (time / words)
+  // Rejim tanlash (time / words / custom / zen / code / quote)
   elements.modeBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-      state.mode = btn.dataset.mode;
+      const selectedMode = btn.dataset.mode;
+      if (selectedMode === 'custom') {
+        window.openAppModal(elements.customTextModal);
+        return;
+      }
+      state.mode = selectedMode;
       localStorage.setItem('mk_mode', state.mode);
       updateConfigUI();
       resetTest();
     });
+  });
+
+  // Maxsus matn (Custom Text) modali hodisalari
+  if (elements.customTextStartBtn) {
+    elements.customTextStartBtn.addEventListener('click', () => {
+      const text = elements.customTextInput ? elements.customTextInput.value.trim() : '';
+      if (!text) {
+        alert("Iltimos, matn kiriting!");
+        return;
+      }
+      state.customWords = text.split(/\s+/).filter(Boolean);
+      state.mode = 'custom';
+      localStorage.setItem('mk_mode', 'custom');
+      window.closeAppModal(elements.customTextModal);
+      updateConfigUI();
+      resetTest();
+    });
+  }
+
+  if (elements.customTextCancelBtn) {
+    elements.customTextCancelBtn.addEventListener('click', () => {
+      window.closeAppModal(elements.customTextModal);
+    });
+  }
+
+  if (elements.closeCustomTextBtn) {
+    elements.closeCustomTextBtn.addEventListener('click', () => {
+      window.closeAppModal(elements.customTextModal);
+    });
+  }
+
+  // Sozlamalar: Fokus rejimi
+  if (elements.focusModeSelect) {
+    elements.focusModeSelect.addEventListener('change', (e) => {
+      state.focusModeEnabled = (e.target.value === 'on');
+      localStorage.setItem('mkt_focus_mode', e.target.value);
+    });
+  }
+
+  // Sozlamalar: Ekrandagi virtual klaviatura
+  if (elements.virtualKeyboardSelect) {
+    elements.virtualKeyboardSelect.addEventListener('change', (e) => {
+      state.virtualKeyboardEnabled = (e.target.value === 'on');
+      localStorage.setItem('mkt_virtual_keyboard', e.target.value);
+      if (elements.virtualKeyboard) {
+        elements.virtualKeyboard.classList.toggle('hidden', !state.virtualKeyboardEnabled);
+      }
+    });
+  }
+
+  // Sozlamalar: Master rejimi (Sudden Death)
+  if (elements.masterModeSelect) {
+    elements.masterModeSelect.addEventListener('change', (e) => {
+      state.masterMode = (e.target.value === 'on');
+      localStorage.setItem('mkt_master_mode', e.target.value);
+    });
+  }
+
+  // Sozlamalar: No Backspace
+  if (elements.noBackspaceSelect) {
+    elements.noBackspaceSelect.addEventListener('change', (e) => {
+      state.noBackspace = (e.target.value === 'on');
+      localStorage.setItem('mkt_no_backspace', e.target.value);
+    });
+  }
+
+  // Ekrandagi klaviatura tugmalarini jonli yoritish (Interaktivlik)
+  window.addEventListener('keydown', (e) => {
+    if (elements.virtualKeyboard && state.virtualKeyboardEnabled) {
+      let key = e.key.toLowerCase();
+      if (e.key === ' ') key = ' ';
+      const vkey = elements.virtualKeyboard.querySelector(`.vkey[data-key="${key}"]`);
+      if (vkey) vkey.classList.add('active');
+    }
+  });
+
+  window.addEventListener('keyup', (e) => {
+    if (elements.virtualKeyboard && state.virtualKeyboardEnabled) {
+      let key = e.key.toLowerCase();
+      if (e.key === ' ') key = ' ';
+      const vkey = elements.virtualKeyboard.querySelector(`.vkey[data-key="${key}"]`);
+      if (vkey) vkey.classList.remove('active');
+    }
+  });
+
+  // Fokus rejimi: Sichqoncha qimirlaganda interfeysni vaqtincha ko'rsatish
+  let focusMouseMoveTimer = null;
+  window.addEventListener('mousemove', () => {
+    if (state.isRunning && state.focusModeEnabled && document.body.classList.contains('focus-mode')) {
+      document.body.classList.remove('focus-mode');
+      clearTimeout(focusMouseMoveTimer);
+      focusMouseMoveTimer = setTimeout(() => {
+        if (state.isRunning && state.focusModeEnabled) {
+          document.body.classList.add('focus-mode');
+        }
+      }, 1800);
+    }
   });
 
   // Vaqt tanlash (15, 30, 60, 120s)
@@ -1426,12 +1528,14 @@ function setupEventListeners() {
   });
 
   // Modal tashqarisiga bosilganda yopish
-  [elements.settingsModal, elements.historyModal].forEach(modal => {
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) {
-        window.closeAppModal(modal);
-      }
-    });
+  [elements.settingsModal, elements.historyModal, elements.customTextModal].forEach(modal => {
+    if (modal) {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          window.closeAppModal(modal);
+        }
+      });
+    }
   });
 
   // Tarixni tozalash
