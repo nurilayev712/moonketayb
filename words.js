@@ -74,5 +74,54 @@ window.WORDS = {
     "ждать", "любить", "ходить", "писать", "читать", "помочь", "открыть", "начать", "строить", "желать",
     "быстро", "хорошо", "просто", "ясно", "важно", "долго", "всегда", "никогда", "снова", "вместе",
     "красивый", "высокий", "чистый", "легкий", "темный", "светлый", "сильный", "умный", "добрый", "яркий"
+  ],
+
+  // Dasturchilar uchun Dasturlash Tillari Sintaksislari (Code Mode)
+  code: {
+    javascript: [
+      "const", "let", "function()", "return", "console.log()", "async", "await", "import", "export",
+      "document.querySelector()", "addEventListener()", "if (x === y)", "for (let i = 0; i < n; i++)",
+      "const [state, setState] = useState()", "Promise.resolve()", "JSON.stringify()", "JSON.parse()",
+      "items.map((item) => item.id)", "array.filter(Boolean)", "setTimeout(() => {}, 1000)", "try {",
+      "} catch (error) {", "class Component extends React {", "typeof variable !== 'undefined'",
+      "e.preventDefault()", "e.stopPropagation()", "Math.floor(Math.random() * 100)", "localStorage.setItem()",
+      "fetch('/api/data')", "new Promise((res, rej) => {})", "Object.keys(obj)", "arr.reduce((acc, curr) => acc + curr, 0)"
+    ],
+    python: [
+      "def solve(nums):", "return sorted(nums)", "if __name__ == '__main__':", "import os, sys",
+      "from collections import defaultdict", "class BinaryTree:", "def __init__(self, val=0):",
+      "self.val = val", "self.left = None", "self.right = None", "for i, val in enumerate(arr):",
+      "print(f'Natija: {res}')", "with open('data.txt', 'r') as f:", "try:", "except Exception as err:",
+      "[x ** 2 for x in numbers if x > 0]", "lambda x, y: x * y", "True", "False", "None",
+      "dict.get(key, default)", "list(reversed(arr))", "len(my_list)", "isinstance(obj, dict)",
+      "while stack and stack[-1] < x:", "heapq.heappush(h, val)", "math.sqrt(144)", "async def main():"
+    ],
+    html: [
+      "<div class=\"container\">", "</div>", "<button type=\"submit\" class=\"btn\">",
+      "<span id=\"live-stats\">", "<a href=\"#\" target=\"_blank\">", "<input type=\"text\" required>",
+      "<header class=\"navbar\">", "<footer id=\"footer\">", "<section class=\"hero-section\">",
+      "<p style=\"display: flex;\">", "<link rel=\"stylesheet\" href=\"style.css\">",
+      "<script src=\"app.js\"></script>", "display: flex;", "justify-content: center;", "align-items: center;",
+      "background-color: var(--bg-color);", "border-radius: 12px;", "box-shadow: 0 4px 15px rgba(0,0,0,0.4);",
+      "font-family: 'JetBrains Mono', monospace;", "transition: all 0.25s ease-in-out;", "cursor: pointer;"
+    ],
+    cpp: [
+      "#include <iostream>", "#include <vector>", "#include <string>", "#include <algorithm>",
+      "using namespace std;", "int main() {", "cout << \"Hello, World!\" << endl;", "return 0;",
+      "vector<int> nums;", "for (int i = 0; i < n; i++)", "cin >> a >> b;", "void solve() {",
+      "sort(nums.begin(), nums.end());", "string s = \"monkeytype\";", "bool isValid = true;",
+      "struct Node { int val; Node* next; };", "class Solution { public: };", "auto it = map.find(key);",
+      "long long sum = 0;", "std::max(a, b);", "priority_queue<int> pq;", "while (!q.empty()) {"
+    ]
+  },
+
+  // Mashhur Iqtiboslar (Quote Mode)
+  quotes: [
+    { text: "Bilim o'rganishdan to'xtagan kishi, yigirma yoshdami yoki sakson yoshdami, qariydir.", author: "Genri Ford" },
+    { text: "Harakat qilgan har qanday odam xato qilishi mumkin, lekin harakatsizlik eng katta xatodir.", author: "Amir Temur" },
+    { text: "Kelajakni bashorat qilishning eng yaxshi yo'li — uni o'zingiz yaratishingizdir.", author: "Piter Druker" },
+    { text: "Vaqtingiz cheklangan, shuning uchun uni birovning hayoti bilan yashab behuda o'tkazmang.", author: "Stiv Jobs" },
+    { text: "Har bir buyuk natija kichik va doimiy odatlarning yig'indisidan boshlanadi.", author: "Jeyms Klir" },
+    { text: "Ilm o'rganmoq igna bilan quduq qazimoq kabidir, har bir harakat samara beradi.", author: "Alisher Navoiy" }
   ]
 };
