@@ -222,7 +222,8 @@ function updateConfigUI() {
     elements.timeGroup.style.display = 'none';
     elements.wordsGroup.style.display = 'none';
     if (elements.codeGroup) elements.codeGroup.style.display = 'flex';
-  } else if (state.mode === 'quote') {
+  } else {
+    // quote, custom, zen
     elements.timeGroup.style.display = 'none';
     elements.wordsGroup.style.display = 'none';
     if (elements.codeGroup) elements.codeGroup.style.display = 'none';
@@ -266,7 +267,25 @@ function updateConfigUI() {
 function generateWords() {
   state.currentQuoteAuthor = '';
 
-  // 1. Dasturlash tillari (Code rejimi)
+  // 0. Maxsus matn (Custom Text rejimi)
+  if (state.mode === 'custom') {
+    if (state.customWords && state.customWords.length > 0) {
+      return [...state.customWords];
+    }
+    return ["Maxsus", "matn", "kiritilmadi.", "Iltimos,", "maxsus", "tugmasi", "orqali", "matn", "yozing."];
+  }
+
+  // 1. Zen rejimi (cheksiz erkin yozish oqimi)
+  if (state.mode === 'zen') {
+    const source = (WORDS && WORDS[state.language]) || (WORDS && WORDS.uzbek) || [];
+    const result = [];
+    for (let i = 0; i < 200; i++) {
+      result.push(source[Math.floor(Math.random() * source.length)]);
+    }
+    return result;
+  }
+
+  // 2. Dasturlash tillari (Code rejimi)
   if (state.mode === 'code') {
     const codeObj = (WORDS && WORDS.code) || {};
     const codeList = codeObj[state.codeLanguage] || codeObj.javascript || [];
