@@ -20,6 +20,13 @@ const state = {
   noBackspace: false,
   focusModeEnabled: true,
   virtualKeyboardEnabled: false,
+  quoteLength: 'all',
+  paceCaretMode: 'off',
+  fontFamily: "'Roboto Mono', monospace",
+  caretAnim: 'smooth',
+  blindMode: false,
+  paceCaretTimer: null,
+  testStartTime: 0,
 
   // Test jarayoni
   words: [],
@@ -48,6 +55,7 @@ const elements = {
   wordsContainer: document.getElementById('words-container'),
   wordsWrapper: document.getElementById('words-wrapper'),
   caret: document.getElementById('caret'),
+  paceCaret: document.getElementById('pace-caret'),
   typingInput: document.getElementById('typing-input'),
   liveStats: document.getElementById('live-stats'),
   testSection: document.getElementById('test-section'),
@@ -84,9 +92,11 @@ const elements = {
   timeBtns: document.querySelectorAll('[data-time]'),
   wordsBtns: document.querySelectorAll('[data-words]'),
   codeLangBtns: document.querySelectorAll('[data-code-lang]'),
+  quoteLenBtns: document.querySelectorAll('[data-quote-len]'),
   timeGroup: document.getElementById('time-config-group'),
   wordsGroup: document.getElementById('words-config-group'),
   codeGroup: document.getElementById('code-config-group'),
+  quoteGroup: document.getElementById('quote-config-group'),
   punctToggle: document.getElementById('punct-toggle'),
   numbersToggle: document.getElementById('numbers-toggle'),
   
