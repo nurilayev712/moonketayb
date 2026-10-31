@@ -502,10 +502,92 @@ function updateCaretPosition() {
 }
 
 // ----------------------------------------------------
+// Soya Kursor (Pace Caret - Monkeytype Target WPM ghost)
+// ----------------------------------------------------
+function startPaceCaret() {
+  stopPaceCaret();
+  if (state.paceCaretMode === 'off' || !elements.paceCaret) return;
+
+  let targetWpm = 60;
+  if (state.paceCaretMode === 'pb') {
+    if (window.authManager && window.authManager.currentUser && window.authManager.currentUser.bestWpm) {
+      targetWpm = window.authManager.currentUser.bestWpm.time30 || window.authManager.currentUser.bestWpm.time15 || 60;
+    } else {
+      targetWpm = 60;
+    }
+  } else {
+    targetWpm = parseInt(state.paceCaretMode, 10) || 60;
+  }
+
+  const charsPerSec = (targetWpm * 5) / 60;
+  elements.paceCaret.style.display = 'block';
+
+  state.paceCaretTimer = setInterval(() => {
+    if (!state.isRunning || state.isFinished) {
+      stopPaceCaret();
+      return;
+    }
+    const elapsed = Math.max(0, (Date.now() - state.testStartTime) / 1000);
+    const targetCharCount = Math.floor(charsPerSec * elapsed);
+
+    let cCount = 0;
+    let targetWordIdx = 0;
+    let targetLetterIdx = 0;
+
+    for (let w = 0; w < state.words.length; w++) {
+      const wLen = state.words[w].length + 1;
+      if (cCount + wLen > targetCharCount) {
+        targetWordIdx = w;
+        targetLetterIdx = targetCharCount - cCount;
+        break;
+      }
+      cCount += wLen;
+      if (w === state.words.length - 1) {
+        targetWordIdx = w;
+        targetLetterIdx = state.words[w].length;
+      }
+    }
+
+    const currentWordEl = elements.wordsContainer.children[targetWordIdx];
+    if (!currentWordEl) return;
+    const letters = currentWordEl.querySelectorAll('.letter');
+    const containerRect = elements.wordsContainer.getBoundingClientRect();
+
+    let targetX = 0;
+    let targetY = 0;
+
+    if (targetLetterIdx < letters.length) {
+      const letterRect = letters[targetLetterIdx].getBoundingClientRect();
+      targetX = letterRect.left - containerRect.left;
+      targetY = letterRect.top - containerRect.top + (letterRect.height - 30) / 2;
+    } else if (letters.length > 0) {
+      const lastLetter = letters[letters.length - 1];
+      const letterRect = lastLetter.getBoundingClientRect();
+      targetX = letterRect.right - containerRect.left;
+      targetY = letterRect.top - containerRect.top + (letterRect.height - 30) / 2;
+    }
+
+    elements.paceCaret.style.left = `${targetX}px`;
+    elements.paceCaret.style.top = `${targetY}px`;
+  }, 50);
+}
+
+function stopPaceCaret() {
+  if (state.paceCaretTimer) {
+    clearInterval(state.paceCaretTimer);
+    state.paceCaretTimer = null;
+  }
+  if (elements.paceCaret) {
+    elements.paceCaret.style.display = 'none';
+  }
+}
+
+// ----------------------------------------------------
 // Testni qayta boshlash (Reset)
 // ----------------------------------------------------
 function resetTest() {
   clearInterval(state.timer);
+  stopPaceCaret();
   state.isRunning = false;
   state.isFinished = false;
   state.timeElapsed = 0;
@@ -565,6 +647,8 @@ function resetTest() {
 function startTest() {
   if (state.isRunning) return;
   state.isRunning = true;
+  state.testStartTime = Date.now();
+  startPaceCaret();
   
   if (state.focusModeEnabled) {
     document.body.classList.add('focus-mode');
