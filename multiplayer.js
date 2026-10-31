@@ -260,6 +260,7 @@ class MultiplayerManager {
           console.log("MQTT Brokerga muvaffaqiyatli ulandik!");
           const topic = `mkt/race/${this.roomId}`;
           this.client.subscribe(topic);
+          this.startPingLoop();
 
           const myPlayer = this.players[this.myId];
 
@@ -308,6 +309,7 @@ class MultiplayerManager {
         onSuccess: () => {
           const topic = `mkt/race/${this.roomId}`;
           this.client.subscribe(topic);
+          this.startPingLoop();
           const myPlayer = this.players[this.myId];
           if (!this.isHost) {
             this.sendMessage({
@@ -348,10 +350,25 @@ class MultiplayerManager {
       return;
     }
 
+    // 0. PING kelganda
+    if (data.type === 'PING') {
+      if (data.senderId === this.myId) {
+        const latency = Math.max(1, Date.now() - data.sentAt);
+        this.updatePingUI(latency);
+      }
+      return;
+    }
+
     // 1. Yangi o'yinchi qo'shilganda
-    if (data.type === 'PLAYER_JOIN') {
+    else if (data.type === 'PLAYER_JOIN') {
+      const isNew = !this.players[data.player.id];
       this.players[data.player.id] = data.player;
       this.updateLobbyUI();
+
+      if (isNew && data.player.id !== this.myId) {
+        if (window.soundManager) window.soundManager.playChime();
+        this.displaySystemMessage(`👋 ${escapeHtml(data.player.name)} xonaga qo'shildi`);
+      }
 
       // Agar biz host bo'lsak, yangi o'yinchiga butun lobby holatini yuboramiz
       if (this.isHost) {
@@ -385,6 +402,8 @@ class MultiplayerManager {
         this.roomLang = data.roomLang;
         if (window.state) window.state.language = data.roomLang;
       }
+      const modeStr = this.roomMode === 'time' ? `${this.roomLimit}s` : `${this.roomLimit} so'z`;
+      this.displaySystemMessage(`⚙️ Xona sozlamasi yangilandi: ${modeStr} (${this.roomLang || 'uzbek'})`);
       this.updateLobbyUI();
     }
 
@@ -393,6 +412,7 @@ class MultiplayerManager {
       if (this.players[data.id]) {
         this.players[data.id].isReady = data.isReady;
         this.updateLobbyUI();
+        if (window.soundManager) window.soundManager.playKey(false, false);
       }
     }
 
@@ -420,6 +440,7 @@ class MultiplayerManager {
         this.players[data.id].finished = true;
         this.players[data.id].wpm = data.wpm;
         this.players[data.id].accuracy = data.accuracy;
+        this.updateRaceTrackUI();
       }
       if (this.isHost) {
         this.checkRaceFinish();
@@ -446,9 +467,41 @@ class MultiplayerManager {
       this.triggerFloatingEmoji(data.emoji, data.sender);
     }
 
-    // 12. O'yinchi xonadan chiqqanda
+    // 12. O'yinchini chetlatish (KICK_PLAYER)
+    else if (data.type === 'KICK_PLAYER') {
+      if (data.targetId === this.myId) {
+        alert("⚠️ Siz xona egasi tomonidan xonadan chetlatildingiz.");
+        this.leaveRoom();
+        return;
+      }
+      delete this.players[data.targetId];
+      this.updateLobbyUI();
+      this.displaySystemMessage(`🚫 ${escapeHtml(data.targetName)} xonadan chetlatildi`);
+    }
+
+    // 13. O'yinchi xonadan chiqqanda
     else if (data.type === 'PLAYER_LEAVE') {
+      const leftPlayer = this.players[data.id];
+      const leftName = leftPlayer ? leftPlayer.name : "Ishtirokchi";
+      const wasHost = leftPlayer ? leftPlayer.isHost : false;
       delete this.players[data.id];
+
+      // Agar xona egasi chiqib ketgan bo'lsa, navbatdagi o'yinchiga host topshiriladi
+      if (wasHost) {
+        const remainingIds = Object.keys(this.players);
+        if (remainingIds.length > 0) {
+          const nextHostId = remainingIds[0];
+          this.players[nextHostId].isHost = true;
+          this.players[nextHostId].isReady = true;
+          if (nextHostId === this.myId) {
+            this.isHost = true;
+            this.isReady = true;
+            this.displaySystemMessage("👑 Siz yangi xona egasi (Host) bo'ldingiz!");
+          }
+        }
+      }
+
+      this.displaySystemMessage(`🚪 ${escapeHtml(leftName)} xonadan chiqdi`);
       this.updateLobbyUI();
     }
   }
