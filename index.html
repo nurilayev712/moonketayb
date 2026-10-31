@@ -562,6 +562,14 @@
             <button type="button" class="lobby-cfg-btn" data-lobby-mode="words" data-lobby-limit="25">📝 25 so'z</button>
             <button type="button" class="lobby-cfg-btn" data-lobby-mode="words" data-lobby-limit="50">📝 50 so'z</button>
           </div>
+          <div class="lobby-cfg-lang-row">
+            <span style="font-size: 0.8rem; color: var(--sub-color); font-weight: 600;">Lug'at tili:</span>
+            <div style="display: flex; gap: 0.4rem;">
+              <button type="button" class="lobby-lang-btn active" data-lobby-lang="uzbek">O'zbekcha</button>
+              <button type="button" class="lobby-lang-btn" data-lobby-lang="english">English</button>
+              <button type="button" class="lobby-lang-btn" data-lobby-lang="russian">Русский</button>
+            </div>
+          </div>
         </div>
 
         <!-- O'yinchilar ro'yxati -->
@@ -586,6 +594,9 @@
           <button class="action-btn" id="lobby-leave-btn" style="padding: 0.85rem 1.25rem;">
             Chiqish
           </button>
+        </div>
+        <div style="text-align: center; margin-top: 0.4rem; font-size: 0.75rem; color: var(--sub-color);">
+          Tezkor tugma: <kbd style="background: var(--bg-color); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1);">Shift + Enter</kbd> orqali tayyor bo'lishingiz mumkin
         </div>
 
         <!-- LOBBY JONLI CHAT VA EMOJILAR -->
@@ -619,19 +630,50 @@
 
   <!-- POYGA NATIJALARI (SHOHSUPA) MODALI -->
   <div class="modal-overlay" id="race-results-modal">
-    <div class="modal">
+    <div class="modal" style="max-width: 640px; width: 95%;">
       <div class="modal-header">
-        <div class="modal-title">🏆 Poyga Natijalari</div>
+        <div class="modal-title">🏆 Poyga Natijalari (Leaderboard)</div>
         <button class="modal-close" id="close-race-results-btn">&times;</button>
       </div>
       <div class="modal-body">
+        
+        <!-- Shohsupa (Podium top 3) -->
+        <div class="podium-container" id="race-podium-container">
+          <!-- 2-o'rin (Kumush) -->
+          <div class="podium-step step-2" id="podium-step-2" style="display: none;">
+            <div class="podium-avatar" id="podium-avatar-2">⌨️</div>
+            <div class="podium-name" id="podium-name-2">Player 2</div>
+            <div class="podium-wpm" id="podium-wpm-2">0 WPM</div>
+            <div class="podium-pedestal p-2">🥈 2</div>
+          </div>
+          <!-- 1-o'rin (Oltin) -->
+          <div class="podium-step step-1" id="podium-step-1" style="display: none;">
+            <div class="podium-crown">👑</div>
+            <div class="podium-avatar" id="podium-avatar-1">⌨️</div>
+            <div class="podium-name" id="podium-name-1">Player 1</div>
+            <div class="podium-wpm" id="podium-wpm-1">0 WPM</div>
+            <div class="podium-pedestal p-1">🥇 1</div>
+          </div>
+          <!-- 3-o'rin (Bronza) -->
+          <div class="podium-step step-3" id="podium-step-3" style="display: none;">
+            <div class="podium-avatar" id="podium-avatar-3">⌨️</div>
+            <div class="podium-name" id="podium-name-3">Player 3</div>
+            <div class="podium-wpm" id="podium-wpm-3">0 WPM</div>
+            <div class="podium-pedestal p-3">🥉 3</div>
+          </div>
+        </div>
+
         <div class="race-leaderboard-list" id="race-leaderboard-list">
-          <!-- G'oliblar ro'yxati -->
+          <!-- Barcha ishtirokchilar ro'yxati -->
         </div>
 
         <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem;">
-          <button class="action-btn primary" id="race-again-btn">Yana o'ynash</button>
-          <button class="action-btn" id="race-exit-btn">Yopish</button>
+          <button class="action-btn primary" id="race-again-btn" style="padding: 0.75rem 1.75rem; font-size: 1rem;">
+            🔄 Yana o'ynash (Rematch)
+          </button>
+          <button class="action-btn" id="race-exit-btn" style="padding: 0.75rem 1.25rem;">
+            🚪 Chiqish
+          </button>
         </div>
       </div>
     </div>
