@@ -269,6 +269,76 @@ class MultiplayerManager {
     else if (data.type === 'LEADERBOARD') {
       this.showRaceResults(data.leaderboard);
     }
+
+    // 7. Jonli Chat xabari
+    else if (data.type === 'CHAT') {
+      this.displayChatMessage(data.sender, data.avatar, data.text, data.senderId === this.myId);
+    }
+
+    // 8. Jonli Emoji reaksiyasi
+    else if (data.type === 'REACTION') {
+      this.triggerFloatingEmoji(data.emoji, data.sender);
+    }
+  }
+
+  // Jonli chat xabari yuborish
+  sendChatMessage(text) {
+    text = (text || '').trim();
+    if (!text) return;
+    const user = (window.authManager && window.authManager.currentUser) || {
+      username: (this.isHost ? 'Host' : 'Player'),
+      avatar: '⌨️'
+    };
+    this.sendMessage({
+      type: 'CHAT',
+      senderId: this.myId,
+      sender: user.username,
+      avatar: user.avatar || '⌨️',
+      text: text
+    });
+  }
+
+  // Emoji reaksiyasi yuborish
+  sendReaction(emoji) {
+    const user = (window.authManager && window.authManager.currentUser) || {
+      username: (this.isHost ? 'Host' : 'Player')
+    };
+    this.sendMessage({
+      type: 'REACTION',
+      senderId: this.myId,
+      sender: user.username,
+      emoji: emoji
+    });
+  }
+
+  displayChatMessage(sender, avatar, text, isMe) {
+    const box = document.getElementById('lobby-chat-messages');
+    if (!box) return;
+    const hint = box.querySelector('.chat-hint');
+    if (hint) hint.remove();
+
+    const bubble = document.createElement('div');
+    bubble.className = 'chat-bubble' + (isMe ? ' is-me' : '');
+    bubble.innerHTML = `
+      <span>${avatar || '⌨️'}</span>
+      <span class="c-user">${sender}:</span>
+      <span class="c-text">${escapeHtml(text)}</span>
+    `;
+    box.appendChild(bubble);
+    box.scrollTop = box.scrollHeight;
+  }
+
+  triggerFloatingEmoji(emoji, sender) {
+    const lobbyModal = document.querySelector('#multiplayer-lobby-modal .modal');
+    if (!lobbyModal) return;
+    const el = document.createElement('div');
+    el.className = 'floating-emoji';
+    el.textContent = emoji;
+    const randomLeft = 25 + Math.random() * 50;
+    el.style.left = `${randomLeft}%`;
+    el.style.top = `60%`;
+    lobbyModal.appendChild(el);
+    setTimeout(() => { el.remove(); }, 1500);
   }
 
   // Host o'yinni boshlashi
