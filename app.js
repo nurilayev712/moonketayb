@@ -990,6 +990,18 @@ function setupEventListeners() {
     });
   });
 
+  // Dasturlash tili tanlash (javascript, python, html, cpp)
+  if (elements.codeLangBtns) {
+    elements.codeLangBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.codeLanguage = btn.dataset.codeLang;
+        localStorage.setItem('mk_code_lang', state.codeLanguage);
+        updateConfigUI();
+        resetTest();
+      });
+    });
+  }
+
   // Tinish belgilari
   elements.punctToggle.addEventListener('click', () => {
     state.punctuation = !state.punctuation;
