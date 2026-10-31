@@ -23,11 +23,78 @@ class MultiplayerManager {
     this.isInRace = false;
     this.raceWords = [];
     this.countdownTimer = null;
+    this.pingInterval = null;
   }
 
   // 6 xonali tasodifiy xona kodi (masalan: 749201)
   generateRoomCode() {
     return Math.floor(100000 + Math.random() * 900000).toString();
+  }
+
+  // Tarmoq kechikishini doimiy tekshirib turish (Ping)
+  startPingLoop() {
+    this.stopPingLoop();
+    this.pingInterval = setInterval(() => {
+      if (this.client && this.client.isConnected && this.client.isConnected()) {
+        this.sendMessage({
+          type: 'PING',
+          senderId: this.myId,
+          sentAt: Date.now()
+        });
+      }
+    }, 4000);
+  }
+
+  stopPingLoop() {
+    if (this.pingInterval) {
+      clearInterval(this.pingInterval);
+      this.pingInterval = null;
+    }
+  }
+
+  updatePingUI(ms) {
+    const badge = document.getElementById('lobby-ping-badge');
+    if (!badge) return;
+    badge.classList.remove('ping-good', 'ping-medium', 'ping-poor');
+    if (ms < 75) {
+      badge.textContent = `🟢 ${ms}ms`;
+      badge.classList.add('ping-good');
+    } else if (ms < 160) {
+      badge.textContent = `🟡 ${ms}ms`;
+      badge.classList.add('ping-medium');
+    } else {
+      badge.textContent = `🔴 ${ms}ms`;
+      badge.classList.add('ping-poor');
+    }
+  }
+
+  // Tizim xabarini chatga qo'shish
+  displaySystemMessage(text) {
+    const box = document.getElementById('lobby-chat-messages');
+    if (!box) return;
+    const hint = box.querySelector('.chat-hint');
+    if (hint) hint.remove();
+
+    const el = document.createElement('div');
+    el.className = 'chat-system-msg';
+    el.textContent = text;
+    box.appendChild(el);
+    box.scrollTop = box.scrollHeight;
+  }
+
+  // Host: O'yinchini xonadan chetlatish (Kick)
+  kickPlayer(targetId) {
+    if (!this.isHost) return;
+    const target = this.players[targetId];
+    const name = target ? target.name : "Ishtirokchi";
+    this.sendMessage({
+      type: 'KICK_PLAYER',
+      targetId: targetId,
+      targetName: name
+    });
+    delete this.players[targetId];
+    this.updateLobbyUI();
+    this.displaySystemMessage(`🚫 ${name} xonadan chiqarildi`);
   }
 
   // 1. Yangi xona yaratish (Host)
