@@ -854,6 +854,12 @@ function finishTest() {
   elements.resultChars.textContent = `${state.correctChars}/${state.incorrectChars}/${state.extraChars}/${state.missedChars}`;
   elements.resultTime.textContent = `${testDuration}s`;
 
+  // Barqarorlik (Consistency %) hisoblash
+  const consistency = calculateConsistency(state.historyChartData);
+  if (elements.resultConsistency) {
+    elements.resultConsistency.textContent = `${consistency}%`;
+  }
+
   // UI almashtirish
   elements.testSection.style.display = 'none';
   elements.resultSection.classList.add('active');
@@ -901,6 +907,7 @@ function renderLineChart() {
 
   const labels = state.historyChartData.map(d => `${d.second}s`);
   const wpmData = state.historyChartData.map(d => d.wpm);
+  const rawData = state.historyChartData.map(d => d.raw !== undefined ? d.raw : d.wpm);
   const errorData = state.historyChartData.map(d => d.errors);
 
   const style = getComputedStyle(document.body);
@@ -939,12 +946,25 @@ function renderLineChart() {
           yAxisID: 'y'
         },
         {
+          label: 'Sof WPM (Raw)',
+          data: rawData,
+          borderColor: subColor,
+          borderDash: [5, 5],
+          backgroundColor: 'transparent',
+          fill: false,
+          tension: 0.35,
+          borderWidth: 2,
+          pointRadius: 1,
+          pointBackgroundColor: subColor,
+          yAxisID: 'y'
+        },
+        {
           label: 'Xatolar',
           data: errorData,
           borderColor: errorColor,
           backgroundColor: 'transparent',
           borderWidth: 2,
-          pointRadius: 3,
+          pointRadius: 4,
           pointStyle: 'crossRot',
           showLine: false,
           yAxisID: 'y1'
