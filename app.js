@@ -56,14 +56,19 @@ const elements = {
   retryBtn: document.getElementById('retry-btn'),
   nextTestBtn: document.getElementById('next-test-btn'),
   
-  // Monkeytype HUD & Qo'shimcha elementlar
-  liveStatsHud: document.getElementById('live-stats-hud'),
-  hudTimer: document.getElementById('hud-timer'),
-  hudWpm: document.getElementById('hud-wpm'),
-  hudAcc: document.getElementById('hud-acc'),
+  // Monkeytype Qo'shimcha elementlar
   zenHint: document.getElementById('zen-hint'),
   virtualKeyboard: document.getElementById('virtual-keyboard-wrapper'),
   capsLockWarning: document.getElementById('caps-lock-warning'),
+
+  // Maxsus vaqt elementlari
+  customTimeBtn: document.getElementById('custom-time-btn'),
+  customTimeLabel: document.getElementById('custom-time-label'),
+  customTimeModal: document.getElementById('custom-time-modal'),
+  customTimeInput: document.getElementById('custom-time-input'),
+  customTimeSaveBtn: document.getElementById('custom-time-save-btn'),
+  customTimeCancelBtn: document.getElementById('custom-time-cancel-btn'),
+  closeCustomTimeBtn: document.getElementById('close-custom-time-btn'),
 
   // Natija elementlari
   resultWpm: document.getElementById('result-wpm'),
