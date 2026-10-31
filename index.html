@@ -516,42 +516,42 @@
   <div class="modal-overlay" id="auth-modal">
     <div class="modal" style="max-width: 420px;">
       <div class="modal-header">
-        <div class="modal-title">👤 Account</div>
+        <div class="modal-title">👤 Akkaunt</div>
         <button class="modal-close" id="close-auth-btn">&times;</button>
       </div>
       <div class="modal-body">
         <div class="auth-tabs">
-          <button class="auth-tab-btn active" id="tab-login-btn">sign in</button>
-          <button class="auth-tab-btn" id="tab-register-btn">register</button>
+          <button class="auth-tab-btn active" id="tab-login-btn">Kirish</button>
+          <button class="auth-tab-btn" id="tab-register-btn">Ro'yxatdan o'tish</button>
         </div>
 
         <!-- Kirish Formasi -->
         <form id="login-form">
           <div class="form-group">
-            <label>username</label>
-            <input type="text" class="form-control" id="login-username" required placeholder="username">
+            <label>Foydalanuvchi nomi</label>
+            <input type="text" class="form-control" id="login-username" required placeholder="Foydalanuvchi nomi">
           </div>
           <div class="form-group">
-            <label>password</label>
+            <label>Parol</label>
             <input type="password" class="form-control" id="login-password" required placeholder="••••••••">
           </div>
           <button type="submit" class="action-btn primary" style="width: 100%; justify-content: center; margin-top: 1rem;">
-            sign in
+            Kirish
           </button>
         </form>
 
         <!-- Ro'yxatdan O'tish Formasi -->
         <form id="register-form" style="display: none;">
           <div class="form-group">
-            <label>username</label>
-            <input type="text" class="form-control" id="reg-username" required placeholder="at least 3 characters">
+            <label>Foydalanuvchi nomi</label>
+            <input type="text" class="form-control" id="reg-username" required placeholder="Kamida 3 ta belgi">
           </div>
           <div class="form-group">
-            <label>password</label>
-            <input type="password" class="form-control" id="reg-password" required placeholder="at least 4 characters">
+            <label>Parol</label>
+            <input type="password" class="form-control" id="reg-password" required placeholder="Kamida 4 ta belgi">
           </div>
           <div class="form-group">
-            <label>avatar</label>
+            <label>Avatar tanlash</label>
             <div class="avatar-selector" id="reg-avatar-selector">
               <span class="avatar-opt active" data-avatar="⌨️">⌨️</span>
               <span class="avatar-opt" data-avatar="🏎️">🏎️</span>
@@ -563,7 +563,7 @@
             </div>
           </div>
           <button type="submit" class="action-btn primary" style="width: 100%; justify-content: center; margin-top: 1rem;">
-            register
+            Akkaunt yaratish
           </button>
         </form>
       </div>
@@ -574,7 +574,7 @@
   <div class="modal-overlay" id="profile-modal">
     <div class="modal">
       <div class="modal-header">
-        <div class="modal-title">👤 User Profile</div>
+        <div class="modal-title">👤 Shaxsiy Profil</div>
         <button class="modal-close" id="close-profile-btn">&times;</button>
       </div>
       <div class="modal-body">
@@ -585,16 +585,16 @@
           <div>
             <div style="font-size: 1.75rem; font-weight: 700; color: var(--text-color); display: flex; align-items: center; gap: 0.6rem;">
               <span class="led-indicator large"></span>
-              <span id="prof-name" class="led-nickname">Username</span>
+              <span id="prof-name" class="led-nickname">Foydalanuvchi</span>
             </div>
-            <div style="font-size: 0.85rem; color: var(--sub-color);" id="prof-joined">Joined Oct 2026</div>
+            <div style="font-size: 0.85rem; color: var(--sub-color);" id="prof-joined">Ro'yxatdan o'tgan</div>
           </div>
         </div>
 
         <!-- XP va Level Progress Bar -->
         <div class="xp-section">
           <div class="xp-header">
-            <span>Level Progress</span>
+            <span>Daraja ko'rsatkichi</span>
             <span id="prof-xp-text">0 / 400 XP</span>
           </div>
           <div class="xp-bar-track">
@@ -603,22 +603,22 @@
         </div>
 
         <!-- MonkeyType All-time bests kartochkalari -->
-        <div style="font-weight: 700; font-size: 0.9rem; color: var(--text-color); margin-bottom: 0.5rem;">All-Time Bests:</div>
+        <div style="font-weight: 700; font-size: 0.9rem; color: var(--text-color); margin-bottom: 0.5rem;">Barcha davrlardagi rekordlar:</div>
         <div class="all-time-bests-grid">
           <div class="best-card">
-            <div class="time-label">15s</div>
+            <div class="time-label">15 soniya</div>
             <div class="wpm-val" id="best-15s">0</div>
           </div>
           <div class="best-card">
-            <div class="time-label">30s</div>
+            <div class="time-label">30 soniya</div>
             <div class="wpm-val" id="best-30s">0</div>
           </div>
           <div class="best-card">
-            <div class="time-label">60s</div>
+            <div class="time-label">60 soniya</div>
             <div class="wpm-val" id="best-60s">0</div>
           </div>
           <div class="best-card">
-            <div class="time-label">120s</div>
+            <div class="time-label">120 soniya</div>
             <div class="wpm-val" id="best-120s">0</div>
           </div>
         </div>
@@ -626,15 +626,15 @@
         <!-- Umumiy testlar statistikasi -->
         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; text-align: center; margin-bottom: 1.5rem;">
           <div style="background: var(--sub-alt-color); padding: 0.85rem; border-radius: 10px;">
-            <div style="font-size: 0.75rem; color: var(--sub-color);">Tests Completed</div>
+            <div style="font-size: 0.75rem; color: var(--sub-color);">Bajarilgan testlar</div>
             <div style="font-size: 1.4rem; font-weight: 700; color: var(--text-color);" id="prof-tests">0</div>
           </div>
           <div style="background: var(--sub-alt-color); padding: 0.85rem; border-radius: 10px;">
-            <div style="font-size: 0.75rem; color: var(--sub-color);">Races Won</div>
+            <div style="font-size: 0.75rem; color: var(--sub-color);">G'alabalar</div>
             <div style="font-size: 1.4rem; font-weight: 700; color: var(--main-color);" id="prof-wins">0</div>
           </div>
           <div style="background: var(--sub-alt-color); padding: 0.85rem; border-radius: 10px;">
-            <div style="font-size: 0.75rem; color: var(--sub-color);">Typing Time</div>
+            <div style="font-size: 0.75rem; color: var(--sub-color);">Yozish vaqti</div>
             <div style="font-size: 1.4rem; font-weight: 700; color: var(--text-color);" id="prof-time">0m</div>
           </div>
         </div>
@@ -644,31 +644,31 @@
           <div class="heatmap-top-bar">
             <div class="heatmap-filter-group">
               <select id="heatmap-range-select" class="heatmap-select">
-                <option value="12months">last 12 months</option>
-                <option value="6months">last 6 months</option>
-                <option value="3months">last 3 months</option>
+                <option value="12months">so'nggi 12 oy</option>
+                <option value="6months">so'nggi 6 oy</option>
+                <option value="3months">so'nggi 3 oy</option>
               </select>
-              <span class="heatmap-count-tag" id="heatmap-total-tests">0 tests</span>
+              <span class="heatmap-count-tag" id="heatmap-total-tests">0 ta test</span>
             </div>
 
             <div class="heatmap-legend">
-              <span>less</span>
+              <span>kam</span>
               <span class="heat-box lvl-0"></span>
               <span class="heat-box lvl-1"></span>
               <span class="heat-box lvl-2"></span>
               <span class="heat-box lvl-3"></span>
               <span class="heat-box lvl-4"></span>
-              <span>more</span>
+              <span>ko'p</span>
             </div>
           </div>
 
           <div class="heatmap-main-wrapper">
             <!-- Chap tarafdagi kunlar -->
             <div class="heatmap-days-col">
-              <span>monday</span>
-              <span>wednesday</span>
-              <span>friday</span>
-              <span>sunday</span>
+              <span>dushanba</span>
+              <span>chorshanba</span>
+              <span>juma</span>
+              <span>yakshanba</span>
             </div>
 
             <!-- Heatmap kataklari va oylar qatori -->
@@ -683,12 +683,12 @@
           </div>
 
           <div class="heatmap-footer-note">
-            Note: All activity data is using local time.
+            Eslatma: Barcha faollik ma'lumotlari mahalliy vaqt bo'yicha hisoblanadi.
           </div>
         </div>
 
         <button class="action-btn" id="logout-btn" style="width: 100%; justify-content: center; color: var(--error-color); margin-top: 1.25rem;">
-          sign out
+          Hisobdan chiqish
         </button>
       </div>
     </div>
@@ -698,7 +698,7 @@
   <div class="modal-overlay" id="settings-modal">
     <div class="modal">
       <div class="modal-header">
-        <div class="modal-title">⚙️ Settings</div>
+        <div class="modal-title">⚙️ Sozlamalar</div>
         <button class="modal-close" id="close-settings-btn">&times;</button>
       </div>
       <div class="modal-body">
@@ -706,35 +706,50 @@
         <!-- Til tanlash -->
         <div class="setting-row">
           <div class="setting-info">
-            <span class="setting-name">language</span>
-            <span class="setting-desc">change the active dictionary</span>
+            <span class="setting-name">Lug'at tili</span>
+            <span class="setting-desc">Yoziladigan so'zlar lug'atini tanlang</span>
           </div>
           <select id="language-select" style="background: var(--sub-alt-color); color: var(--text-color); border: 1px solid var(--sub-color); padding: 6px 12px; border-radius: 6px; font-family: inherit;">
-            <option value="uzbek">uzbek</option>
-            <option value="english">english</option>
-            <option value="russian">russian</option>
+            <option value="uzbek">O'zbekcha</option>
+            <option value="english">Inglizcha (English)</option>
+            <option value="russian">Ruscha (Русский)</option>
           </select>
         </div>
 
         <!-- Klaviatura tovushlari to'plami -->
         <div class="setting-row">
           <div class="setting-info">
-            <span class="setting-name">sound pack</span>
-            <span class="setting-desc">mechanical switch sound type</span>
+            <span class="setting-name">Klaviatura ovozi</span>
+            <span class="setting-desc">Mexanik tugma bosilish tovushi</span>
           </div>
           <select id="sound-pack-select" style="background: var(--sub-alt-color); color: var(--text-color); border: 1px solid var(--sub-color); padding: 6px 12px; border-radius: 6px; font-family: inherit;">
-            <option value="thock">thock (deep switch)</option>
-            <option value="click">clicky (cherry mx blue)</option>
-            <option value="pop">bubble pop</option>
-            <option value="off">off (silent)</option>
+            <option value="thock">Thock (To'q mexanik switch)</option>
+            <option value="click">Clicky (Cherry MX Blue)</option>
+            <option value="pop">Bubble Pop (Pufakcha)</option>
+            <option value="off">O'chiq (Tovushsiz)</option>
+          </select>
+        </div>
+
+        <!-- Kursor uslubi (Monkeytype imzo xususiyati) -->
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-name">Kursor uslubi</span>
+            <span class="setting-desc">Matndagi kursor ko'rinishi va animatsiyasi</span>
+          </div>
+          <select id="caret-style-select" style="background: var(--sub-alt-color); color: var(--text-color); border: 1px solid var(--sub-color); padding: 6px 12px; border-radius: 6px; font-family: inherit;">
+            <option value="line">Chiziq (Line)</option>
+            <option value="block">Blok (Block)</option>
+            <option value="underline">Ostki chiziq (Underline)</option>
+            <option value="outline">Ramka (Outline Box)</option>
+            <option value="off">O'chiq (Off)</option>
           </select>
         </div>
 
         <!-- Mavzu (Tema) tanlash -->
         <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 0.75rem;">
           <div class="setting-info">
-            <span class="setting-name">theme</span>
-            <span class="setting-desc">color scheme</span>
+            <span class="setting-name">Ranglar mavzusi</span>
+            <span class="setting-desc">Sayt ko'rinishi va dizayni</span>
           </div>
           <div class="theme-options">
             <button class="theme-btn active" data-theme-name="serika_dark">
@@ -768,7 +783,7 @@
   <div class="modal-overlay" id="history-modal">
     <div class="modal">
       <div class="modal-header">
-        <div class="modal-title">📊 Leaderboards & Result History</div>
+        <div class="modal-title">📊 Liderlar taxtasi & Natijalar tarixi</div>
         <button class="modal-close" id="close-history-btn">&times;</button>
       </div>
       <div class="modal-body">
@@ -777,7 +792,7 @@
         </div>
         <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
           <button class="action-btn" id="clear-history-btn" style="font-size: 0.8rem; padding: 0.4rem 0.8rem;">
-            clear history
+            Tarixni tozalash
           </button>
         </div>
       </div>
