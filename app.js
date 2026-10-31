@@ -1455,14 +1455,5 @@ finishTest = function() {
   }
 };
 
-// handleKeyDown dagi Space bosilishiga progress ulaymiz
-const originalHandleKeyDown = handleKeyDown;
-handleKeyDown = function(e) {
-  originalHandleKeyDown(e);
-  if (state.isMultiplayer) {
-    window.checkMultiplayerProgress();
-  }
-};
-
 // Boshlash
 window.addEventListener('DOMContentLoaded', init);
