@@ -70,6 +70,12 @@ class MultiplayerManager {
 
   // WebSocket MQTT Brokerga ulanish (HiveMQ / EMQX WSS)
   connectToBroker() {
+    if (typeof Paho === 'undefined' || !Paho.MQTT) {
+      console.warn("Paho MQTT kutubxonasi kutilmoqda...");
+      setTimeout(() => this.connectToBroker(), 300);
+      return;
+    }
+
     if (this.client) {
       try { this.client.disconnect(); } catch (e) {}
     }
@@ -143,6 +149,7 @@ class MultiplayerManager {
 
   // Zaxira broker (EMQX WSS)
   connectToFallbackBroker() {
+    if (typeof Paho === 'undefined' || !Paho.MQTT) return;
     try {
       const brokerHost = "broker.emqx.io";
       const brokerPort = 8084;
