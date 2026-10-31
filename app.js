@@ -1364,8 +1364,8 @@ function setupEventListeners() {
   if (roomParam) {
     setTimeout(() => {
       if (confirm(`Siz ${roomParam} xonasiga taklif qilindingiz. Qo'shilasizmi?`)) {
+        window.openAppModal(lobbyModal);
         window.multiplayerManager.joinRoom(roomParam);
-        lobbyModal.classList.add('active');
       }
     }, 500);
   }
