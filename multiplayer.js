@@ -1,246 +1,270 @@
-// MoonKeyType — PeerJS orqali P2P Multiplayer Poyga Tizimi (100% Ishonchli va Xatosiz)
-
-const PEER_CONFIG = {
-  debug: 1,
-  config: {
-    iceServers: [
-      { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun1.l.google.com:19302' },
-      { urls: 'stun:stun2.l.google.com:19302' },
-      { urls: 'stun:global.stun.twilio.com:3478' }
-    ]
-  }
-};
+// MoonKeyType — Ultra-Tezkor va 100% Barqaror Real-Time Multiplayer Tizimi (Paho MQTT)
 
 class MultiplayerManager {
   constructor() {
-    this.peer = null;
-    this.connections = []; // Host uchun barcha ulanishlar
-    this.hostConnection = null; // Client uchun hostga ulanish
-    this.isHost = false;
+    this.client = null;
     this.roomId = null;
-    this.players = {}; // { peerId: { id, name, avatar, progress, wpm, finished } }
+    this.isHost = false;
+    this.myId = 'usr_' + Math.random().toString(36).substring(2, 9);
+    this.players = {}; // { id: { id, name, avatar, isHost, progress, wpm, finished } }
     this.isInRace = false;
     this.raceWords = [];
     this.countdownTimer = null;
   }
 
+  // 6 xonali tasodifiy xona kodi (masalan: 749201)
+  generateRoomCode() {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  }
+
   // 1. Yangi xona yaratish (Host)
   createRoom() {
-    const user = (window.authManager && window.authManager.currentUser) || { 
-      username: 'Player_' + Math.floor(Math.random() * 900 + 100), 
-      avatar: '⌨️' 
-    };
-
+    this.roomId = this.generateRoomCode();
     this.isHost = true;
     this.players = {};
 
-    if (this.peer) {
-      try { this.peer.destroy(); } catch (e) {}
-    }
+    const user = (window.authManager && window.authManager.currentUser) || {
+      username: 'Host_' + Math.floor(Math.random() * 900 + 100),
+      avatar: '⌨️'
+    };
 
-    this.updateStatusText("Xona kodi olinmoqda, serverga ulanilmoqda...");
+    // O'zimizni o'yinchilar safiga kiritamiz
+    this.players[this.myId] = {
+      id: this.myId,
+      name: user.username,
+      avatar: user.avatar || '⌨️',
+      isHost: true,
+      progress: 0,
+      wpm: 0,
+      finished: false
+    };
+
     const codeEl = document.getElementById('lobby-room-code');
-    if (codeEl) codeEl.textContent = "Kutilmoqda...";
+    if (codeEl) codeEl.textContent = this.roomId;
 
-    try {
-      // ID bermasdan yaratamiz — shunda PeerJS serveri 100% xatosiz noyob ID beradi!
-      this.peer = new Peer(PEER_CONFIG);
+    this.updateLobbyUI();
+    this.updateStatusText("Xona tayyor! Do'stingizga xona kodini bering.");
 
-      this.peer.on('open', (id) => {
-        console.log('Xona muvaffaqiyatli ochildi, Peer ID:', id);
-        this.roomId = id;
-        
-        if (codeEl) codeEl.textContent = this.roomId;
-
-        this.players[this.peer.id] = {
-          id: this.peer.id,
-          name: user.username,
-          avatar: user.avatar || '⌨️',
-          isHost: true,
-          progress: 0,
-          wpm: 0,
-          finished: false
-        };
-
-        this.updateLobbyUI();
-        this.updateStatusText("Xona tayyor! Do'stingizga xona kodini bering.");
-      });
-
-      this.peer.on('connection', (conn) => {
-        console.log('Yangi o\'yinchi ulandi:', conn.peer);
-        this.connections.push(conn);
-
-        conn.on('data', (data) => {
-          this.handleHostData(conn, data);
-        });
-
-        conn.on('close', () => {
-          delete this.players[conn.peer];
-          this.connections = this.connections.filter(c => c !== conn);
-          this.broadcastLobby();
-          this.updateLobbyUI();
-        });
-      });
-
-      this.peer.on('error', (err) => {
-        console.error('PeerJS xatosi:', err);
-        this.updateStatusText("Tarmoq xatosi: " + (err.type || 'server band'));
-        alert('Serverga ulanishda xatolik yuz berdi. Iltimos qayta urinib ko\'ring.');
-      });
-
-    } catch (e) {
-      console.error(e);
-      alert("Xona yaratishda xatolik yuz berdi!");
-    }
+    this.connectToBroker();
+    return this.roomId;
   }
 
   // 2. Mavjud xonaga qo'shilish (Client)
   joinRoom(code) {
     code = code.trim();
     if (!code) {
-      alert('Iltimos, xona kodini kiriting!');
+      alert("Iltimos, xona kodini kiriting!");
       return;
     }
-
-    const user = (window.authManager && window.authManager.currentUser) || { 
-      username: 'Player_' + Math.floor(Math.random() * 900 + 100), 
-      avatar: '⌨️' 
-    };
 
     this.roomId = code;
     this.isHost = false;
     this.players = {};
 
-    if (this.peer) {
-      try { this.peer.destroy(); } catch (e) {}
-    }
-
-    this.updateStatusText("Xonaga ulanilmoqda, kuting...");
     const codeEl = document.getElementById('lobby-room-code');
     if (codeEl) codeEl.textContent = this.roomId;
 
+    this.updateStatusText("Xonaga ulanilmoqda, kuting...");
+    this.connectToBroker();
+  }
+
+  // WebSocket MQTT Brokerga ulanish (HiveMQ / EMQX WSS)
+  connectToBroker() {
+    if (this.client) {
+      try { this.client.disconnect(); } catch (e) {}
+    }
+
+    // HiveMQ WSS (Port 8884)
+    const brokerHost = "broker.hivemq.com";
+    const brokerPort = 8884;
+    const clientId = "mkt_" + this.myId;
+
     try {
-      this.peer = new Peer(PEER_CONFIG);
+      this.client = new Paho.MQTT.Client(brokerHost, brokerPort, "/mqtt", clientId);
 
-      this.peer.on('open', (myPeerId) => {
-        console.log('Mening Peer ID im:', myPeerId);
-        const conn = this.peer.connect(this.roomId, { reliable: true });
-        this.hostConnection = conn;
+      this.client.onConnectionLost = (responseObject) => {
+        if (responseObject.errorCode !== 0) {
+          console.warn("Ulanish uzildi:", responseObject.errorMessage);
+        }
+      };
 
-        // Ulanish uchun 10 soniya timeout
-        const timer = setTimeout(() => {
-          if (!conn.open) {
-            alert("Xonaga ulanib bo'lmadi! Xona kodi noto'g'ri yoki xona egasi sahifadan chiqqan.");
-            this.leaveRoom();
+      this.client.onMessageArrived = (message) => {
+        this.handleIncomingMessage(message.payloadString);
+      };
+
+      const connectOptions = {
+        useSSL: true,
+        timeout: 5,
+        keepAliveInterval: 30,
+        cleanSession: true,
+        onSuccess: () => {
+          console.log("MQTT Brokerga muvaffaqiyatli ulandik!");
+          const topic = `mkt/race/${this.roomId}`;
+          this.client.subscribe(topic);
+
+          const user = (window.authManager && window.authManager.currentUser) || {
+            username: (this.isHost ? 'Host_' : 'Player_') + Math.floor(Math.random() * 900 + 100),
+            avatar: '⌨️'
+          };
+
+          if (this.isHost) {
+            this.updateStatusText("Xona tayyor! Do'stlaringiz qo'shilishini kuting.");
+          } else {
+            this.updateStatusText("Xonaga ulandingiz! Xona egasi o'yinni boshlashini kuting.");
+            // Host va boshqalarga qo'shilganimiz haqida xabar yuboramiz
+            this.sendMessage({
+              type: 'PLAYER_JOIN',
+              player: {
+                id: this.myId,
+                name: user.username,
+                avatar: user.avatar || '⌨️',
+                isHost: false,
+                progress: 0,
+                wpm: 0,
+                finished: false
+              }
+            });
           }
-        }, 10000);
+        },
+        onFailure: (err) => {
+          console.error("Brokerga ulanish muvaffaqiyatsiz bo'ldi, zaxira brokerga urinilmoqda...", err);
+          // Zaxira broker (EMQX)
+          this.connectToFallbackBroker();
+        }
+      };
 
-        conn.on('open', () => {
-          clearTimeout(timer);
-          console.log('Hostga muvaffaqiyatli ulandik!');
-          this.updateStatusText("Xonaga ulandingiz! Xona egasi o'yinni boshlashini kuting.");
-
-          conn.send({
-            type: 'JOIN',
-            player: {
-              id: myPeerId,
-              name: user.username,
-              avatar: user.avatar || '⌨️',
-              isHost: false,
-              progress: 0,
-              wpm: 0,
-              finished: false
-            }
-          });
-        });
-
-        conn.on('data', (data) => {
-          this.handleClientData(data);
-        });
-
-        conn.on('close', () => {
-          alert("Xona egasi ulanishni yopdi!");
-          this.leaveRoom();
-        });
-      });
-
-      this.peer.on('error', (err) => {
-        console.error('PeerJS ulanish xatosi:', err);
-        alert('Xonaga ulanib bo\'lmadi! Kodni to\'g\'ri kiritganingizni tekshiring.');
-        this.leaveRoom();
-      });
+      this.client.connect(connectOptions);
 
     } catch (e) {
       console.error(e);
-      alert("Xonaga ulanishda xatolik yuz berdi!");
+      this.connectToFallbackBroker();
     }
   }
 
-  handleHostData(conn, data) {
-    if (data.type === 'JOIN') {
-      this.players[conn.peer] = data.player;
-      this.broadcastLobby();
-      this.updateLobbyUI();
-      conn.send({
-        type: 'LOBBY_UPDATE',
-        players: this.players
+  // Zaxira broker (EMQX WSS)
+  connectToFallbackBroker() {
+    try {
+      const brokerHost = "broker.emqx.io";
+      const brokerPort = 8084;
+      const clientId = "mkt_fb_" + this.myId;
+
+      this.client = new Paho.MQTT.Client(brokerHost, brokerPort, "/mqtt", clientId);
+
+      this.client.onMessageArrived = (message) => {
+        this.handleIncomingMessage(message.payloadString);
+      };
+
+      this.client.connect({
+        useSSL: true,
+        timeout: 5,
+        onSuccess: () => {
+          const topic = `mkt/race/${this.roomId}`;
+          this.client.subscribe(topic);
+          const user = (window.authManager && window.authManager.currentUser) || {
+            username: (this.isHost ? 'Host_' : 'Player_') + Math.floor(Math.random() * 900 + 100),
+            avatar: '⌨️'
+          };
+          if (!this.isHost) {
+            this.sendMessage({
+              type: 'PLAYER_JOIN',
+              player: {
+                id: this.myId,
+                name: user.username,
+                avatar: user.avatar || '⌨️',
+                isHost: false,
+                progress: 0,
+                wpm: 0,
+                finished: false
+              }
+            });
+          }
+        },
+        onFailure: () => {
+          this.updateStatusText("Tarmoq xatosi. Iltimos internet aloqasini tekshiring.");
+        }
       });
-    } else if (data.type === 'PROGRESS') {
-      if (this.players[conn.peer]) {
-        this.players[conn.peer].progress = data.progress;
-        this.players[conn.peer].wpm = data.wpm;
-        this.broadcast({
-          type: 'PROGRESS_UPDATE',
-          peerId: conn.peer,
-          progress: data.progress,
-          wpm: data.wpm
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  // Xabar yuborish
+  sendMessage(dataObj) {
+    if (!this.client || !this.client.isConnected()) return;
+    try {
+      const topic = `mkt/race/${this.roomId}`;
+      const msgStr = JSON.stringify(dataObj);
+      const message = new Paho.MQTT.Message(msgStr);
+      message.destinationName = topic;
+      this.client.send(message);
+    } catch (e) {
+      console.error("Xabar yuborishda xatolik:", e);
+    }
+  }
+
+  // Kelgan xabarlarni qayta ishlash
+  handleIncomingMessage(payloadStr) {
+    let data;
+    try {
+      data = JSON.parse(payloadStr);
+    } catch (e) {
+      return;
+    }
+
+    // 1. Yangi o'yinchi qo'shilganda
+    if (data.type === 'PLAYER_JOIN') {
+      this.players[data.player.id] = data.player;
+      this.updateLobbyUI();
+
+      // Agar biz host bo'lsak, yangi o'yinchiga butun lobby holatini yuboramiz
+      if (this.isHost) {
+        this.sendMessage({
+          type: 'SYNC_LOBBY',
+          players: this.players
         });
+      }
+    }
+
+    // 2. Lobby sinxronizatsiyasi
+    else if (data.type === 'SYNC_LOBBY') {
+      this.players = Object.assign({}, this.players, data.players);
+      this.updateLobbyUI();
+    }
+
+    // 3. Poyga boshlanishi (3.. 2.. 1.. START)
+    else if (data.type === 'START_RACE') {
+      this.raceWords = data.words;
+      this.startCountdownUI();
+    }
+
+    // 4. Progress yangilanishi
+    else if (data.type === 'PROGRESS') {
+      if (this.players[data.id]) {
+        this.players[data.id].progress = data.progress;
+        this.players[data.id].wpm = data.wpm;
         this.updateRaceTrackUI();
       }
-    } else if (data.type === 'FINISHED') {
-      if (this.players[conn.peer]) {
-        this.players[conn.peer].finished = true;
-        this.players[conn.peer].wpm = data.wpm;
-        this.players[conn.peer].accuracy = data.accuracy;
+    }
+
+    // 5. Biror o'yinchi marraga yetganda
+    else if (data.type === 'FINISH') {
+      if (this.players[data.id]) {
+        this.players[data.id].finished = true;
+        this.players[data.id].wpm = data.wpm;
+        this.players[data.id].accuracy = data.accuracy;
+      }
+      if (this.isHost) {
         this.checkRaceFinish();
       }
     }
-  }
 
-  handleClientData(data) {
-    if (data.type === 'LOBBY_UPDATE') {
-      this.players = data.players;
-      this.updateLobbyUI();
-    } else if (data.type === 'START_COUNTDOWN') {
-      this.raceWords = data.words;
-      this.startCountdownUI();
-    } else if (data.type === 'PROGRESS_UPDATE') {
-      if (this.players[data.peerId]) {
-        this.players[data.peerId].progress = data.progress;
-        this.players[data.peerId].wpm = data.wpm;
-        this.updateRaceTrackUI();
-      }
-    } else if (data.type === 'RACE_FINISHED_SUMMARY') {
+    // 6. G'oliblar yakuniy taxtasi
+    else if (data.type === 'LEADERBOARD') {
       this.showRaceResults(data.leaderboard);
     }
   }
 
-  broadcast(data) {
-    this.connections.forEach(conn => {
-      if (conn && conn.open) {
-        try { conn.send(data); } catch (e) {}
-      }
-    });
-  }
-
-  broadcastLobby() {
-    this.broadcast({
-      type: 'LOBBY_UPDATE',
-      players: this.players
-    });
-  }
-
+  // Host o'yinni boshlashi
   startRace() {
     if (!this.isHost) return;
 
@@ -254,21 +278,26 @@ class MultiplayerManager {
 
     this.raceWords = words;
 
-    this.broadcast({
-      type: 'START_COUNTDOWN',
+    // Barcha o'yinchilarga boshlash xabarini yuboramiz
+    this.sendMessage({
+      type: 'START_RACE',
       words: words
     });
-
-    this.startCountdownUI();
   }
 
+  // 3... 2... 1... Ortga hisoblash
   startCountdownUI() {
     this.isInRace = true;
     const overlay = document.getElementById('race-countdown-overlay');
     const numberEl = document.getElementById('countdown-number');
     overlay.style.display = 'flex';
 
-    document.getElementById('multiplayer-lobby-modal').classList.remove('active');
+    if (window.closeAppModal) {
+      window.closeAppModal(document.getElementById('multiplayer-lobby-modal'));
+    } else {
+      document.getElementById('multiplayer-lobby-modal').classList.remove('active');
+    }
+
     document.getElementById('race-track-section').style.display = 'flex';
     document.getElementById('test-section').style.display = 'flex';
 
@@ -297,60 +326,47 @@ class MultiplayerManager {
     }, 1000);
   }
 
+  // Har bir harf bosilganda progress yuborish
   sendProgress(progressPercent, currentWpm) {
-    const myId = this.peer ? this.peer.id : null;
-    if (myId && this.players[myId]) {
-      this.players[myId].progress = progressPercent;
-      this.players[myId].wpm = currentWpm;
+    if (this.players[this.myId]) {
+      this.players[this.myId].progress = progressPercent;
+      this.players[this.myId].wpm = currentWpm;
     }
-
     this.updateRaceTrackUI();
 
-    if (this.isHost) {
-      this.broadcast({
-        type: 'PROGRESS_UPDATE',
-        peerId: myId,
-        progress: progressPercent,
-        wpm: currentWpm
-      });
-    } else if (this.hostConnection && this.hostConnection.open) {
-      this.hostConnection.send({
-        type: 'PROGRESS',
-        progress: progressPercent,
-        wpm: currentWpm
-      });
-    }
+    this.sendMessage({
+      type: 'PROGRESS',
+      id: this.myId,
+      progress: progressPercent,
+      wpm: currentWpm
+    });
   }
 
+  // Testni tugatganda
   sendFinish(wpm, accuracy) {
-    const myId = this.peer ? this.peer.id : null;
-    if (myId && this.players[myId]) {
-      this.players[myId].finished = true;
-      this.players[myId].wpm = wpm;
-      this.players[myId].accuracy = accuracy;
+    if (this.players[this.myId]) {
+      this.players[this.myId].finished = true;
+      this.players[this.myId].wpm = wpm;
+      this.players[this.myId].accuracy = accuracy;
     }
 
-    if (this.isHost) {
-      this.checkRaceFinish();
-    } else if (this.hostConnection && this.hostConnection.open) {
-      this.hostConnection.send({
-        type: 'FINISHED',
-        wpm: wpm,
-        accuracy: accuracy
-      });
-    }
+    this.sendMessage({
+      type: 'FINISH',
+      id: this.myId,
+      wpm: wpm,
+      accuracy: accuracy
+    });
   }
 
+  // Host marrani tekshirib shohsupa e'lon qilishi
   checkRaceFinish() {
     const allPlayers = Object.values(this.players);
     const sorted = [...allPlayers].sort((a, b) => (b.wpm || 0) - (a.wpm || 0));
 
-    this.broadcast({
-      type: 'RACE_FINISHED_SUMMARY',
+    this.sendMessage({
+      type: 'LEADERBOARD',
       leaderboard: sorted
     });
-
-    this.showRaceResults(sorted);
   }
 
   showRaceResults(leaderboard) {
@@ -359,9 +375,8 @@ class MultiplayerManager {
     const list = document.getElementById('race-leaderboard-list');
     list.innerHTML = '';
 
-    const myId = this.peer ? this.peer.id : null;
-    const isWinner = leaderboard.length > 0 && leaderboard[0].id === myId;
-    const myResult = leaderboard.find(p => p.id === myId);
+    const isWinner = leaderboard.length > 0 && leaderboard[0].id === this.myId;
+    const myResult = leaderboard.find(p => p.id === this.myId);
 
     if (window.authManager) {
       window.authManager.recordRace(isWinner, myResult ? myResult.wpm : 0);
@@ -372,7 +387,7 @@ class MultiplayerManager {
       const rankText = medals[idx] || `${idx + 1}th Place`;
 
       const item = document.createElement('div');
-      item.className = 'leaderboard-item' + (player.id === myId ? ' is-me' : '');
+      item.className = 'leaderboard-item' + (player.id === this.myId ? ' is-me' : '');
       item.innerHTML = `
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <span style="font-size: 1.5rem;">${player.avatar || '⌨️'}</span>
@@ -389,7 +404,11 @@ class MultiplayerManager {
       list.appendChild(item);
     });
 
-    modal.classList.add('active');
+    if (window.openAppModal) {
+      window.openAppModal(modal);
+    } else {
+      modal.classList.add('active');
+    }
   }
 
   renderRaceTracks() {
@@ -469,16 +488,19 @@ class MultiplayerManager {
   }
 
   leaveRoom() {
-    if (this.peer) {
-      try { this.peer.destroy(); } catch (e) {}
+    if (this.client) {
+      try { this.client.disconnect(); } catch (e) {}
     }
-    this.peer = null;
-    this.connections = [];
-    this.hostConnection = null;
+    this.client = null;
     this.players = {};
     this.isInRace = false;
 
-    document.getElementById('multiplayer-lobby-modal').classList.remove('active');
+    if (window.closeAppModal) {
+      window.closeAppModal(document.getElementById('multiplayer-lobby-modal'));
+    } else {
+      document.getElementById('multiplayer-lobby-modal').classList.remove('active');
+    }
+
     document.getElementById('race-track-section').style.display = 'none';
     document.getElementById('test-section').style.display = 'flex';
     document.getElementById('main-config-bar').style.display = 'flex';
