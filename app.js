@@ -374,7 +374,15 @@ function generateWords() {
 
   // 2. Mashhur iqtiboslar (Quote rejimi)
   if (state.mode === 'quote') {
-    const quotesList = (WORDS && WORDS.quotes) || [];
+    let quotesList = (WORDS && WORDS.quotes) || [];
+    if (state.quoteLength === 'short') {
+      quotesList = quotesList.filter(q => q.text.length < 90);
+    } else if (state.quoteLength === 'medium') {
+      quotesList = quotesList.filter(q => q.text.length >= 90 && q.text.length <= 180);
+    } else if (state.quoteLength === 'long') {
+      quotesList = quotesList.filter(q => q.text.length > 180);
+    }
+    if (quotesList.length === 0) quotesList = (WORDS && WORDS.quotes) || [];
     const chosen = quotesList[Math.floor(Math.random() * quotesList.length)] || {
       text: "Bilim o'rganishdan to'xtagan kishi qariydi.",
       author: "Genri Ford"
