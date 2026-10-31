@@ -612,17 +612,17 @@ class MultiplayerManager {
 
     let count = 3;
     numberEl.textContent = count;
-    if (window.soundManager) window.soundManager.playKey(false, false);
+    if (window.soundManager) window.soundManager.playBeep(false);
 
     clearInterval(this.countdownTimer);
     this.countdownTimer = setInterval(() => {
       count--;
       if (count > 0) {
         numberEl.textContent = count;
-        if (window.soundManager) window.soundManager.playKey(false, false);
+        if (window.soundManager) window.soundManager.playBeep(false);
       } else if (count === 0) {
         numberEl.textContent = 'START!';
-        if (window.soundManager) window.soundManager.playKey(false, true);
+        if (window.soundManager) window.soundManager.playBeep(true);
       } else {
         clearInterval(this.countdownTimer);
         overlay.style.display = 'none';
