@@ -489,10 +489,55 @@
           <div style="background: var(--sub-alt-color); padding: 0.85rem; border-radius: 10px;">
             <div style="font-size: 0.75rem; color: var(--sub-color);">Typing Time</div>
             <div style="font-size: 1.4rem; font-weight: 700; color: var(--text-color);" id="prof-time">0m</div>
+        <!-- FAOLIYAT XARITASI (ACTIVITY HEATMAP) -->
+        <div class="heatmap-section">
+          <div class="heatmap-top-bar">
+            <div class="heatmap-filter-group">
+              <select id="heatmap-range-select" class="heatmap-select">
+                <option value="12months">last 12 months</option>
+                <option value="6months">last 6 months</option>
+                <option value="3months">last 3 months</option>
+              </select>
+              <span class="heatmap-count-tag" id="heatmap-total-tests">0 tests</span>
+            </div>
+
+            <div class="heatmap-legend">
+              <span>less</span>
+              <span class="heat-box lvl-0"></span>
+              <span class="heat-box lvl-1"></span>
+              <span class="heat-box lvl-2"></span>
+              <span class="heat-box lvl-3"></span>
+              <span class="heat-box lvl-4"></span>
+              <span>more</span>
+            </div>
+          </div>
+
+          <div class="heatmap-main-wrapper">
+            <!-- Chap tarafdagi kunlar -->
+            <div class="heatmap-days-col">
+              <span>monday</span>
+              <span>wednesday</span>
+              <span>friday</span>
+              <span>sunday</span>
+            </div>
+
+            <!-- Heatmap kataklari va oylar qatori -->
+            <div class="heatmap-scroll-area">
+              <div class="heatmap-grid" id="heatmap-grid-container">
+                <!-- Dinamik kataklar (52 hafta) JS orqali chiziladi -->
+              </div>
+              <div class="heatmap-months-row" id="heatmap-months-row">
+                <!-- Oylar nomlari -->
+              </div>
+            </div>
+          </div>
+
+          <div class="heatmap-footer-note">
+            Note: All activity data is using local time.
           </div>
         </div>
 
-        <button class="action-btn" id="logout-btn" style="width: 100%; justify-content: center; color: var(--error-color);">
+        <button class="action-btn" id="logout-btn" style="width: 100%; justify-content: center; color: var(--error-color); margin-top: 1.25rem;">
           sign out
         </button>
       </div>
