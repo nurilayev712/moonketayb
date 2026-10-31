@@ -326,6 +326,37 @@ body.focus-mode footer {
   box-shadow: 0 0 10px var(--caret-color);
 }
 
+/* Caret uslublari (Monkeytype signature) */
+.caret.caret-line {
+  width: 2.5px;
+  background-color: var(--caret-color);
+  box-shadow: 0 0 10px var(--caret-color);
+}
+.caret.caret-block {
+  width: 14px;
+  background-color: var(--caret-color);
+  opacity: 0.35;
+  box-shadow: 0 0 8px var(--caret-color);
+  border-radius: 3px;
+}
+.caret.caret-underline {
+  width: 14px;
+  height: 3px;
+  margin-top: 29px;
+  background-color: var(--caret-color);
+  box-shadow: 0 0 6px var(--caret-color);
+}
+.caret.caret-outline {
+  width: 14px;
+  background-color: transparent;
+  border: 2px solid var(--caret-color);
+  box-shadow: 0 0 8px var(--caret-color);
+  border-radius: 3px;
+}
+.caret.caret-off {
+  display: none !important;
+}
+
 .caret.blink {
   animation: blink 1s infinite;
 }
@@ -333,6 +364,32 @@ body.focus-mode footer {
 @keyframes blink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }
+}
+
+/* Caps Lock Ogohlantirish Paneli */
+.caps-lock-warning {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: rgba(202, 71, 84, 0.15);
+  border: 1px solid var(--error-color, #ca4754);
+  color: var(--error-color, #ca4754);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.4rem 1.25rem;
+  border-radius: 8px;
+  letter-spacing: 1px;
+  margin: 0 auto 0.75rem auto;
+  box-shadow: 0 0 15px rgba(202, 71, 84, 0.25);
+  animation: pulseCaps 1.2s infinite alternate ease-in-out;
+  user-select: none;
+}
+
+@keyframes pulseCaps {
+  0% { transform: scale(0.98); opacity: 0.85; }
+  100% { transform: scale(1.02); opacity: 1; box-shadow: 0 0 20px rgba(202, 71, 84, 0.4); }
 }
 
 /* So'z va harflar dizayni */
