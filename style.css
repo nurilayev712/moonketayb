@@ -135,13 +135,18 @@ header {
 }
 
 .logo-text {
-  font-size: 1.75rem;
-  font-weight: 700;
-  letter-spacing: -0.5px;
+  font-size: 1.85rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
 }
 
 .logo-text span {
   color: var(--main-color);
+  text-shadow: 0 0 10px var(--main-color), 0 0 22px rgba(226, 183, 20, 0.6);
+  margin-left: 2px;
 }
 
 .header-actions {
