@@ -1307,6 +1307,8 @@ function setupEventListeners() {
         const mins = Math.floor((u.totalTimeTyping || 0) / 60);
         document.getElementById('prof-time').textContent = `${mins}m`;
         renderActivityHeatmap('12months');
+      } else {
+        renderActivityHeatmap('12months');
       }
       window.openAppModal(profileModal);
     });
