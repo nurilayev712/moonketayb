@@ -469,8 +469,8 @@ class MultiplayerManager {
     }
 
     leaderboard.forEach((player, idx) => {
-      const medals = ['🥇 1st Place', '🥈 2nd Place', '🥉 3rd Place'];
-      const rankText = medals[idx] || `${idx + 1}th Place`;
+      const medals = ["🥇 1-o'rin (G'olib)", "🥈 2-o'rin", "🥉 3-o'rin"];
+      const rankText = medals[idx] || `${idx + 1}-o'rin`;
 
       const item = document.createElement('div');
       item.className = 'leaderboard-item' + (player.id === this.myId ? ' is-me' : '');
@@ -484,7 +484,7 @@ class MultiplayerManager {
         </div>
         <div style="text-align: right;">
           <div style="font-size: 1.5rem; font-weight: 700; color: var(--main-color);">${player.wpm || 0} WPM</div>
-          <div style="font-size: 0.75rem; color: var(--sub-color);">${player.accuracy || 100}% acc</div>
+          <div style="font-size: 0.75rem; color: var(--sub-color);">${player.accuracy || 100}% aniqlik</div>
         </div>
       `;
       list.appendChild(item);
