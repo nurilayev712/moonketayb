@@ -362,8 +362,14 @@ function resetTest() {
   if (state.mode === 'time') {
     elements.liveStats.textContent = state.timeLimit;
     elements.liveStats.classList.remove('hidden');
-  } else {
+  } else if (state.mode === 'words') {
     elements.liveStats.textContent = `0 / ${state.wordsLimit}`;
+    elements.liveStats.classList.remove('hidden');
+  } else if (state.mode === 'code') {
+    elements.liveStats.textContent = `0 / 25`;
+    elements.liveStats.classList.remove('hidden');
+  } else if (state.mode === 'quote') {
+    elements.liveStats.textContent = `quote`;
     elements.liveStats.classList.remove('hidden');
   }
 
