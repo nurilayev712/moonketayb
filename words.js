@@ -117,11 +117,30 @@ window.WORDS = {
 
   // Mashhur Iqtiboslar (Quote Mode)
   quotes: [
+    // Qisqa (Short < 90)
+    { text: "Kuch adolatdadir.", author: "Amir Temur" },
+    { text: "Boshlangan ish — yarmi bitgan ishdir.", author: "Aristotel" },
+    { text: "Bilim — eng katta boylikdir.", author: "Abu Rayhon Beruniy" },
+    { text: "Kuchsiz odamlar kutadilar, kuchlilar esa yaratadilar.", author: "Lev Tolstoy" },
+    { text: "Intizom — orzular va natijalar orasidagi ko'prikdir.", author: "Jim Ron" },
+    { text: "Bitta qadam bilan ming chaqirimlik yo'l boshlanadi.", author: "Lao Szi" },
+    { text: "Stay hungry, stay foolish.", author: "Steve Jobs" },
+    { text: "Simplicity is the ultimate sophistication.", author: "Leonardo da Vinci" },
+
+    // O'rta (Medium 90 - 180)
     { text: "Bilim o'rganishdan to'xtagan kishi, yigirma yoshdami yoki sakson yoshdami, qariydir.", author: "Genri Ford" },
-    { text: "Harakat qilgan har qanday odam xato qilishi mumkin, lekin harakatsizlik eng katta xatodir.", author: "Amir Temur" },
     { text: "Kelajakni bashorat qilishning eng yaxshi yo'li — uni o'zingiz yaratishingizdir.", author: "Piter Druker" },
     { text: "Vaqtingiz cheklangan, shuning uchun uni birovning hayoti bilan yashab behuda o'tkazmang.", author: "Stiv Jobs" },
     { text: "Har bir buyuk natija kichik va doimiy odatlarning yig'indisidan boshlanadi.", author: "Jeyms Klir" },
-    { text: "Ilm o'rganmoq igna bilan quduq qazimoq kabidir, har bir harakat samara beradi.", author: "Alisher Navoiy" }
+    { text: "Ilm o'rganmoq igna bilan quduq qazimoq kabidir, har bir harakat samara beradi.", author: "Alisher Navoiy" },
+    { text: "Dunyo o'zgarishini xohlasangiz, o'zgarishni avval o'zingizdan boshlang.", author: "Mahatma Gandi" },
+    { text: "Muvaffaqiyat — bu har kuni takrorlanadigan kichik g'alabalarning yakunidir.", author: "Robert Koller" },
+    { text: "Aql bilan boshqarilmagan kuch faqat vayronagarchilik keltiradi.", author: "Ibn Sino" },
+
+    // Uzun (Long > 180)
+    { text: "Harakat qilgan har qanday odam xato qilishi mumkin, lekin harakatsizlik eng katta xatodir. Harakatda baraka bor, intilgan kishi maqsadiga albatta erishadi.", author: "Amir Temur" },
+    { text: "Biz kimligimizni o'ylashimiz emas, balki har kuni nima qilayotganimiz belgilaydi. Mukammallik bu tasodifiy harakat emas, balki yuksak odatdir.", author: "Aristotel" },
+    { text: "O'z orzularingiz ortidan ergashing, chunki qiyinchiliklar o'tkinchidir, erishilgan buyuk natijalar esa abadiy faxr bag'ishlaydi.", author: "Albert Eynshteyn" },
+    { text: "Agar siz yiqilsangiz, turing va yana harakat qiling. Qat'iyatlilik har qanday to'siqni yengib o'tishning birdan-bir siri hisoblanadi.", author: "Konfutsiy" }
   ]
 };
