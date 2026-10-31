@@ -102,6 +102,9 @@ function loadStoredSettings() {
   const savedMode = localStorage.getItem('mk_mode');
   if (savedMode) state.mode = savedMode;
 
+  const savedCodeLang = localStorage.getItem('mk_code_lang');
+  if (savedCodeLang) state.codeLanguage = savedCodeLang;
+
   const savedTime = localStorage.getItem('mk_time');
   if (savedTime) state.timeLimit = parseInt(savedTime, 10);
 
@@ -146,9 +149,26 @@ function updateConfigUI() {
   if (state.mode === 'time') {
     elements.timeGroup.style.display = 'flex';
     elements.wordsGroup.style.display = 'none';
-  } else {
+    if (elements.codeGroup) elements.codeGroup.style.display = 'none';
+  } else if (state.mode === 'words') {
     elements.timeGroup.style.display = 'none';
     elements.wordsGroup.style.display = 'flex';
+    if (elements.codeGroup) elements.codeGroup.style.display = 'none';
+  } else if (state.mode === 'code') {
+    elements.timeGroup.style.display = 'none';
+    elements.wordsGroup.style.display = 'none';
+    if (elements.codeGroup) elements.codeGroup.style.display = 'flex';
+  } else if (state.mode === 'quote') {
+    elements.timeGroup.style.display = 'none';
+    elements.wordsGroup.style.display = 'none';
+    if (elements.codeGroup) elements.codeGroup.style.display = 'none';
+  }
+
+  // Dasturlash tili tugmalari
+  if (elements.codeLangBtns) {
+    elements.codeLangBtns.forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.codeLang === state.codeLanguage);
+    });
   }
 
   // Vaqt tugmalari
