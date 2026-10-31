@@ -1352,11 +1352,17 @@ window.startMultiplayerGame = function(words) {
   setTimeout(updateCaretPosition, 20);
 };
 
-// Har safar progress yangilanganda multiplayerga xabar berish
-const originalUpdateCaretPosition = updateCaretPosition;
+// Har safar harf yozilganda progressni do'stlarga yuborish
 window.checkMultiplayerProgress = function() {
   if (state.isMultiplayer && window.multiplayerManager && window.multiplayerManager.isInRace) {
-    const progress = Math.round((state.currentWordIndex / state.words.length) * 100);
+    const totalChars = Math.max(state.words.join(' ').length, 1);
+    let typedChars = 0;
+    for (let i = 0; i < state.currentWordIndex; i++) {
+      typedChars += state.words[i].length + 1;
+    }
+    typedChars += state.currentLetterIndex;
+
+    const progress = Math.min(Math.round((typedChars / totalChars) * 100), 100);
     const liveWpm = calculateLiveWpm();
     window.multiplayerManager.sendProgress(progress, liveWpm);
   }
