@@ -387,6 +387,11 @@ function handleKeyDown(e) {
     }
   }
 
+  // 3. Agar test inputi o'chirilgan (disabled) bo'lsa
+  if (elements.typingInput && elements.typingInput.disabled) {
+    return;
+  }
+
   if (state.isFinished) {
     if (e.key === 'Tab' || e.key === 'Enter') {
       e.preventDefault();
