@@ -924,9 +924,325 @@ function setupEventListeners() {
     });
   }
 
+  // ===================================================
+  // AUTH HODISALARI (Kirish / Ro'yxat / Profil)
+  // ===================================================
+  const authModal = document.getElementById('auth-modal');
+  const profileModal = document.getElementById('profile-modal');
+  const authBtn = document.getElementById('auth-btn');
+  const profileBtn = document.getElementById('profile-btn');
+  const closeAuthBtn = document.getElementById('close-auth-btn');
+  const closeProfileBtn = document.getElementById('close-profile-btn');
+  const tabLoginBtn = document.getElementById('tab-login-btn');
+  const tabRegisterBtn = document.getElementById('tab-register-btn');
+  const loginForm = document.getElementById('login-form');
+  const registerForm = document.getElementById('register-form');
+  const logoutBtn = document.getElementById('logout-btn');
+
+  let selectedAvatar = '🏎️';
+
+  if (authBtn) {
+    authBtn.addEventListener('click', () => {
+      authModal.classList.add('active');
+    });
+  }
+
+  if (closeAuthBtn) {
+    closeAuthBtn.addEventListener('click', () => {
+      authModal.classList.remove('active');
+      elements.typingInput.focus();
+    });
+  }
+
+  if (profileBtn) {
+    profileBtn.addEventListener('click', () => {
+      const u = window.authManager.currentUser;
+      if (u) {
+        document.getElementById('prof-avatar').textContent = u.avatar || '🏎️';
+        document.getElementById('prof-name').textContent = u.username;
+        document.getElementById('prof-races').textContent = u.races || 0;
+        document.getElementById('prof-wins').textContent = u.wins || 0;
+        document.getElementById('prof-best-wpm').textContent = (u.bestWpm || 0) + ' WPM';
+      }
+      profileModal.classList.add('active');
+    });
+  }
+
+  if (closeProfileBtn) {
+    closeProfileBtn.addEventListener('click', () => {
+      profileModal.classList.remove('active');
+      elements.typingInput.focus();
+    });
+  }
+
+  if (tabLoginBtn && tabRegisterBtn) {
+    tabLoginBtn.addEventListener('click', () => {
+      tabLoginBtn.classList.add('active');
+      tabRegisterBtn.classList.remove('active');
+      loginForm.style.display = 'block';
+      registerForm.style.display = 'none';
+    });
+
+    tabRegisterBtn.addEventListener('click', () => {
+      tabRegisterBtn.classList.add('active');
+      tabLoginBtn.classList.remove('active');
+      loginForm.style.display = 'none';
+      registerForm.style.display = 'block';
+    });
+  }
+
+  // Avatar tanlash
+  document.querySelectorAll('#reg-avatar-selector .avatar-opt').forEach(opt => {
+    opt.addEventListener('click', () => {
+      document.querySelectorAll('#reg-avatar-selector .avatar-opt').forEach(o => o.classList.remove('active'));
+      opt.classList.add('active');
+      selectedAvatar = opt.dataset.avatar;
+    });
+  });
+
+  // Login form submit
+  if (loginForm) {
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const u = document.getElementById('login-username').value;
+      const p = document.getElementById('login-password').value;
+      const res = window.authManager.login(u, p);
+      if (res.success) {
+        authModal.classList.remove('active');
+        alert("Xush kelibsiz, " + res.user.username + "!");
+        elements.typingInput.focus();
+      } else {
+        alert(res.message);
+      }
+    });
+  }
+
+  // Register form submit
+  if (registerForm) {
+    registerForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const u = document.getElementById('reg-username').value;
+      const p = document.getElementById('reg-password').value;
+      const res = window.authManager.register(u, p, selectedAvatar);
+      if (res.success) {
+        authModal.classList.remove('active');
+        alert("Tabriklaymiz, muvaffaqiyatli ro'yxatdan o'tdingiz!");
+        elements.typingInput.focus();
+      } else {
+        alert(res.message);
+      }
+    });
+  }
+
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      window.authManager.logout();
+      profileModal.classList.remove('active');
+      alert("Profildan chiqildi.");
+      elements.typingInput.focus();
+    });
+  }
+
+  // ===================================================
+  // MULTIPLAYER HODISALARI (Poyga va Xonalar)
+  // ===================================================
+  const multiModal = document.getElementById('multiplayer-modal');
+  const openMultiBtn = document.getElementById('open-multiplayer-btn');
+  const closeMultiBtn = document.getElementById('close-multiplayer-btn');
+  const createRoomBtn = document.getElementById('create-room-btn');
+  const joinRoomBtn = document.getElementById('join-room-btn');
+  const joinRoomInput = document.getElementById('join-room-input');
+  const lobbyModal = document.getElementById('multiplayer-lobby-modal');
+  const closeLobbyBtn = document.getElementById('close-lobby-btn');
+  const lobbyStartBtn = document.getElementById('lobby-start-btn');
+  const copyLinkBtn = document.getElementById('copy-room-link-btn');
+  const leaveRaceBtn = document.getElementById('leave-race-btn');
+  const raceResultsModal = document.getElementById('race-results-modal');
+  const closeRaceResultsBtn = document.getElementById('close-race-results-btn');
+  const raceAgainBtn = document.getElementById('race-again-btn');
+  const raceExitBtn = document.getElementById('race-exit-btn');
+
+  if (openMultiBtn) {
+    openMultiBtn.addEventListener('click', () => {
+      multiModal.classList.add('active');
+    });
+  }
+
+  if (closeMultiBtn) {
+    closeMultiBtn.addEventListener('click', () => {
+      multiModal.classList.remove('active');
+      elements.typingInput.focus();
+    });
+  }
+
+  if (createRoomBtn) {
+    createRoomBtn.addEventListener('click', () => {
+      const code = window.multiplayerManager.createRoom();
+      multiModal.classList.remove('active');
+      lobbyModal.classList.add('active');
+    });
+  }
+
+  if (joinRoomBtn) {
+    joinRoomBtn.addEventListener('click', () => {
+      const code = joinRoomInput.value.trim();
+      if (!code) {
+        alert("Iltimos, xona kodini kiriting!");
+        return;
+      }
+      window.multiplayerManager.joinRoom(code);
+      multiModal.classList.remove('active');
+      lobbyModal.classList.add('active');
+    });
+  }
+
+  if (copyLinkBtn) {
+    copyLinkBtn.addEventListener('click', () => {
+      const url = window.location.origin + window.location.pathname + '?room=' + window.multiplayerManager.roomId;
+      navigator.clipboard.writeText(url).then(() => {
+        copyLinkBtn.textContent = "✅ Nusxalandi!";
+        setTimeout(() => { copyLinkBtn.textContent = "📋 Havolani nusxalash"; }, 2000);
+      });
+    });
+  }
+
+  if (lobbyStartBtn) {
+    lobbyStartBtn.addEventListener('click', () => {
+      window.multiplayerManager.startRace();
+    });
+  }
+
+  if (closeLobbyBtn) {
+    closeLobbyBtn.addEventListener('click', () => {
+      window.multiplayerManager.leaveRoom();
+    });
+  }
+
+  if (leaveRaceBtn) {
+    leaveRaceBtn.addEventListener('click', () => {
+      window.multiplayerManager.leaveRoom();
+    });
+  }
+
+  if (closeRaceResultsBtn) {
+    closeRaceResultsBtn.addEventListener('click', () => {
+      raceResultsModal.classList.remove('active');
+      window.multiplayerManager.leaveRoom();
+    });
+  }
+
+  if (raceExitBtn) {
+    raceExitBtn.addEventListener('click', () => {
+      raceResultsModal.classList.remove('active');
+      window.multiplayerManager.leaveRoom();
+    });
+  }
+
+  if (raceAgainBtn) {
+    raceAgainBtn.addEventListener('click', () => {
+      raceResultsModal.classList.remove('active');
+      if (window.multiplayerManager.isHost) {
+        lobbyModal.classList.add('active');
+        document.getElementById('race-track-section').style.display = 'none';
+      } else {
+        alert("Xona egasi yangi poyga boshlashini kuting.");
+      }
+    });
+  }
+
+  // URL da ?room=XXXXXX bormi tekshirish
+  const urlParams = new URLSearchParams(window.location.search);
+  const roomParam = urlParams.get('room');
+  if (roomParam) {
+    setTimeout(() => {
+      if (confirm(`Siz ${roomParam} xonasiga taklif qilindingiz. Qo'shilasizmi?`)) {
+        window.multiplayerManager.joinRoom(roomParam);
+        lobbyModal.classList.add('active');
+      }
+    }, 500);
+  }
+
   // Oyna o'lchami o'zgarganda kursor joyini to'g'rilash
   window.addEventListener('resize', updateCaretPosition);
 }
+
+// ===================================================
+// MULTIPLAYER POYGA BOSHLANISH FUNKSIYASI
+// ===================================================
+window.startMultiplayerGame = function(words) {
+  state.isMultiplayer = true;
+  state.mode = 'words';
+  state.wordsLimit = words.length;
+
+  // UI tayyorlash
+  document.getElementById('test-section').style.display = 'flex';
+  document.getElementById('main-config-bar').style.display = 'none'; // Poygada sozlamalarni yashirish
+
+  state.words = words;
+  elements.wordsContainer.innerHTML = '';
+  state.words.forEach((wordText, wIdx) => {
+    const wordEl = document.createElement('div');
+    wordEl.className = 'word' + (wIdx === 0 ? ' active' : '');
+    wordEl.dataset.wordIndex = wIdx;
+
+    for (let i = 0; i < wordText.length; i++) {
+      const letterEl = document.createElement('span');
+      letterEl.className = 'letter';
+      letterEl.textContent = wordText[i];
+      wordEl.appendChild(letterEl);
+    }
+    elements.wordsContainer.appendChild(wordEl);
+  });
+
+  state.currentWordIndex = 0;
+  state.currentLetterIndex = 0;
+  state.correctChars = 0;
+  state.incorrectChars = 0;
+  state.extraChars = 0;
+  state.missedChars = 0;
+  state.timeElapsed = 0;
+  state.historyChartData = [];
+
+  elements.liveStats.textContent = `0 / ${words.length}`;
+  elements.typingInput.value = '';
+  elements.typingInput.focus();
+
+  startTest();
+  setTimeout(updateCaretPosition, 20);
+};
+
+// Har safar progress yangilanganda multiplayerga xabar berish
+const originalUpdateCaretPosition = updateCaretPosition;
+window.checkMultiplayerProgress = function() {
+  if (state.isMultiplayer && window.multiplayerManager && window.multiplayerManager.isInRace) {
+    const progress = Math.round((state.currentWordIndex / state.words.length) * 100);
+    const liveWpm = calculateLiveWpm();
+    window.multiplayerManager.sendProgress(progress, liveWpm);
+  }
+};
+
+// Finish test ni kengaytirish
+const originalFinishTest = finishTest;
+finishTest = function() {
+  originalFinishTest();
+  if (state.isMultiplayer && window.multiplayerManager) {
+    const minutes = Math.max(state.timeElapsed, 1) / 60;
+    const netWpm = Math.max(0, Math.round((state.correctChars / 5) / minutes));
+    const totalTyped = state.correctChars + state.incorrectChars + state.extraChars;
+    const accuracy = totalTyped > 0 ? Math.round((state.correctChars / totalTyped) * 100) : 0;
+    window.multiplayerManager.sendFinish(netWpm, accuracy);
+    document.getElementById('main-config-bar').style.display = 'flex';
+  }
+};
+
+// handleKeyDown dagi Space bosilishiga progress ulaymiz
+const originalHandleKeyDown = handleKeyDown;
+handleKeyDown = function(e) {
+  originalHandleKeyDown(e);
+  if (state.isMultiplayer) {
+    window.checkMultiplayerProgress();
+  }
+};
 
 // Boshlash
 window.addEventListener('DOMContentLoaded', init);
