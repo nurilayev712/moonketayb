@@ -127,6 +127,11 @@ class AuthManager {
       }
     }
 
+    // Kunlik faollik xaritasi (Activity Heatmap)
+    const today = new Date().toISOString().split('T')[0];
+    if (!this.currentUser.activity) this.currentUser.activity = {};
+    this.currentUser.activity[today] = (this.currentUser.activity[today] || 0) + 1;
+
     this.saveCurrentUserData();
     this.updateUI();
   }
