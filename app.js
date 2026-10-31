@@ -976,6 +976,7 @@ function appendMoreWords(count) {
 // ----------------------------------------------------
 function finishTest() {
   clearInterval(state.timer);
+  stopPaceCaret();
   state.isRunning = false;
   state.isFinished = true;
   document.body.classList.remove('focus-mode');
