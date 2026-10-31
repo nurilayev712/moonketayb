@@ -1,4 +1,16 @@
-// MoonKeyType — PeerJS orqali P2P Multiplayer Poyga Tizimi
+// MoonKeyType — PeerJS orqali P2P Multiplayer Poyga Tizimi (Tuzatilgan va barqaror)
+
+const PEER_CONFIG = {
+  debug: 1,
+  config: {
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+      { urls: 'stun:stun2.l.google.com:19302' },
+      { urls: 'stun:global.stun.twilio.com:3478' }
+    ]
+  }
+};
 
 class MultiplayerManager {
   constructor() {
@@ -7,10 +19,11 @@ class MultiplayerManager {
     this.hostConnection = null; // Client uchun hostga ulanish
     this.isHost = false;
     this.roomId = null;
-    this.players = {}; // { peerId: { name, avatar, progress, wpm, finished, finishTime, rank } }
+    this.players = {}; // { peerId: { id, name, avatar, progress, wpm, finished } }
     this.isInRace = false;
     this.raceWords = [];
     this.countdownTimer = null;
+    this.connectionTimeout = null;
   }
 
   // Xona kodi yaratish (masalan 482910)
@@ -20,52 +33,67 @@ class MultiplayerManager {
 
   // 1. Yangi xona yaratish (Host)
   createRoom() {
-    const user = window.authManager.currentUser || { username: 'Mehmon_' + Math.floor(Math.random() * 100), avatar: '🏎️' };
+    const user = window.authManager.currentUser || { username: 'Guest_' + Math.floor(Math.random() * 900 + 100), avatar: '⌨️' };
     this.roomId = this.generateRoomCode();
     this.isHost = true;
     this.players = {};
 
     const peerId = 'mkt-room-' + this.roomId;
 
-    if (this.peer) this.peer.destroy();
+    if (this.peer) {
+      try { this.peer.destroy(); } catch (e) {}
+    }
 
-    this.peer = new Peer(peerId, {
-      debug: 1
-    });
+    this.updateStatusText("Xona yaratilmoqda, kuting...");
 
-    this.peer.on('open', (id) => {
-      console.log('Xona yaratildi, Peer ID:', id);
-      this.players[this.peer.id] = {
-        id: this.peer.id,
-        name: user.username,
-        avatar: user.avatar,
-        isHost: true,
-        progress: 0,
-        wpm: 0,
-        finished: false
-      };
-      this.updateLobbyUI();
-    });
+    try {
+      this.peer = new Peer(peerId, PEER_CONFIG);
 
-    this.peer.on('connection', (conn) => {
-      this.connections.push(conn);
-
-      conn.on('data', (data) => {
-        this.handleHostData(conn, data);
-      });
-
-      conn.on('close', () => {
-        delete this.players[conn.peer];
-        this.connections = this.connections.filter(c => c !== conn);
-        this.broadcastLobby();
+      this.peer.on('open', (id) => {
+        console.log('Xona muvaffaqiyatli ochildi, Peer ID:', id);
+        this.players[this.peer.id] = {
+          id: this.peer.id,
+          name: user.username,
+          avatar: user.avatar || '⌨️',
+          isHost: true,
+          progress: 0,
+          wpm: 0,
+          finished: false
+        };
         this.updateLobbyUI();
+        this.updateStatusText("Xona tayyor! Do'stlaringizga kodni bering.");
       });
-    });
 
-    this.peer.on('error', (err) => {
-      console.error('PeerJS xatosi:', err);
-      alert('Xona yaratishda xatolik yuz berdi: ' + err.type);
-    });
+      this.peer.on('connection', (conn) => {
+        console.log('Yangi o\'yinchi ulandi:', conn.peer);
+        this.connections.push(conn);
+
+        conn.on('data', (data) => {
+          this.handleHostData(conn, data);
+        });
+
+        conn.on('close', () => {
+          delete this.players[conn.peer];
+          this.connections = this.connections.filter(c => c !== conn);
+          this.broadcastLobby();
+          this.updateLobbyUI();
+        });
+      });
+
+      this.peer.on('error', (err) => {
+        console.error('PeerJS xatosi:', err);
+        if (err.type === 'unavailable-id') {
+          // Kod band bo'lsa yangitdan yaratish
+          this.createRoom();
+        } else {
+          alert('Tarmoq xatosi: ' + (err.message || err.type));
+        }
+      });
+
+    } catch (e) {
+      console.error(e);
+      alert("Xona ochishda xatolik yuz berdi!");
+    }
 
     return this.roomId;
   }
@@ -78,50 +106,75 @@ class MultiplayerManager {
       return;
     }
 
-    const user = window.authManager.currentUser || { username: 'Mehmon_' + Math.floor(Math.random() * 100), avatar: '🏎️' };
+    const user = window.authManager.currentUser || { username: 'Guest_' + Math.floor(Math.random() * 900 + 100), avatar: '⌨️' };
     this.roomId = code;
     this.isHost = false;
+    this.players = {};
 
-    if (this.peer) this.peer.destroy();
+    if (this.peer) {
+      try { this.peer.destroy(); } catch (e) {}
+    }
 
-    this.peer = new Peer({ debug: 1 });
+    this.updateStatusText("Xonaga ulanilmoqda, kuting...");
 
-    this.peer.on('open', (myPeerId) => {
-      const hostPeerId = 'mkt-room-' + this.roomId;
-      const conn = this.peer.connect(hostPeerId);
-      this.hostConnection = conn;
+    try {
+      this.peer = new Peer(PEER_CONFIG);
 
-      conn.on('open', () => {
-        console.log('Hostga ulanildi!');
-        // O'z ma'lumotlarini hostga yuborish
-        conn.send({
-          type: 'JOIN',
-          player: {
-            id: myPeerId,
-            name: user.username,
-            avatar: user.avatar,
-            isHost: false,
-            progress: 0,
-            wpm: 0,
-            finished: false
+      this.peer.on('open', (myPeerId) => {
+        const hostPeerId = 'mkt-room-' + this.roomId;
+        const conn = this.peer.connect(hostPeerId, { reliable: true });
+        this.hostConnection = conn;
+
+        // Ulanish uchun 12 soniya timeout
+        clearTimeout(this.connectionTimeout);
+        this.connectionTimeout = setTimeout(() => {
+          if (!conn.open) {
+            alert("Xonaga ulanib bo'lmadi! Xona kodi noto'g'ri yoki xona egasi oflayn.");
+            this.leaveRoom();
           }
+        }, 12000);
+
+        conn.on('open', () => {
+          clearTimeout(this.connectionTimeout);
+          console.log('Hostga muvaffaqiyatli ulanildi!');
+          this.updateStatusText("Xonaga ulandiz! Xona egasi poygani boshlashini kuting.");
+
+          // O'z ma'lumotlarini hostga yuborish
+          conn.send({
+            type: 'JOIN',
+            player: {
+              id: myPeerId,
+              name: user.username,
+              avatar: user.avatar || '⌨️',
+              isHost: false,
+              progress: 0,
+              wpm: 0,
+              finished: false
+            }
+          });
+        });
+
+        conn.on('data', (data) => {
+          this.handleClientData(data);
+        });
+
+        conn.on('close', () => {
+          alert("Xona egasi chiqib ketdi yoki ulanish uzildi!");
+          this.leaveRoom();
         });
       });
 
-      conn.on('data', (data) => {
-        this.handleClientData(data);
-      });
-
-      conn.on('close', () => {
-        alert("Xona egasi ulanishni to'xtatdi!");
+      this.peer.on('error', (err) => {
+        clearTimeout(this.connectionTimeout);
+        console.error('PeerJS ulanish xatosi:', err);
+        alert('Xona topilmadi! Kodni to\'g\'ri kiritganingizni tekshiring.');
         this.leaveRoom();
       });
-    });
 
-    this.peer.on('error', (err) => {
-      console.error('PeerJS ulanish xatosi:', err);
-      alert('Xonaga ulanib bo\'lmadi! Kodni tekshiring.');
-    });
+    } catch (e) {
+      console.error(e);
+      alert("Xonaga ulanishda xatolik yuz berdi!");
+    }
   }
 
   // Host xabarlarni qabul qilishi
@@ -130,6 +183,11 @@ class MultiplayerManager {
       this.players[conn.peer] = data.player;
       this.broadcastLobby();
       this.updateLobbyUI();
+      // Yangi qo'shilgan o'yinchiga ham darhol lobby holatini yuborish
+      conn.send({
+        type: 'LOBBY_UPDATE',
+        players: this.players
+      });
     } else if (data.type === 'PROGRESS') {
       if (this.players[conn.peer]) {
         this.players[conn.peer].progress = data.progress;
@@ -174,7 +232,9 @@ class MultiplayerManager {
   // Host barcha o'yinchilarga xabar tarqatishi
   broadcast(data) {
     this.connections.forEach(conn => {
-      if (conn.open) conn.send(data);
+      if (conn && conn.open) {
+        try { conn.send(data); } catch (e) {}
+      }
     });
   }
 
@@ -189,11 +249,12 @@ class MultiplayerManager {
   startRace() {
     if (!this.isHost) return;
 
-    // So'zlar generatsiyasi (hamma uchun bir xil 30 ta so'z)
-    const lang = window.state ? window.state.language : 'uzbek';
-    const source = (window.WORDS && window.WORDS[lang]) || window.WORDS.uzbek;
+    // So'zlar generatsiyasi (hamma uchun bir xil 25 ta so'z)
+    const lang = (window.state && window.state.language) || 'english';
+    const source = (window.WORDS && window.WORDS[lang]) || (window.WORDS && window.WORDS.english) || [];
     const words = [];
-    for (let i = 0; i < 30; i++) {
+    const count = 25;
+    for (let i = 0; i < count; i++) {
       words.push(source[Math.floor(Math.random() * source.length)]);
     }
 
@@ -218,17 +279,16 @@ class MultiplayerManager {
     // Xonani yashirish, poyga maydonini ochish
     document.getElementById('multiplayer-lobby-modal').classList.remove('active');
     document.getElementById('race-track-section').style.display = 'flex';
-    document.getElementById('test-section').style.display = 'none';
+    document.getElementById('test-section').style.display = 'flex';
 
     // Poyga treki qatorlarini chizish
     this.renderRaceTracks();
 
     let count = 3;
     numberEl.textContent = count;
-
-    // Ovoz
     if (window.soundManager) window.soundManager.playKey(false, false);
 
+    clearInterval(this.countdownTimer);
     this.countdownTimer = setInterval(() => {
       count--;
       if (count > 0) {
@@ -241,12 +301,14 @@ class MultiplayerManager {
         clearInterval(this.countdownTimer);
         overlay.style.display = 'none';
         // Asosiy o'yinni boshlash
-        window.startMultiplayerGame(this.raceWords);
+        if (window.startMultiplayerGame) {
+          window.startMultiplayerGame(this.raceWords);
+        }
       }
     }, 1000);
   }
 
-  // Progress yuborish (o'yin davomida harf terilganda chaqiriladi)
+  // Progress yuborish (har bir harf yozilganda)
   sendProgress(progressPercent, currentWpm) {
     const myId = this.peer ? this.peer.id : null;
     if (myId && this.players[myId]) {
@@ -295,12 +357,8 @@ class MultiplayerManager {
   // Host marrani tekshirishi
   checkRaceFinish() {
     const allPlayers = Object.values(this.players);
-    const finishedCount = allPlayers.filter(p => p.finished).length;
-
-    // Agar hamma yoki kamida 1-o'rin tugatsa
     const sorted = [...allPlayers].sort((a, b) => (b.wpm || 0) - (a.wpm || 0));
 
-    // Natijalarni uzatish
     this.broadcast({
       type: 'RACE_FINISHED_SUMMARY',
       leaderboard: sorted
@@ -324,14 +382,14 @@ class MultiplayerManager {
     }
 
     leaderboard.forEach((player, idx) => {
-      const medals = ['🥇 1-O\'RIN', '🥈 2-O\'RIN', '🥉 3-O\'RIN'];
-      const rankText = medals[idx] || `${idx + 1}-o'rin`;
+      const medals = ['🥇 1st Place', '🥈 2nd Place', '🥉 3rd Place'];
+      const rankText = medals[idx] || `${idx + 1}th Place`;
 
       const item = document.createElement('div');
       item.className = 'leaderboard-item' + (player.id === myId ? ' is-me' : '');
       item.innerHTML = `
         <div style="display: flex; align-items: center; gap: 0.75rem;">
-          <span style="font-size: 1.5rem;">${player.avatar || '🏎️'}</span>
+          <span style="font-size: 1.5rem;">${player.avatar || '⌨️'}</span>
           <div>
             <div style="font-weight: 700; color: var(--text-color);">${player.name}</div>
             <div style="font-size: 0.8rem; color: var(--main-color);">${rankText}</div>
@@ -339,7 +397,7 @@ class MultiplayerManager {
         </div>
         <div style="text-align: right;">
           <div style="font-size: 1.5rem; font-weight: 700; color: var(--main-color);">${player.wpm || 0} WPM</div>
-          <div style="font-size: 0.75rem; color: var(--sub-color);">${player.accuracy || 100}% aniqlik</div>
+          <div style="font-size: 0.75rem; color: var(--sub-color);">${player.accuracy || 100}% acc</div>
         </div>
       `;
       list.appendChild(item);
@@ -359,8 +417,10 @@ class MultiplayerManager {
       track.id = 'track-' + player.id;
       track.innerHTML = `
         <div class="player-info-badge">
-          <span class="p-avatar">${player.avatar || '🏎️'}</span>
-          <span class="p-name">${player.name}</span>
+          <div style="display: flex; align-items: center; gap: 0.4rem;">
+            <span class="p-avatar">${player.avatar || '⌨️'}</span>
+            <span class="p-name">${player.name}</span>
+          </div>
           <span class="p-wpm" id="wpm-tag-${player.id}">${player.wpm || 0} WPM</span>
         </div>
         <div class="track-line">
@@ -379,7 +439,6 @@ class MultiplayerManager {
       const carEl = document.getElementById('car-' + player.id);
       const wpmTag = document.getElementById('wpm-tag-' + player.id);
       if (carEl) {
-        // 0% dan 95% gacha (finishgacha)
         const percent = Math.min(Math.max(player.progress || 0, 0), 96);
         carEl.style.left = `${percent}%`;
       }
@@ -389,14 +448,18 @@ class MultiplayerManager {
     });
   }
 
+  updateStatusText(msg) {
+    const statusText = document.getElementById('lobby-status-text');
+    if (statusText) statusText.textContent = msg;
+  }
+
   // Lobby (Kutish zali) UI
   updateLobbyUI() {
     const codeEl = document.getElementById('lobby-room-code');
     const playersList = document.getElementById('lobby-players-list');
     const startBtn = document.getElementById('lobby-start-btn');
-    const statusText = document.getElementById('lobby-status-text');
 
-    if (codeEl) codeEl.textContent = this.roomId || '---';
+    if (codeEl) codeEl.textContent = this.roomId || '------';
 
     if (playersList) {
       playersList.innerHTML = '';
@@ -404,8 +467,8 @@ class MultiplayerManager {
         const item = document.createElement('div');
         item.className = 'lobby-player-card';
         item.innerHTML = `
-          <span style="font-size: 1.5rem;">${p.avatar || '🏎️'}</span>
-          <span style="font-weight: 600;">${p.name} ${p.isHost ? '👑' : ''}</span>
+          <span style="font-size: 1.75rem;">${p.avatar || '⌨️'}</span>
+          <span style="font-weight: 600; font-size: 0.9rem;">${p.name} ${p.isHost ? '👑' : ''}</span>
         `;
         playersList.appendChild(item);
       });
@@ -414,17 +477,18 @@ class MultiplayerManager {
     if (startBtn) {
       if (this.isHost) {
         startBtn.style.display = 'block';
-        startBtn.textContent = "Poygani Boshlash (Start)";
-        if (statusText) statusText.textContent = "Do'stlaringiz qo'shilishini kuting va Boshlash tugmasini bosing.";
+        startBtn.textContent = "Start Game";
       } else {
         startBtn.style.display = 'none';
-        if (statusText) statusText.textContent = "Xona egasi poygani boshlashini kuting...";
       }
     }
   }
 
   leaveRoom() {
-    if (this.peer) this.peer.destroy();
+    clearTimeout(this.connectionTimeout);
+    if (this.peer) {
+      try { this.peer.destroy(); } catch (e) {}
+    }
     this.peer = null;
     this.connections = [];
     this.hostConnection = null;
@@ -434,6 +498,7 @@ class MultiplayerManager {
     document.getElementById('multiplayer-lobby-modal').classList.remove('active');
     document.getElementById('race-track-section').style.display = 'none';
     document.getElementById('test-section').style.display = 'flex';
+    document.getElementById('main-config-bar').style.display = 'flex';
     if (window.resetTest) window.resetTest();
   }
 }
