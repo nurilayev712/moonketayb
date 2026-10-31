@@ -14,8 +14,11 @@ class MultiplayerManager {
     this.client = null;
     this.roomId = null;
     this.isHost = false;
+    this.isReady = false;
+    this.roomMode = 'time'; // 'time' yoki 'words'
+    this.roomLimit = 30; // 15, 30, 60 yoki 25, 50
     this.myId = 'usr_' + Math.random().toString(36).substring(2, 9);
-    this.players = {}; // { id: { id, name, avatar, isHost, progress, wpm, finished } }
+    this.players = {}; // { id: { id, name, avatar, isHost, isReady, progress, wpm, finished, accuracy } }
     this.isInRace = false;
     this.raceWords = [];
     this.countdownTimer = null;
@@ -30,6 +33,9 @@ class MultiplayerManager {
   createRoom() {
     this.roomId = this.generateRoomCode();
     this.isHost = true;
+    this.isReady = true;
+    this.roomMode = 'time';
+    this.roomLimit = 30;
     this.players = {};
 
     const user = (window.authManager && window.authManager.currentUser) || {
@@ -43,9 +49,11 @@ class MultiplayerManager {
       name: user.username,
       avatar: user.avatar || '⌨️',
       isHost: true,
+      isReady: true,
       progress: 0,
       wpm: 0,
-      finished: false
+      finished: false,
+      accuracy: 100
     };
 
     const codeEl = document.getElementById('lobby-room-code');
@@ -60,7 +68,7 @@ class MultiplayerManager {
 
   // 2. Mavjud xonaga qo'shilish (Client)
   joinRoom(code) {
-    code = code.trim();
+    code = (code || '').trim();
     if (!code) {
       alert("Iltimos, xona kodini kiriting!");
       return;
@@ -68,13 +76,62 @@ class MultiplayerManager {
 
     this.roomId = code;
     this.isHost = false;
+    this.isReady = false;
     this.players = {};
+
+    const user = (window.authManager && window.authManager.currentUser) || {
+      username: 'Mehmon_' + Math.floor(Math.random() * 900 + 100),
+      avatar: '⌨️'
+    };
+
+    this.players[this.myId] = {
+      id: this.myId,
+      name: user.username,
+      avatar: user.avatar || '⌨️',
+      isHost: false,
+      isReady: false,
+      progress: 0,
+      wpm: 0,
+      finished: false,
+      accuracy: 100
+    };
 
     const codeEl = document.getElementById('lobby-room-code');
     if (codeEl) codeEl.textContent = this.roomId;
 
+    this.updateLobbyUI();
     this.updateStatusText("Xonaga ulanilmoqda, kuting...");
     this.connectToBroker();
+  }
+
+  // Host: Xona parametrlarini o'zgartirish (Vaqt yoki So'zlar)
+  setRoomConfig(mode, limit) {
+    if (!this.isHost) return;
+    this.roomMode = mode;
+    this.roomLimit = limit;
+    this.updateLobbyUI();
+
+    this.sendMessage({
+      type: 'ROOM_CONFIG',
+      roomMode: this.roomMode,
+      roomLimit: this.roomLimit
+    });
+  }
+
+  // Guest: Tayyorlik holatini almashtirish (Ready toggle)
+  toggleReady() {
+    if (this.isHost) return;
+    this.isReady = !this.isReady;
+    if (this.players[this.myId]) {
+      this.players[this.myId].isReady = this.isReady;
+    }
+    this.updateLobbyUI();
+
+    this.sendMessage({
+      type: 'PLAYER_READY',
+      id: this.myId,
+      isReady: this.isReady
+    });
   }
 
   // WebSocket MQTT Brokerga ulanish (HiveMQ / EMQX WSS)
@@ -117,33 +174,21 @@ class MultiplayerManager {
           const topic = `mkt/race/${this.roomId}`;
           this.client.subscribe(topic);
 
-          const user = (window.authManager && window.authManager.currentUser) || {
-            username: (this.isHost ? 'Host_' : 'Player_') + Math.floor(Math.random() * 900 + 100),
-            avatar: '⌨️'
-          };
+          const myPlayer = this.players[this.myId];
 
           if (this.isHost) {
             this.updateStatusText("Xona tayyor! Do'stlaringiz qo'shilishini kuting.");
           } else {
-            this.updateStatusText("Xonaga ulandingiz! Xona egasi o'yinni boshlashini kuting.");
+            this.updateStatusText("Xonaga ulandingiz! Tayyor bo'lgach 'Tayyorman' tugmasini bosing.");
             // Host va boshqalarga qo'shilganimiz haqida xabar yuboramiz
             this.sendMessage({
               type: 'PLAYER_JOIN',
-              player: {
-                id: this.myId,
-                name: user.username,
-                avatar: user.avatar || '⌨️',
-                isHost: false,
-                progress: 0,
-                wpm: 0,
-                finished: false
-              }
+              player: myPlayer
             });
           }
         },
         onFailure: (err) => {
           console.error("Brokerga ulanish muvaffaqiyatsiz bo'ldi, zaxira brokerga urinilmoqda...", err);
-          // Zaxira broker (EMQX)
           this.connectToFallbackBroker();
         }
       };
@@ -176,22 +221,11 @@ class MultiplayerManager {
         onSuccess: () => {
           const topic = `mkt/race/${this.roomId}`;
           this.client.subscribe(topic);
-          const user = (window.authManager && window.authManager.currentUser) || {
-            username: (this.isHost ? 'Host_' : 'Player_') + Math.floor(Math.random() * 900 + 100),
-            avatar: '⌨️'
-          };
+          const myPlayer = this.players[this.myId];
           if (!this.isHost) {
             this.sendMessage({
               type: 'PLAYER_JOIN',
-              player: {
-                id: this.myId,
-                name: user.username,
-                avatar: user.avatar || '⌨️',
-                isHost: false,
-                progress: 0,
-                wpm: 0,
-                finished: false
-              }
+              player: myPlayer
             });
           }
         },
@@ -236,7 +270,9 @@ class MultiplayerManager {
       if (this.isHost) {
         this.sendMessage({
           type: 'SYNC_LOBBY',
-          players: this.players
+          players: this.players,
+          roomMode: this.roomMode,
+          roomLimit: this.roomLimit
         });
       }
     }
@@ -244,16 +280,35 @@ class MultiplayerManager {
     // 2. Lobby sinxronizatsiyasi
     else if (data.type === 'SYNC_LOBBY') {
       this.players = Object.assign({}, this.players, data.players);
+      if (data.roomMode) this.roomMode = data.roomMode;
+      if (data.roomLimit) this.roomLimit = data.roomLimit;
       this.updateLobbyUI();
     }
 
-    // 3. Poyga boshlanishi (3.. 2.. 1.. START)
+    // 3. Xona egasi parametrlarni o'zgartirganda
+    else if (data.type === 'ROOM_CONFIG') {
+      this.roomMode = data.roomMode;
+      this.roomLimit = data.roomLimit;
+      this.updateLobbyUI();
+    }
+
+    // 4. O'yinchi tayyorlik holatini o'zgartirganda
+    else if (data.type === 'PLAYER_READY') {
+      if (this.players[data.id]) {
+        this.players[data.id].isReady = data.isReady;
+        this.updateLobbyUI();
+      }
+    }
+
+    // 5. Poyga boshlanishi (3.. 2.. 1.. START)
     else if (data.type === 'START_RACE') {
       this.raceWords = data.words;
+      if (data.roomMode) this.roomMode = data.roomMode;
+      if (data.roomLimit) this.roomLimit = data.roomLimit;
       this.startCountdownUI();
     }
 
-    // 4. Progress yangilanishi
+    // 6. Progress yangilanishi
     else if (data.type === 'PROGRESS') {
       if (this.players[data.id]) {
         this.players[data.id].progress = data.progress;
@@ -262,7 +317,7 @@ class MultiplayerManager {
       }
     }
 
-    // 5. Biror o'yinchi marraga yetganda
+    // 7. Biror o'yinchi marraga yetganda
     else if (data.type === 'FINISH') {
       if (this.players[data.id]) {
         this.players[data.id].finished = true;
@@ -274,19 +329,30 @@ class MultiplayerManager {
       }
     }
 
-    // 6. G'oliblar yakuniy taxtasi
+    // 8. G'oliblar yakuniy taxtasi
     else if (data.type === 'LEADERBOARD') {
       this.showRaceResults(data.leaderboard);
     }
 
-    // 7. Jonli Chat xabari
+    // 9. Yana o'ynash (Lobbyga qaytish)
+    else if (data.type === 'RACE_AGAIN') {
+      this.resetToLobby();
+    }
+
+    // 10. Jonli Chat xabari
     else if (data.type === 'CHAT') {
       this.displayChatMessage(data.sender, data.avatar, data.text, data.senderId === this.myId);
     }
 
-    // 8. Jonli Emoji reaksiyasi
+    // 11. Jonli Emoji reaksiyasi
     else if (data.type === 'REACTION') {
       this.triggerFloatingEmoji(data.emoji, data.sender);
+    }
+
+    // 12. O'yinchi xonadan chiqqanda
+    else if (data.type === 'PLAYER_LEAVE') {
+      delete this.players[data.id];
+      this.updateLobbyUI();
     }
   }
 
@@ -295,7 +361,7 @@ class MultiplayerManager {
     text = (text || '').trim();
     if (!text) return;
     const user = (window.authManager && window.authManager.currentUser) || {
-      username: (this.isHost ? 'Host' : 'Player'),
+      username: (this.isHost ? 'Host' : 'Mehmon'),
       avatar: '⌨️'
     };
     this.sendMessage({
@@ -310,7 +376,7 @@ class MultiplayerManager {
   // Emoji reaksiyasi yuborish
   sendReaction(emoji) {
     const user = (window.authManager && window.authManager.currentUser) || {
-      username: (this.isHost ? 'Host' : 'Player')
+      username: (this.isHost ? 'Host' : 'Mehmon')
     };
     this.sendMessage({
       type: 'REACTION',
@@ -330,7 +396,7 @@ class MultiplayerManager {
     bubble.className = 'chat-bubble' + (isMe ? ' is-me' : '');
     bubble.innerHTML = `
       <span>${avatar || '⌨️'}</span>
-      <span class="c-user">${sender}:</span>
+      <span class="c-user">${escapeHtml(sender)}:</span>
       <span class="c-text">${escapeHtml(text)}</span>
     `;
     box.appendChild(bubble);
@@ -357,7 +423,9 @@ class MultiplayerManager {
     const lang = (window.state && window.state.language) || 'uzbek';
     const source = (window.WORDS && window.WORDS[lang]) || (window.WORDS && window.WORDS.uzbek) || [];
     const words = [];
-    const count = 25;
+    
+    // Agar time bo'lsa yetarlicha 120 ta so'z olamiz, agar words bo'lsa limit qadar
+    const count = this.roomMode === 'time' ? 120 : (this.roomLimit || 25);
     for (let i = 0; i < count; i++) {
       words.push(source[Math.floor(Math.random() * source.length)]);
     }
@@ -367,7 +435,9 @@ class MultiplayerManager {
     // Barcha o'yinchilarga boshlash xabarini yuboramiz
     this.sendMessage({
       type: 'START_RACE',
-      words: words
+      words: words,
+      roomMode: this.roomMode,
+      roomLimit: this.roomLimit
     });
   }
 
@@ -406,7 +476,7 @@ class MultiplayerManager {
         clearInterval(this.countdownTimer);
         overlay.style.display = 'none';
         if (window.startMultiplayerGame) {
-          window.startMultiplayerGame(this.raceWords);
+          window.startMultiplayerGame(this.raceWords, this.roomMode, this.roomLimit);
         }
       }
     }, 1000);
@@ -478,7 +548,7 @@ class MultiplayerManager {
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <span style="font-size: 1.5rem;">${player.avatar || '⌨️'}</span>
           <div>
-            <div style="font-weight: 700; color: var(--text-color);">${player.name}</div>
+            <div style="font-weight: 700; color: var(--text-color);">${escapeHtml(player.name)}</div>
             <div style="font-size: 0.8rem; color: var(--main-color);">${rankText}</div>
           </div>
         </div>
@@ -497,6 +567,53 @@ class MultiplayerManager {
     }
   }
 
+  // Yana o'ynash tugmasi bosilganda (barchani kutish zaliga qaytarish)
+  requestRaceAgain() {
+    this.sendMessage({
+      type: 'RACE_AGAIN'
+    });
+    this.resetToLobby();
+  }
+
+  resetToLobby() {
+    this.isInRace = false;
+
+    // Reset player scores
+    Object.values(this.players).forEach(p => {
+      p.progress = 0;
+      p.wpm = 0;
+      p.finished = false;
+      if (!p.isHost) p.isReady = false;
+    });
+
+    if (!this.isHost) {
+      this.isReady = false;
+    }
+
+    const resultsModal = document.getElementById('race-results-modal');
+    if (window.closeAppModal) {
+      window.closeAppModal(resultsModal);
+    } else if (resultsModal) {
+      resultsModal.classList.remove('active');
+    }
+
+    const lobbyModal = document.getElementById('multiplayer-lobby-modal');
+    if (window.openAppModal) {
+      window.openAppModal(lobbyModal);
+    } else if (lobbyModal) {
+      lobbyModal.classList.add('active');
+    }
+
+    document.getElementById('race-track-section').style.display = 'none';
+    document.getElementById('main-config-bar').style.display = 'flex';
+
+    if (window.resetTest) {
+      window.resetTest();
+    }
+
+    this.updateLobbyUI();
+  }
+
   renderRaceTracks() {
     const container = document.getElementById('race-tracks-container');
     container.innerHTML = '';
@@ -509,11 +626,12 @@ class MultiplayerManager {
         <div class="player-info-badge">
           <div style="display: flex; align-items: center; gap: 0.4rem;">
             <span class="p-avatar">${player.avatar || '⌨️'}</span>
-            <span class="p-name">${player.name}</span>
+            <span class="p-name">${escapeHtml(player.name)}</span>
           </div>
           <span class="p-wpm" id="wpm-tag-${player.id}">${player.wpm || 0} WPM</span>
         </div>
         <div class="track-line">
+          <div class="track-fill" id="track-fill-${player.id}" style="width: 0%;"></div>
           <div class="car-runner" id="car-${player.id}" style="left: 0%;">
             ${player.avatar || '🏎️'}
           </div>
@@ -526,11 +644,18 @@ class MultiplayerManager {
 
   updateRaceTrackUI() {
     Object.values(this.players).forEach(player => {
+      const fillEl = document.getElementById('track-fill-' + player.id);
       const carEl = document.getElementById('car-' + player.id);
       const wpmTag = document.getElementById('wpm-tag-' + player.id);
+
+      const percent = Math.min(Math.max(player.progress || 0, 0), 100);
+
+      if (fillEl) {
+        fillEl.style.width = `${percent}%`;
+      }
       if (carEl) {
-        const percent = Math.min(Math.max(player.progress || 0, 0), 96);
-        carEl.style.left = `${percent}%`;
+        const runnerLeft = Math.min(percent, 94);
+        carEl.style.left = `${runnerLeft}%`;
       }
       if (wpmTag) {
         wpmTag.textContent = `${player.wpm || 0} WPM`;
@@ -545,37 +670,124 @@ class MultiplayerManager {
 
   updateLobbyUI() {
     const codeEl = document.getElementById('lobby-room-code');
+    const modeBadge = document.getElementById('lobby-mode-badge');
+    const langBadge = document.getElementById('lobby-lang-badge');
+    const playersBadge = document.getElementById('lobby-players-badge');
+    const configCard = document.getElementById('lobby-config-card');
     const playersList = document.getElementById('lobby-players-list');
     const startBtn = document.getElementById('lobby-start-btn');
+    const readyBtn = document.getElementById('lobby-ready-btn');
 
     if (codeEl) codeEl.textContent = this.roomId || '------';
 
+    // Xona rejimi badge
+    if (modeBadge) {
+      if (this.roomMode === 'time') {
+        modeBadge.textContent = `⏱ ${this.roomLimit}s`;
+      } else {
+        modeBadge.textContent = `📝 ${this.roomLimit} so'z`;
+      }
+    }
+
+    // Til badge
+    if (langBadge) {
+      const curLang = (window.state && window.state.language) || 'uzbek';
+      const langNames = { uzbek: "🌐 O'zbekcha", english: "🌐 English", russian: "🌐 Русский" };
+      langBadge.textContent = langNames[curLang] || "🌐 O'zbekcha";
+    }
+
+    // O'yinchilar soni badge
+    const count = Object.keys(this.players).length;
+    if (playersBadge) {
+      playersBadge.textContent = `👥 ${count}/8 o'yinchi`;
+    }
+
+    // Host sozlamalar kartasi
+    if (configCard) {
+      configCard.style.display = this.isHost ? 'block' : 'none';
+      if (this.isHost) {
+        document.querySelectorAll('.lobby-cfg-btn').forEach(btn => {
+          const btnMode = btn.dataset.lobbyMode;
+          const btnLimit = parseInt(btn.dataset.lobbyLimit, 10);
+          if (btnMode === this.roomMode && btnLimit === this.roomLimit) {
+            btn.classList.add('active');
+          } else {
+            btn.classList.remove('active');
+          }
+        });
+      }
+    }
+
+    // O'yinchilar ro'yxati kartochkalari (Monkeytype style)
     if (playersList) {
       playersList.innerHTML = '';
       Object.values(this.players).forEach(p => {
-        const item = document.createElement('div');
-        item.className = 'lobby-player-card';
-        item.innerHTML = `
-          <span style="font-size: 1.75rem;">${p.avatar || '⌨️'}</span>
-          <span style="font-weight: 600; font-size: 0.9rem;">${p.name} ${p.isHost ? '👑' : ''}</span>
+        const isMe = p.id === this.myId;
+        const card = document.createElement('div');
+        card.className = 'lobby-player-card' + (isMe ? ' is-me' : '');
+
+        let statusBadge = '';
+        if (p.isHost) {
+          statusBadge = '<span class="player-status-badge status-host">👑 XONA EGASI</span>';
+        } else if (p.isReady) {
+          statusBadge = '<span class="player-status-badge status-ready">✅ TAYYOR</span>';
+        } else {
+          statusBadge = '<span class="player-status-badge status-waiting">⏳ KUTILMOQDA</span>';
+        }
+
+        card.innerHTML = `
+          <div class="lobby-avatar-ring">${p.avatar || '⌨️'}</div>
+          <div style="font-weight: 700; font-size: 0.9rem; color: var(--text-color); display: flex; align-items: center; gap: 0.35rem;">
+            ${escapeHtml(p.name)}
+            ${isMe ? '<span style="font-size: 0.72rem; color: var(--sub-color);">(siz)</span>' : ''}
+          </div>
+          ${statusBadge}
         `;
-        playersList.appendChild(item);
+        playersList.appendChild(card);
       });
     }
 
-    if (startBtn) {
-      if (this.isHost) {
-        startBtn.style.display = 'block';
-        startBtn.textContent = "Start Game";
-      } else {
-        startBtn.style.display = 'none';
+    // Host va Guest tugmalari boshqaruvi
+    if (this.isHost) {
+      if (startBtn) {
+        startBtn.style.display = 'flex';
+        const otherPlayers = Object.values(this.players).filter(p => !p.isHost);
+        const readyCount = otherPlayers.filter(p => p.isReady).length;
+        if (otherPlayers.length > 0) {
+          startBtn.innerHTML = `🏁 Poygani boshlash (${readyCount}/${otherPlayers.length} tayyor)`;
+        } else {
+          startBtn.innerHTML = `🏁 Poygani boshlash`;
+        }
+      }
+      if (readyBtn) readyBtn.style.display = 'none';
+    } else {
+      if (startBtn) startBtn.style.display = 'none';
+      if (readyBtn) {
+        readyBtn.style.display = 'flex';
+        if (this.isReady) {
+          readyBtn.textContent = '❌ Bekor qilish (Tayyor emasman)';
+          readyBtn.style.background = 'var(--sub-alt-color)';
+          readyBtn.style.color = 'var(--error-color)';
+          readyBtn.style.borderColor = 'var(--error-color)';
+        } else {
+          readyBtn.textContent = '✅ Tayyorman (Ready)';
+          readyBtn.style.background = 'var(--main-color)';
+          readyBtn.style.color = 'var(--bg-color)';
+          readyBtn.style.borderColor = 'transparent';
+        }
       }
     }
   }
 
   leaveRoom() {
     if (this.client) {
-      try { this.client.disconnect(); } catch (e) {}
+      try {
+        this.sendMessage({
+          type: 'PLAYER_LEAVE',
+          id: this.myId
+        });
+        this.client.disconnect();
+      } catch (e) {}
     }
     this.client = null;
     this.players = {};
