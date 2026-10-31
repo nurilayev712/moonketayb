@@ -1212,3 +1212,157 @@ footer {
   background-color: var(--sub-alt-color);
   color: var(--main-color);
 }
+
+/* ===================================================
+   LOBBY JONLI CHAT VA EMOJILAR DIZAYNI
+   =================================================== */
+.lobby-chat-card {
+  background-color: var(--sub-alt-color);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 0.85rem;
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.lobby-chat-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-color);
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.emoji-fast-bar {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.emoji-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 0.25rem 0.45rem;
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: transform 0.15s, background-color 0.15s;
+}
+
+.emoji-btn:hover {
+  transform: scale(1.25);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.emoji-btn:active {
+  transform: scale(0.95);
+}
+
+.lobby-chat-messages {
+  max-height: 140px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding-right: 0.3rem;
+  font-size: 0.85rem;
+}
+
+.lobby-chat-messages::-webkit-scrollbar {
+  width: 4px;
+}
+
+.lobby-chat-messages::-webkit-scrollbar-thumb {
+  background: var(--sub-color);
+  border-radius: 4px;
+}
+
+.chat-hint {
+  font-size: 0.75rem;
+  color: var(--sub-color);
+  text-align: center;
+  font-style: italic;
+  padding: 0.5rem 0;
+}
+
+.chat-bubble {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  padding: 0.35rem 0.55rem;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  line-height: 1.3;
+}
+
+.chat-bubble.is-me {
+  background: rgba(226, 183, 20, 0.1);
+  border: 1px solid rgba(226, 183, 20, 0.2);
+}
+
+.chat-bubble .c-user {
+  font-weight: 700;
+  color: var(--main-color);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.chat-bubble .c-text {
+  color: var(--text-color);
+  word-break: break-word;
+}
+
+.lobby-chat-form {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.lobby-chat-form input {
+  font-size: 0.85rem;
+  padding: 0.5rem 0.75rem;
+}
+
+/* Suzuvchi Emojilar (Floating reactions) */
+.floating-emoji {
+  position: absolute;
+  font-size: 2.2rem;
+  pointer-events: none;
+  animation: floatEmoji 1.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  z-index: 2000;
+}
+
+@keyframes floatEmoji {
+  0% {
+    transform: translate(-50%, 0) scale(0.6);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -40px) scale(1.3);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(-50%, -90px) scale(1);
+    opacity: 0;
+  }
+}
+
+/* ===================================================
+   CODE VA QUOTE REJIMLARI DIZAYNI
+   =================================================== */
+.quote-author {
+  font-size: 0.95rem;
+  color: var(--main-color);
+  font-style: italic;
+  margin-top: 1rem;
+  text-align: right;
+  width: 100%;
+}
+
+.word.code-token {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  letter-spacing: -0.5px;
+}
