@@ -1063,3 +1063,152 @@ footer {
   border-color: var(--main-color);
   background-color: rgba(255, 255, 255, 0.05);
 }
+
+/* ==================================================== */
+/* MONKEYTYPE XP, STATS VA COMMAND PALETTE */
+/* ==================================================== */
+
+/* XP va Level indikatori */
+.xp-section {
+  background-color: var(--sub-alt-color);
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.xp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.xp-level-badge {
+  color: var(--bg-color);
+  background-color: var(--main-color);
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.xp-bar-track {
+  width: 100%;
+  height: 8px;
+  background-color: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.xp-bar-fill {
+  height: 100%;
+  background: var(--main-color);
+  border-radius: 4px;
+  transition: width 0.4s ease;
+  box-shadow: 0 0 10px var(--main-color);
+}
+
+/* Barcha vaqtlardagi eng yaxshi rekordlar (All-time Bests) */
+.all-time-bests-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  margin: 1.25rem 0;
+}
+
+.best-card {
+  background-color: var(--sub-alt-color);
+  padding: 0.85rem;
+  border-radius: 10px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.best-card .time-label {
+  font-size: 0.75rem;
+  color: var(--sub-color);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.best-card .wpm-val {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--main-color);
+  margin-top: 4px;
+}
+
+/* MonkeyType Command Palette (Esc tugmasi bosilganda) */
+.command-palette-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  display: none;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 15vh;
+  z-index: 3000;
+}
+
+.command-palette {
+  background-color: var(--bg-color);
+  border: 1px solid var(--sub-color);
+  border-radius: 12px;
+  width: 90%;
+  max-width: 550px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  animation: paletteDrop 0.15s ease-out;
+}
+
+@keyframes paletteDrop {
+  from { transform: translateY(-15px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.command-input-wrapper {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--sub-alt-color);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.command-input {
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--text-color);
+  font-family: inherit;
+  font-size: 1.1rem;
+  outline: none;
+}
+
+.command-list {
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.command-item {
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  color: var(--text-color);
+  font-size: 0.9rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.command-item:hover, .command-item.selected {
+  background-color: var(--sub-alt-color);
+  color: var(--main-color);
+}
