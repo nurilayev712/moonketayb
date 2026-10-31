@@ -834,8 +834,13 @@ function setupEventListeners() {
   });
 
   document.addEventListener('click', (e) => {
-    // Agar modal yoki tugma bosilmagan bo'lsa, inputga fokus qaytarish
-    if (!e.target.closest('button') && !e.target.closest('select') && !e.target.closest('.modal')) {
+    // Agar birorta modal ochiq bo'lsa, test inputiga fokus berilmaydi!
+    const isModalOpen = document.querySelector('.modal-overlay.active') || 
+                        (document.getElementById('command-palette-overlay') && document.getElementById('command-palette-overlay').style.display === 'flex');
+    if (isModalOpen) return;
+
+    // Agar tugma, select yoki boshqa element bosilmagan bo'lsa, inputga fokus qaytarish
+    if (!e.target.closest('button') && !e.target.closest('select') && !e.target.closest('input')) {
       elements.typingInput.focus();
     }
   });
