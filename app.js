@@ -1912,6 +1912,59 @@ function setupEventListeners() {
     });
   }
 
+  // Matn Shrifti (Font Family)
+  const fontSelect = document.getElementById('font-family-select');
+  if (fontSelect) {
+    fontSelect.value = state.fontFamily;
+    fontSelect.addEventListener('change', (e) => {
+      state.fontFamily = e.target.value;
+      document.documentElement.style.setProperty('--font-family', state.fontFamily);
+      localStorage.setItem('mkt_font_family', state.fontFamily);
+      setTimeout(updateCaretPosition, 20);
+    });
+  }
+
+  // Soya Kursor (Pace Caret)
+  const paceSelect = document.getElementById('pace-caret-select');
+  if (paceSelect) {
+    paceSelect.value = state.paceCaretMode;
+    paceSelect.addEventListener('change', (e) => {
+      state.paceCaretMode = e.target.value;
+      localStorage.setItem('mkt_pace_caret', state.paceCaretMode);
+    });
+  }
+
+  // Kursor Animatsiyasi
+  const caretAnimSelect = document.getElementById('caret-anim-select');
+  if (caretAnimSelect) {
+    caretAnimSelect.value = state.caretAnim;
+    caretAnimSelect.addEventListener('change', (e) => {
+      applyCaretAnim(e.target.value);
+    });
+  }
+
+  // Ko'r-ko'rona rejim (Blind Mode)
+  const blindSelect = document.getElementById('blind-mode-select');
+  if (blindSelect) {
+    blindSelect.value = state.blindMode ? 'on' : 'off';
+    blindSelect.addEventListener('change', (e) => {
+      state.blindMode = e.target.value === 'on';
+      document.body.classList.toggle('blind-mode', state.blindMode);
+      localStorage.setItem('mkt_blind_mode', state.blindMode);
+    });
+  }
+
+  // Iqtibos uzunligi tanlash
+  document.querySelectorAll('[data-quote-len]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.quoteLength = btn.dataset.quoteLen;
+      document.querySelectorAll('[data-quote-len]').forEach(b => {
+        b.classList.toggle('active', b.dataset.quoteLen === state.quoteLength);
+      });
+      resetTest();
+    });
+  });
+
   // ===================================================
   // MONKEYTYPE COMMAND PALETTE (ESC BOSILGANDA)
   // ===================================================
