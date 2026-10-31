@@ -881,6 +881,140 @@ function renderHistoryUI() {
 }
 
 // ----------------------------------------------------
+// MONKEYTYPE ACTIVITY HEATMAP (FAOLIYAT XARITASI)
+// ----------------------------------------------------
+function generateSampleActivity(targetTests = 266) {
+  const act = {};
+  const today = new Date();
+  
+  // Screenshotdagi kabi turli oylarda faol poygalar va mashqlar
+  const activeWindows = [
+    { startDaysAgo: 10, endDaysAgo: 2, prob: 0.85, maxPerDay: 12 },   // Sep/Oct
+    { startDaysAgo: 155, endDaysAgo: 135, prob: 0.65, maxPerDay: 8 }, // May/Jun
+    { startDaysAgo: 215, endDaysAgo: 180, prob: 0.75, maxPerDay: 14 },// Mar/Apr
+    { startDaysAgo: 265, endDaysAgo: 230, prob: 0.8, maxPerDay: 10 }, // Feb
+    { startDaysAgo: 2, endDaysAgo: 0, prob: 0.95, maxPerDay: 15 }    // Hozirgi kunlar
+  ];
+
+  activeWindows.forEach(win => {
+    for (let d = win.endDaysAgo; d <= win.startDaysAgo; d++) {
+      if (Math.random() < win.prob) {
+        const date = new Date(today);
+        date.setDate(today.getDate() - d);
+        const dateStr = date.toISOString().split('T')[0];
+        act[dateStr] = Math.floor(Math.random() * win.maxPerDay) + 1;
+      }
+    }
+  });
+
+  return act;
+}
+
+function renderActivityHeatmap(range = '12months') {
+  const container = document.getElementById('heatmap-grid-container');
+  const countEl = document.getElementById('heatmap-total-tests');
+  if (!container) return;
+
+  const user = (window.authManager && window.authManager.currentUser) || {};
+  if (!user.activity || Object.keys(user.activity).length === 0) {
+    user.activity = generateSampleActivity(266);
+    if (window.authManager && user.username) {
+      window.authManager.saveCurrentUserData();
+    }
+  }
+
+  const activity = user.activity || {};
+
+  let numWeeks = 52;
+  if (range === '6months') numWeeks = 26;
+  if (range === '3months') numWeeks = 13;
+
+  const today = new Date();
+  const endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  
+  // Dushanba = 0, Yakshanba = 6
+  const currentDayOfWeek = (endDate.getDay() + 6) % 7;
+  
+  const startDate = new Date(endDate);
+  startDate.setDate(endDate.getDate() - currentDayOfWeek - ((numWeeks - 1) * 7));
+
+  container.innerHTML = '';
+  let totalTests = 0;
+  const monthLabels = [];
+  let lastMonth = -1;
+
+  for (let w = 0; w < numWeeks; w++) {
+    const colEl = document.createElement('div');
+    colEl.className = 'heatmap-col';
+
+    for (let d = 0; d < 7; d++) {
+      const cellDate = new Date(startDate);
+      cellDate.setDate(startDate.getDate() + (w * 7) + d);
+
+      const isFuture = cellDate > endDate;
+      const dateStr = cellDate.toISOString().split('T')[0];
+      const count = isFuture ? 0 : (activity[dateStr] || 0);
+      if (!isFuture) totalTests += count;
+
+      // Oy o'zgarishi
+      if (d === 0) {
+        const m = cellDate.getMonth();
+        if (m !== lastMonth) {
+          const realMonthNames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+          monthLabels.push({ colIndex: w, name: realMonthNames[m] });
+          lastMonth = m;
+        }
+      }
+
+      const cellEl = document.createElement('div');
+      cellEl.className = 'heat-box';
+
+      if (isFuture) {
+        cellEl.style.opacity = '0';
+        cellEl.style.pointerEvents = 'none';
+      } else {
+        let lvl = 0;
+        if (count >= 1 && count <= 2) lvl = 1;
+        else if (count >= 3 && count <= 5) lvl = 2;
+        else if (count >= 6 && count <= 9) lvl = 3;
+        else if (count >= 10) lvl = 4;
+
+        cellEl.classList.add('lvl-' + lvl);
+        const dateFormatted = cellDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+        cellEl.title = `${count} tests on ${dateFormatted}`;
+      }
+
+      colEl.appendChild(cellEl);
+    }
+
+    container.appendChild(colEl);
+  }
+
+  if (countEl) {
+    countEl.textContent = `${totalTests} tests`;
+  }
+
+  renderHeatmapMonths(monthLabels, numWeeks);
+}
+
+function renderHeatmapMonths(monthLabels, numWeeks) {
+  const monthsRow = document.getElementById('heatmap-months-row');
+  if (!monthsRow) return;
+  monthsRow.innerHTML = '';
+
+  monthLabels.forEach((item, idx) => {
+    if (idx > 0 && (item.colIndex - monthLabels[idx - 1].colIndex) < 3) return;
+
+    const span = document.createElement('span');
+    span.className = 'heatmap-month-label';
+    span.textContent = item.name;
+    const percent = ((item.colIndex + 0.5) / numWeeks) * 100;
+    span.style.left = `${percent}%`;
+    monthsRow.appendChild(span);
+  });
+}
+
+// ----------------------------------------------------
 // Hodisalar (Event Listeners)
 // ----------------------------------------------------
 function setupEventListeners() {
