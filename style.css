@@ -265,16 +265,19 @@ body.focus-mode footer {
 }
 
 .live-stats {
-  font-size: 1.75rem;
+  font-size: 1.85rem;
   font-weight: 700;
   color: var(--main-color);
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.75rem;
   height: 38px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  width: 100%;
+  padding-left: 2px;
   transition: opacity 0.2s;
   letter-spacing: 1px;
+  user-select: none;
 }
 
 .live-stats.hidden {
