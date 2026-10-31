@@ -879,6 +879,87 @@ class MultiplayerManager {
         }
       }
     });
+
+    this.renderTribeCarets();
+  }
+
+  // Monkeytype Tribe Carets (Raqib kursorlarini matn ustida ko'rsatish)
+  renderTribeCarets() {
+    const container = document.getElementById('tribe-carets-container');
+    if (!container) return;
+    if (!this.isInRace) {
+      container.innerHTML = '';
+      return;
+    }
+
+    const wordsContainer = document.getElementById('words-container');
+    if (!wordsContainer) return;
+    const containerRect = wordsContainer.getBoundingClientRect();
+
+    const allLetters = wordsContainer.querySelectorAll('.letter');
+    const totalLetters = allLetters.length;
+    if (totalLetters === 0) return;
+
+    const playerColors = [
+      '#3b82f6', '#ec4899', '#8b5cf6', '#10b981', '#f59e0b', '#06b6d4', '#e2b714'
+    ];
+
+    Object.values(this.players).forEach((p, idx) => {
+      if (p.id === this.myId) return; // O'zimizning kursorimiz bor
+      let caretEl = document.getElementById('tribe-caret-' + p.id);
+      if (!caretEl) {
+        caretEl = document.createElement('div');
+        caretEl.className = 'tribe-caret';
+        caretEl.id = 'tribe-caret-' + p.id;
+        const color = playerColors[idx % playerColors.length];
+        caretEl.style.backgroundColor = color;
+        caretEl.innerHTML = `<span class="tribe-caret-tag" style="background:${color}">${escapeHtml(p.name)}</span>`;
+        container.appendChild(caretEl);
+      }
+
+      const percent = Math.min(Math.max(p.progress || 0, 0), 100);
+      const targetIndex = Math.min(Math.floor((percent / 100) * totalLetters), totalLetters - 1);
+      const letterEl = allLetters[targetIndex];
+      if (letterEl) {
+        const lRect = letterEl.getBoundingClientRect();
+        const left = lRect.left - containerRect.left;
+        const top = lRect.top - containerRect.top + wordsContainer.scrollTop;
+        caretEl.style.left = `${left}px`;
+        caretEl.style.top = `${top}px`;
+        caretEl.style.display = 'block';
+      }
+    });
+  }
+
+  // Monkeytype Tribe Delta (Yetakchidan farq: +WPM / -WPM)
+  updateTribeDelta(myWpm) {
+    const deltaEl = document.getElementById('tribe-delta');
+    if (!deltaEl) return;
+    if (!this.isInRace) {
+      deltaEl.style.display = 'none';
+      return;
+    }
+
+    const otherPlayers = Object.values(this.players).filter(p => p.id !== this.myId);
+    if (otherPlayers.length === 0) {
+      deltaEl.style.display = 'none';
+      return;
+    }
+
+    let leaderWpm = 0;
+    otherPlayers.forEach(p => {
+      if ((p.wpm || 0) > leaderWpm) leaderWpm = p.wpm;
+    });
+
+    const diff = (myWpm || 0) - leaderWpm;
+    deltaEl.style.display = 'block';
+    if (diff >= 0) {
+      deltaEl.textContent = `Δ +${diff} wpm`;
+      deltaEl.classList.remove('is-behind');
+    } else {
+      deltaEl.textContent = `Δ ${diff} wpm`;
+      deltaEl.classList.add('is-behind');
+    }
   }
 
   updateStatusText(msg) {
