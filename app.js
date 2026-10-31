@@ -2388,6 +2388,7 @@ window.checkMultiplayerProgress = function() {
     }
     const liveWpm = calculateLiveWpm();
     window.multiplayerManager.sendProgress(progress, liveWpm);
+    window.multiplayerManager.updateTribeDelta(liveWpm);
   }
 };
 
