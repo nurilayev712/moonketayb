@@ -4,9 +4,10 @@ const soundManager = window.soundManager;
 
 // Holat va Sozlamalar
 const state = {
-  mode: 'time', // 'time' yoki 'words'
+  mode: 'time', // 'time', 'words', 'code', 'quote'
   timeLimit: 30, // 15, 30, 60, 120
   wordsLimit: 25, // 10, 25, 50, 100
+  codeLanguage: 'javascript', // 'javascript', 'python', 'html', 'cpp'
   language: 'uzbek', // 'uzbek', 'english', 'russian'
   punctuation: false,
   numbers: false,
@@ -17,6 +18,7 @@ const state = {
   words: [],
   currentWordIndex: 0,
   currentLetterIndex: 0,
+  currentQuoteAuthor: '',
   isRunning: false,
   isFinished: false,
   timer: null,
@@ -59,8 +61,10 @@ const elements = {
   modeBtns: document.querySelectorAll('[data-mode]'),
   timeBtns: document.querySelectorAll('[data-time]'),
   wordsBtns: document.querySelectorAll('[data-words]'),
+  codeLangBtns: document.querySelectorAll('[data-code-lang]'),
   timeGroup: document.getElementById('time-config-group'),
   wordsGroup: document.getElementById('words-config-group'),
+  codeGroup: document.getElementById('code-config-group'),
   punctToggle: document.getElementById('punct-toggle'),
   numbersToggle: document.getElementById('numbers-toggle'),
   
