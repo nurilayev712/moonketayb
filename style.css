@@ -1335,6 +1335,94 @@ footer {
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+/* Kick Player Button (Faqat Host uchun ko'rinadi) */
+.kick-player-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  z-index: 5;
+}
+
+.lobby-player-card:hover .kick-player-btn {
+  display: flex;
+}
+
+.kick-player-btn:hover {
+  background: #ef4444;
+  color: #fff;
+  transform: scale(1.15);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+}
+
+/* Tarmoq kechikishi (Ping Badge) */
+#lobby-ping-badge {
+  transition: color 0.3s, border-color 0.3s;
+}
+
+#lobby-ping-badge.ping-good {
+  color: #a3e635;
+  border-color: rgba(163, 230, 53, 0.35);
+}
+
+#lobby-ping-badge.ping-medium {
+  color: #facc15;
+  border-color: rgba(250, 204, 21, 0.35);
+}
+
+#lobby-ping-badge.ping-poor {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+/* Tizim bildirishnomasi chatda */
+.chat-system-msg {
+  text-align: center;
+  font-size: 0.74rem;
+  color: var(--sub-color);
+  padding: 3px 10px;
+  margin: 4px auto;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  display: block;
+  width: fit-content;
+  max-width: 90%;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Poyga yetakchisi toj va glow */
+.leader-crown {
+  font-size: 0.95rem;
+  animation: bounceCrown 1.5s infinite ease-in-out;
+}
+
+@keyframes bounceCrown {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.race-track-row.is-leading {
+  border-color: rgba(226, 183, 20, 0.45);
+  box-shadow: 0 0 14px rgba(226, 183, 20, 0.18);
+}
+
+.race-track-row.is-me {
+  border-left: 3px solid var(--main-color);
+}
+
 .lobby-actions-row {
   display: flex;
   gap: 0.75rem;
