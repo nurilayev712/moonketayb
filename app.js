@@ -2081,6 +2081,70 @@ function setupEventListeners() {
     });
   }
 
+  // Tribe Nav Tabs Switching (Monkeytype 1-to-1)
+  document.querySelectorAll('.tribe-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tribe-tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const targetTab = btn.dataset.tribeTab;
+      document.querySelectorAll('.tribe-tab-content').forEach(c => c.style.display = 'none');
+      const targetContent = document.getElementById('tribe-tab-' + targetTab);
+      if (targetContent) targetContent.style.display = 'block';
+    });
+  });
+
+  // Tribe Create Room Capsule Configuration
+  let tribeSelectedMode = 'time';
+  let tribeSelectedLimit = 30;
+  let tribeSelectedLang = 'uzbek';
+
+  function attachTribeLimitListeners() {
+    document.querySelectorAll('#tribe-create-limit .tribe-cfg-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#tribe-create-limit .tribe-cfg-pill').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        tribeSelectedLimit = parseInt(btn.dataset.limit, 10);
+      });
+    });
+  }
+  attachTribeLimitListeners();
+
+  document.querySelectorAll('#tribe-create-mode .tribe-cfg-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#tribe-create-mode .tribe-cfg-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      tribeSelectedMode = btn.dataset.mode;
+
+      const limitBox = document.getElementById('tribe-create-limit');
+      if (limitBox) {
+        if (tribeSelectedMode === 'time') {
+          limitBox.innerHTML = `
+            <button type="button" class="tribe-cfg-pill" data-limit="15">15</button>
+            <button type="button" class="tribe-cfg-pill active" data-limit="30">30</button>
+            <button type="button" class="tribe-cfg-pill" data-limit="60">60</button>
+          `;
+          tribeSelectedLimit = 30;
+        } else {
+          limitBox.innerHTML = `
+            <button type="button" class="tribe-cfg-pill active" data-limit="25">25</button>
+            <button type="button" class="tribe-cfg-pill" data-limit="50">50</button>
+            <button type="button" class="tribe-cfg-pill" data-limit="100">100</button>
+          `;
+          tribeSelectedLimit = 25;
+        }
+        attachTribeLimitListeners();
+      }
+    });
+  });
+
+  document.querySelectorAll('#tribe-create-lang .tribe-cfg-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#tribe-create-lang .tribe-cfg-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      tribeSelectedLang = btn.dataset.lang;
+    });
+  });
+
   const joinPublicBtn = document.getElementById('join-public-room-btn');
   if (joinPublicBtn) {
     joinPublicBtn.addEventListener('click', () => {
@@ -2094,7 +2158,7 @@ function setupEventListeners() {
     createRoomBtn.addEventListener('click', () => {
       window.closeAppModal(multiModal);
       window.openAppModal(lobbyModal);
-      window.multiplayerManager.createRoom();
+      window.multiplayerManager.createRoom(tribeSelectedMode, tribeSelectedLimit, tribeSelectedLang);
     });
   }
 
