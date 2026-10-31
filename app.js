@@ -1410,6 +1410,29 @@ function setupEventListeners() {
     });
   }
 
+  // Lobby Chat va Emojilar hodisalari
+  const chatForm = document.getElementById('lobby-chat-form');
+  const chatInput = document.getElementById('lobby-chat-input');
+  if (chatForm && chatInput) {
+    chatForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const txt = chatInput.value.trim();
+      if (txt && window.multiplayerManager) {
+        window.multiplayerManager.sendChatMessage(txt);
+        chatInput.value = '';
+      }
+    });
+  }
+
+  document.querySelectorAll('.emoji-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const emoji = btn.dataset.emoji;
+      if (emoji && window.multiplayerManager) {
+        window.multiplayerManager.sendReaction(emoji);
+      }
+    });
+  });
+
   if (leaveRaceBtn) {
     leaveRaceBtn.addEventListener('click', () => {
       window.multiplayerManager.leaveRoom();
