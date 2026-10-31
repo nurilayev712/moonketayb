@@ -1299,23 +1299,23 @@ function setupEventListeners() {
 
   if (closeRaceResultsBtn) {
     closeRaceResultsBtn.addEventListener('click', () => {
-      raceResultsModal.classList.remove('active');
+      window.closeAppModal(raceResultsModal);
       window.multiplayerManager.leaveRoom();
     });
   }
 
   if (raceExitBtn) {
     raceExitBtn.addEventListener('click', () => {
-      raceResultsModal.classList.remove('active');
+      window.closeAppModal(raceResultsModal);
       window.multiplayerManager.leaveRoom();
     });
   }
 
   if (raceAgainBtn) {
     raceAgainBtn.addEventListener('click', () => {
-      raceResultsModal.classList.remove('active');
+      window.closeAppModal(raceResultsModal);
       if (window.multiplayerManager.isHost) {
-        lobbyModal.classList.add('active');
+        window.openAppModal(lobbyModal);
         document.getElementById('race-track-section').style.display = 'none';
       } else {
         alert("Xona egasi yangi poyga boshlashini kuting.");
