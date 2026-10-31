@@ -888,25 +888,34 @@ function generateSampleActivity(targetTests = 266) {
   const act = {};
   const today = new Date();
   
-  // Screenshotdagi kabi turli oylarda faol poygalar va mashqlar
+  // Screenshotdagi kabi faol to'plamlar (Oct/Sep, May/Jun, Mar/Apr, Feb)
   const activeWindows = [
-    { startDaysAgo: 10, endDaysAgo: 2, prob: 0.85, maxPerDay: 12 },   // Sep/Oct
-    { startDaysAgo: 155, endDaysAgo: 135, prob: 0.65, maxPerDay: 8 }, // May/Jun
-    { startDaysAgo: 215, endDaysAgo: 180, prob: 0.75, maxPerDay: 14 },// Mar/Apr
-    { startDaysAgo: 265, endDaysAgo: 230, prob: 0.8, maxPerDay: 10 }, // Feb
-    { startDaysAgo: 2, endDaysAgo: 0, prob: 0.95, maxPerDay: 15 }    // Hozirgi kunlar
+    { startDaysAgo: 14, endDaysAgo: 1, weight: 65, max: 12 },
+    { startDaysAgo: 155, endDaysAgo: 135, weight: 60, max: 8 },
+    { startDaysAgo: 220, endDaysAgo: 185, weight: 80, max: 11 },
+    { startDaysAgo: 265, endDaysAgo: 235, weight: 61, max: 7 }
   ];
 
+  let remaining = targetTests;
   activeWindows.forEach(win => {
-    for (let d = win.endDaysAgo; d <= win.startDaysAgo; d++) {
-      if (Math.random() < win.prob) {
-        const date = new Date(today);
-        date.setDate(today.getDate() - d);
-        const dateStr = date.toISOString().split('T')[0];
-        act[dateStr] = Math.floor(Math.random() * win.maxPerDay) + 1;
-      }
+    let pool = Math.min(win.weight, remaining);
+    const daysSpan = win.startDaysAgo - win.endDaysAgo + 1;
+    while (pool > 0) {
+      const d = Math.floor(Math.random() * daysSpan) + win.endDaysAgo;
+      const date = new Date(today);
+      date.setDate(today.getDate() - d);
+      const dateStr = date.toISOString().split('T')[0];
+      const add = Math.min(Math.floor(Math.random() * 4) + 1, pool);
+      act[dateStr] = (act[dateStr] || 0) + add;
+      pool -= add;
+      remaining -= add;
     }
   });
+
+  if (remaining > 0) {
+    const todayStr = today.toISOString().split('T')[0];
+    act[todayStr] = (act[todayStr] || 0) + remaining;
+  }
 
   return act;
 }
