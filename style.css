@@ -360,6 +360,40 @@ body.focus-mode footer {
   display: none !important;
 }
 
+.caret.smooth {
+  transition: left 0.08s cubic-bezier(0.2, 0, 0, 1), top 0.08s cubic-bezier(0.2, 0, 0, 1);
+}
+.caret.anim-default {
+  transition: left 0.05s ease-out, top 0.05s ease-out;
+}
+.caret.anim-off {
+  transition: none !important;
+}
+
+/* Soya Kursor (Pace Caret - Monkeytype Target WPM ghost) */
+.pace-caret {
+  position: absolute;
+  width: 2.5px;
+  height: 32px;
+  background-color: var(--main-color);
+  opacity: 0.38;
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 7;
+  transition: left 0.12s linear, top 0.12s linear;
+  box-shadow: 0 0 8px var(--main-color);
+}
+
+/* Ko'r-ko'rona yozish (Blind Mode) */
+body.blind-mode .letter.correct,
+body.blind-mode .letter.incorrect {
+  color: var(--sub-color) !important;
+  text-decoration: none !important;
+}
+body.blind-mode .letter.active {
+  color: var(--text-color) !important;
+}
+
 .caret.blink {
   animation: blink 1s infinite;
 }
