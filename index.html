@@ -936,6 +936,29 @@
     </div>
   </div>
 
+  <!-- MAXSUS VAQT KIRITISH MODALI -->
+  <div class="modal-overlay" id="custom-time-modal">
+    <div class="modal" style="max-width: 380px;">
+      <div class="modal-header">
+        <div class="modal-title">⏱️ Maxsus vaqtni tanlash</div>
+        <button class="modal-close" id="close-custom-time-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.85rem; color: var(--sub-color); margin-bottom: 1rem;">
+          Test davomiyligini soniyalarda kiriting (masalan: 45, 90, 180):
+        </p>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <input type="number" id="custom-time-input" class="form-control" min="5" max="3600" placeholder="45" style="font-size: 1.25rem; font-weight: 700; text-align: center; flex: 1;">
+          <span style="color: var(--sub-color); font-weight: 600;">soniya</span>
+        </div>
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.25rem;">
+          <button class="action-btn" id="custom-time-cancel-btn">Bekor qilish</button>
+          <button class="action-btn primary" id="custom-time-save-btn">O'rnatish</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Skriptlar (v9.0 TYPEX712 & Real Activity & O'zbekcha) -->
   <script src="words.js?v=9.0"></script>
   <script src="sound.js?v=9.0"></script>
