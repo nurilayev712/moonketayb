@@ -191,6 +191,27 @@ function loadStoredSettings() {
   const savedNoBack = localStorage.getItem('mkt_no_backspace');
   state.noBackspace = (savedNoBack === 'on');
   if (elements.noBackspaceSelect) elements.noBackspaceSelect.value = state.noBackspace ? 'on' : 'off';
+
+  // Matn shrifti
+  state.fontFamily = localStorage.getItem('mkt_font_family') || "'Roboto Mono', monospace";
+  document.documentElement.style.setProperty('--font-family', state.fontFamily);
+  const fontSel = document.getElementById('font-family-select');
+  if (fontSel) fontSel.value = state.fontFamily;
+
+  // Kursor animatsiyasi
+  state.caretAnim = localStorage.getItem('mkt_caret_anim') || 'smooth';
+  applyCaretAnim(state.caretAnim);
+
+  // Ko'r-ko'rona rejim
+  state.blindMode = localStorage.getItem('mkt_blind_mode') === 'true';
+  document.body.classList.toggle('blind-mode', state.blindMode);
+  const blindSel = document.getElementById('blind-mode-select');
+  if (blindSel) blindSel.value = state.blindMode ? 'on' : 'off';
+
+  // Soya kursor (Pace Caret)
+  state.paceCaretMode = localStorage.getItem('mkt_pace_caret') || 'off';
+  const paceSel = document.getElementById('pace-caret-select');
+  if (paceSel) paceSel.value = state.paceCaretMode;
 }
 
 // ----------------------------------------------------
@@ -200,10 +221,22 @@ function applyCaretStyle(style) {
   state.caretStyle = style;
   localStorage.setItem('mk_caret_style', style);
   if (elements.caret) {
-    elements.caret.className = 'caret blink caret-' + style;
+    elements.caret.className = 'caret blink caret-' + style + ' ' + (state.caretAnim || 'smooth');
   }
   const sel = document.getElementById('caret-style-select');
   if (sel && sel.value !== style) sel.value = style;
+}
+
+function applyCaretAnim(anim) {
+  state.caretAnim = anim;
+  localStorage.setItem('mkt_caret_anim', anim);
+  if (elements.caret) {
+    elements.caret.classList.toggle('smooth', anim === 'smooth');
+    elements.caret.classList.toggle('anim-off', anim === 'off');
+    elements.caret.classList.toggle('anim-default', anim === 'default');
+  }
+  const sel = document.getElementById('caret-anim-select');
+  if (sel && sel.value !== anim) sel.value = anim;
 }
 
 // ----------------------------------------------------
@@ -229,19 +262,35 @@ function updateConfigUI() {
     elements.timeGroup.style.display = 'flex';
     elements.wordsGroup.style.display = 'none';
     if (elements.codeGroup) elements.codeGroup.style.display = 'none';
+    if (elements.quoteGroup) elements.quoteGroup.style.display = 'none';
   } else if (state.mode === 'words') {
     elements.timeGroup.style.display = 'none';
     elements.wordsGroup.style.display = 'flex';
     if (elements.codeGroup) elements.codeGroup.style.display = 'none';
+    if (elements.quoteGroup) elements.quoteGroup.style.display = 'none';
   } else if (state.mode === 'code') {
     elements.timeGroup.style.display = 'none';
     elements.wordsGroup.style.display = 'none';
     if (elements.codeGroup) elements.codeGroup.style.display = 'flex';
-  } else {
-    // quote, custom, zen
+    if (elements.quoteGroup) elements.quoteGroup.style.display = 'none';
+  } else if (state.mode === 'quote') {
     elements.timeGroup.style.display = 'none';
     elements.wordsGroup.style.display = 'none';
     if (elements.codeGroup) elements.codeGroup.style.display = 'none';
+    if (elements.quoteGroup) elements.quoteGroup.style.display = 'flex';
+  } else {
+    // custom, zen
+    elements.timeGroup.style.display = 'none';
+    elements.wordsGroup.style.display = 'none';
+    if (elements.codeGroup) elements.codeGroup.style.display = 'none';
+    if (elements.quoteGroup) elements.quoteGroup.style.display = 'none';
+  }
+
+  // Iqtibos uzunligi tugmalari
+  if (elements.quoteLenBtns) {
+    elements.quoteLenBtns.forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.quoteLen === state.quoteLength);
+    });
   }
 
   // Dasturlash tili tugmalari
