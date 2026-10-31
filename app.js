@@ -778,13 +778,6 @@ function handleKeyDown(e) {
       }
     }
 
-    // Jonli HUD ko'rsatkichlarini tezkor yangilash
-    if (state.timeElapsed > 0) {
-      const live = calculateLiveStats();
-      if (elements.hudWpm) elements.hudWpm.textContent = live.netWpm;
-      if (elements.hudAcc) elements.hudAcc.textContent = `${live.acc}%`;
-    }
-
     // Words / Code / Quote / Custom rejimida oxirgi so'zning oxirgi harfi kiritilganda yakunlash
     const isWordBased = (state.mode === 'words' || state.mode === 'code' || state.mode === 'quote' || state.mode === 'custom');
     const totalWordCount = state.mode === 'words' ? state.wordsLimit : state.words.length;
