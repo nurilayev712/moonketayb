@@ -614,9 +614,11 @@ function handleKeyDown(e) {
       }
     }
 
-    // Words rejimida oxirgi so'zning oxirgi harfi kiritilganda yakunlash
-    if (state.mode === 'words' && 
-        state.currentWordIndex === state.wordsLimit - 1 && 
+    // Words / Code / Quote rejimida oxirgi so'zning oxirgi harfi kiritilganda yakunlash
+    const isWordBased = (state.mode === 'words' || state.mode === 'code' || state.mode === 'quote');
+    const totalWordCount = state.mode === 'words' ? state.wordsLimit : state.words.length;
+    if (isWordBased && 
+        state.currentWordIndex === totalWordCount - 1 && 
         state.currentLetterIndex >= targetWord.length) {
       finishTest();
       return;
