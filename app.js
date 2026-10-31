@@ -963,11 +963,27 @@ function setupEventListeners() {
     profileBtn.addEventListener('click', () => {
       const u = window.authManager.currentUser;
       if (u) {
-        document.getElementById('prof-avatar').textContent = u.avatar || '🏎️';
+        document.getElementById('prof-avatar').textContent = u.avatar || '⌨️';
         document.getElementById('prof-name').textContent = u.username;
-        document.getElementById('prof-races').textContent = u.races || 0;
+        document.getElementById('prof-joined').textContent = `Joined ${u.joinedDate || 'recently'}`;
+        
+        // XP va Level
+        const xpPercent = Math.min(Math.round(((u.xp || 0) / (u.xpToNextLevel || 400)) * 100), 100);
+        document.getElementById('prof-xp-bar').style.width = `${xpPercent}%`;
+        document.getElementById('prof-xp-text').textContent = `${u.xp || 0} / ${u.xpToNextLevel || 400} XP (lvl ${u.level || 1})`;
+
+        // Rekordlar (All-time bests)
+        const bests = u.bestWpm || {};
+        document.getElementById('best-15s').textContent = bests.time15 || 0;
+        document.getElementById('best-30s').textContent = bests.time30 || 0;
+        document.getElementById('best-60s').textContent = bests.time60 || 0;
+        document.getElementById('best-120s').textContent = bests.time120 || 0;
+
+        // Boshqa statistikalar
+        document.getElementById('prof-tests').textContent = u.testsCompleted || 0;
         document.getElementById('prof-wins').textContent = u.wins || 0;
-        document.getElementById('prof-best-wpm').textContent = (u.bestWpm || 0) + ' WPM';
+        const mins = Math.floor((u.totalTimeTyping || 0) / 60);
+        document.getElementById('prof-time').textContent = `${mins}m`;
       }
       profileModal.classList.add('active');
     });
@@ -1014,7 +1030,6 @@ function setupEventListeners() {
       const res = window.authManager.login(u, p);
       if (res.success) {
         authModal.classList.remove('active');
-        alert("Xush kelibsiz, " + res.user.username + "!");
         elements.typingInput.focus();
       } else {
         alert(res.message);
@@ -1031,7 +1046,6 @@ function setupEventListeners() {
       const res = window.authManager.register(u, p, selectedAvatar);
       if (res.success) {
         authModal.classList.remove('active');
-        alert("Tabriklaymiz, muvaffaqiyatli ro'yxatdan o'tdingiz!");
         elements.typingInput.focus();
       } else {
         alert(res.message);
@@ -1043,8 +1057,94 @@ function setupEventListeners() {
     logoutBtn.addEventListener('click', () => {
       window.authManager.logout();
       profileModal.classList.remove('active');
-      alert("Profildan chiqildi.");
       elements.typingInput.focus();
+    });
+  }
+
+  // Sound Pack Select
+  const soundPackSelect = document.getElementById('sound-pack-select');
+  if (soundPackSelect) {
+    soundPackSelect.value = soundManager.soundPack;
+    soundPackSelect.addEventListener('change', (e) => {
+      soundManager.setSoundPack(e.target.value);
+    });
+  }
+
+  // ===================================================
+  // MONKEYTYPE COMMAND PALETTE (ESC BOSILGANDA)
+  // ===================================================
+  const cmdOverlay = document.getElementById('command-palette-overlay');
+  const cmdInput = document.getElementById('command-input');
+  const cmdList = document.getElementById('command-list');
+
+  const commands = [
+    { label: "theme: serika dark", action: () => applyTheme('serika_dark') },
+    { label: "theme: carbon", action: () => applyTheme('carbon') },
+    { label: "theme: dracula", action: () => applyTheme('dracula') },
+    { label: "theme: nord", action: () => applyTheme('nord') },
+    { label: "theme: cyberpunk", action: () => applyTheme('cyberpunk') },
+    { label: "mode: time 15", action: () => { state.mode = 'time'; state.timeLimit = 15; updateConfigUI(); resetTest(); } },
+    { label: "mode: time 30", action: () => { state.mode = 'time'; state.timeLimit = 30; updateConfigUI(); resetTest(); } },
+    { label: "mode: time 60", action: () => { state.mode = 'time'; state.timeLimit = 60; updateConfigUI(); resetTest(); } },
+    { label: "mode: words 25", action: () => { state.mode = 'words'; state.wordsLimit = 25; updateConfigUI(); resetTest(); } },
+    { label: "mode: words 50", action: () => { state.mode = 'words'; state.wordsLimit = 50; updateConfigUI(); resetTest(); } },
+    { label: "language: uzbek", action: () => { state.language = 'uzbek'; resetTest(); } },
+    { label: "language: english", action: () => { state.language = 'english'; resetTest(); } },
+    { label: "language: russian", action: () => { state.language = 'russian'; resetTest(); } },
+    { label: "sound: thock", action: () => soundManager.setSoundPack('thock') },
+    { label: "sound: clicky", action: () => soundManager.setSoundPack('click') },
+    { label: "sound: bubble pop", action: () => soundManager.setSoundPack('pop') },
+    { label: "sound: off", action: () => soundManager.setSoundPack('off') },
+    { label: "multiplayer: custom room", action: () => document.getElementById('multiplayer-modal').classList.add('active') },
+    { label: "view: account / profile", action: () => profileBtn.click() },
+    { label: "restart test", action: () => resetTest() }
+  ];
+
+  window.openCommandPalette = function() {
+    cmdOverlay.style.display = 'flex';
+    cmdInput.value = '';
+    renderCommandList('');
+    cmdInput.focus();
+  };
+
+  window.closeCommandPalette = function() {
+    cmdOverlay.style.display = 'none';
+    elements.typingInput.focus();
+  };
+
+  function renderCommandList(query) {
+    cmdList.innerHTML = '';
+    const filtered = commands.filter(c => c.label.toLowerCase().includes(query.toLowerCase()));
+    filtered.forEach((cmd, idx) => {
+      const item = document.createElement('div');
+      item.className = 'command-item' + (idx === 0 ? ' selected' : '');
+      item.textContent = cmd.label;
+      item.addEventListener('click', () => {
+        cmd.action();
+        window.closeCommandPalette();
+      });
+      cmdList.appendChild(item);
+    });
+  }
+
+  if (cmdInput) {
+    cmdInput.addEventListener('input', (e) => {
+      renderCommandList(e.target.value);
+    });
+
+    cmdInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        window.closeCommandPalette();
+      } else if (e.key === 'Enter') {
+        const first = cmdList.querySelector('.command-item');
+        if (first) first.click();
+      }
+    });
+  }
+
+  if (cmdOverlay) {
+    cmdOverlay.addEventListener('click', (e) => {
+      if (e.target === cmdOverlay) window.closeCommandPalette();
     });
   }
 
