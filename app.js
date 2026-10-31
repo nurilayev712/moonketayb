@@ -242,9 +242,20 @@ function updateConfigUI() {
   }
 
   // Vaqt tugmalari
+  const standardTimes = [15, 30, 60, 120];
+  const isCustomTime = !standardTimes.includes(state.timeLimit);
+
   elements.timeBtns.forEach(btn => {
-    btn.classList.toggle('active', parseInt(btn.dataset.time, 10) === state.timeLimit);
+    if (btn.dataset.time === 'custom') {
+      btn.classList.toggle('active', isCustomTime);
+    } else {
+      btn.classList.toggle('active', parseInt(btn.dataset.time, 10) === state.timeLimit);
+    }
   });
+
+  if (elements.customTimeLabel) {
+    elements.customTimeLabel.textContent = isCustomTime ? `${state.timeLimit}s` : 'maxsus';
+  }
 
   // So'zlar soni tugmalari
   elements.wordsBtns.forEach(btn => {
