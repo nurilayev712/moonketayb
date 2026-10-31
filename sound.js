@@ -97,6 +97,22 @@ class SoundManager {
       gain.connect(this.audioCtx.destination);
       osc.start(t);
       osc.stop(t + 0.03);
+
+    } else if (this.soundPack === 'typewriter') {
+      // Vintage Mechanical Typewriter
+      const osc = this.audioCtx.createOscillator();
+      const gain = this.audioCtx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(isSpace ? 420 : 680 + Math.random() * 120, t);
+      osc.frequency.exponentialRampToValueAtTime(120, t + 0.04);
+
+      gain.gain.setValueAtTime(this.volume * (isSpace ? 0.35 : 0.24), t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+
+      osc.connect(gain);
+      gain.connect(this.audioCtx.destination);
+      osc.start(t);
+      osc.stop(t + 0.04);
     }
   }
 }
