@@ -466,13 +466,6 @@ function resetTest() {
     elements.virtualKeyboard.classList.toggle('hidden', !state.virtualKeyboardEnabled);
   }
 
-  // Live HUD boshlang'ich qiymatlari
-  if (elements.hudTimer) {
-    elements.hudTimer.textContent = state.mode === 'time' ? `${state.timeLimit}s` : '0s';
-  }
-  if (elements.hudWpm) elements.hudWpm.textContent = '0';
-  if (elements.hudAcc) elements.hudAcc.textContent = '100%';
-
   renderWords();
 
   if (state.mode === 'time') {
@@ -519,13 +512,10 @@ function startTest() {
     state.timeElapsed++;
 
     const live = calculateLiveStats();
-    if (elements.hudWpm) elements.hudWpm.textContent = live.netWpm;
-    if (elements.hudAcc) elements.hudAcc.textContent = `${live.acc}%`;
 
     if (state.mode === 'time') {
       state.timeRemaining--;
       elements.liveStats.textContent = state.timeRemaining;
-      if (elements.hudTimer) elements.hudTimer.textContent = `${state.timeRemaining}s`;
 
       if (state.timeRemaining <= 0) {
         finishTest();
@@ -534,10 +524,8 @@ function startTest() {
     } else if (state.mode === 'words' || state.mode === 'custom') {
       const targetCount = state.mode === 'words' ? state.wordsLimit : state.words.length;
       elements.liveStats.textContent = `${state.currentWordIndex} / ${targetCount}`;
-      if (elements.hudTimer) elements.hudTimer.textContent = `${state.timeElapsed}s`;
     } else {
       elements.liveStats.textContent = `${state.timeElapsed}s`;
-      if (elements.hudTimer) elements.hudTimer.textContent = `${state.timeElapsed}s`;
     }
 
     // Grafik uchun har soniyada WPM saqlash
