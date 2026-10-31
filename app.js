@@ -1575,7 +1575,7 @@ function setupEventListeners() {
   });
 
   // Modal tashqarisiga bosilganda yopish
-  [elements.settingsModal, elements.historyModal, elements.customTextModal].forEach(modal => {
+  [elements.settingsModal, elements.historyModal, elements.customTextModal, elements.customTimeModal].forEach(modal => {
     if (modal) {
       modal.addEventListener('click', (e) => {
         if (e.target === modal) {
