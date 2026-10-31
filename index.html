@@ -308,11 +308,36 @@
           </div>
         </div>
 
-        <div id="lobby-status-text" style="text-align: center; color: var(--main-color); font-size: 0.85rem; margin: 1rem 0;">
+        <div id="lobby-status-text" style="text-align: center; color: var(--main-color); font-size: 0.85rem; margin: 0.75rem 0;">
           Waiting for players to join...
         </div>
 
-        <button class="action-btn primary" id="lobby-start-btn" style="width: 100%; justify-content: center; font-size: 1.1rem; padding: 0.85rem;">
+        <!-- LOBBY JONLI CHAT VA EMOJILAR -->
+        <div class="lobby-chat-card">
+          <div class="lobby-chat-title">
+            <span>💬 Live Chat & Reactions</span>
+            <div class="emoji-fast-bar">
+              <button type="button" class="emoji-btn" data-emoji="🔥">🔥</button>
+              <button type="button" class="emoji-btn" data-emoji="🏎️">🏎️</button>
+              <button type="button" class="emoji-btn" data-emoji="⚡">⚡</button>
+              <button type="button" class="emoji-btn" data-emoji="👑">👑</button>
+              <button type="button" class="emoji-btn" data-emoji="🚀">🚀</button>
+              <button type="button" class="emoji-btn" data-emoji="😂">😂</button>
+              <button type="button" class="emoji-btn" data-emoji="👏">👏</button>
+            </div>
+          </div>
+          <div class="lobby-chat-messages" id="lobby-chat-messages">
+            <div class="chat-hint">Xonadagilar bilan emoji yoki qisqa xabar orqali suhbatlashing!</div>
+          </div>
+          <form id="lobby-chat-form" class="lobby-chat-form">
+            <input type="text" id="lobby-chat-input" class="form-control" placeholder="Xabar yozing (masalan: Tayyormisiz?)..." maxlength="100">
+            <button type="submit" class="action-btn primary" id="lobby-chat-send-btn" style="padding: 0.5rem 0.9rem;">
+              <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: currentColor;"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+            </button>
+          </form>
+        </div>
+
+        <button class="action-btn primary" id="lobby-start-btn" style="width: 100%; justify-content: center; font-size: 1.1rem; padding: 0.85rem; margin-top: 1rem;">
           Start Game
         </button>
       </div>
