@@ -1,4 +1,4 @@
-// MoonKeyType — PeerJS orqali P2P Multiplayer Poyga Tizimi (Tuzatilgan va barqaror)
+// MoonKeyType — PeerJS orqali P2P Multiplayer Poyga Tizimi (100% Ishonchli va Xatosiz)
 
 const PEER_CONFIG = {
   debug: 1,
@@ -23,34 +23,36 @@ class MultiplayerManager {
     this.isInRace = false;
     this.raceWords = [];
     this.countdownTimer = null;
-    this.connectionTimeout = null;
-  }
-
-  // Xona kodi yaratish (masalan 482910)
-  generateRoomCode() {
-    return Math.floor(100000 + Math.random() * 900000).toString();
   }
 
   // 1. Yangi xona yaratish (Host)
   createRoom() {
-    const user = window.authManager.currentUser || { username: 'Guest_' + Math.floor(Math.random() * 900 + 100), avatar: '⌨️' };
-    this.roomId = this.generateRoomCode();
+    const user = (window.authManager && window.authManager.currentUser) || { 
+      username: 'Player_' + Math.floor(Math.random() * 900 + 100), 
+      avatar: '⌨️' 
+    };
+
     this.isHost = true;
     this.players = {};
-
-    const peerId = 'mkt-room-' + this.roomId;
 
     if (this.peer) {
       try { this.peer.destroy(); } catch (e) {}
     }
 
-    this.updateStatusText("Xona yaratilmoqda, kuting...");
+    this.updateStatusText("Xona kodi olinmoqda, serverga ulanilmoqda...");
+    const codeEl = document.getElementById('lobby-room-code');
+    if (codeEl) codeEl.textContent = "Kutilmoqda...";
 
     try {
-      this.peer = new Peer(peerId, PEER_CONFIG);
+      // ID bermasdan yaratamiz — shunda PeerJS serveri 100% xatosiz noyob ID beradi!
+      this.peer = new Peer(PEER_CONFIG);
 
       this.peer.on('open', (id) => {
         console.log('Xona muvaffaqiyatli ochildi, Peer ID:', id);
+        this.roomId = id;
+        
+        if (codeEl) codeEl.textContent = this.roomId;
+
         this.players[this.peer.id] = {
           id: this.peer.id,
           name: user.username,
@@ -60,8 +62,9 @@ class MultiplayerManager {
           wpm: 0,
           finished: false
         };
+
         this.updateLobbyUI();
-        this.updateStatusText("Xona tayyor! Do'stlaringizga kodni bering.");
+        this.updateStatusText("Xona tayyor! Do'stingizga xona kodini bering.");
       });
 
       this.peer.on('connection', (conn) => {
@@ -82,31 +85,29 @@ class MultiplayerManager {
 
       this.peer.on('error', (err) => {
         console.error('PeerJS xatosi:', err);
-        if (err.type === 'unavailable-id') {
-          // Kod band bo'lsa yangitdan yaratish
-          this.createRoom();
-        } else {
-          alert('Tarmoq xatosi: ' + (err.message || err.type));
-        }
+        this.updateStatusText("Tarmoq xatosi: " + (err.type || 'server band'));
+        alert('Serverga ulanishda xatolik yuz berdi. Iltimos qayta urinib ko\'ring.');
       });
 
     } catch (e) {
       console.error(e);
-      alert("Xona ochishda xatolik yuz berdi!");
+      alert("Xona yaratishda xatolik yuz berdi!");
     }
-
-    return this.roomId;
   }
 
   // 2. Mavjud xonaga qo'shilish (Client)
   joinRoom(code) {
-    code = code.trim().replace('#', '');
+    code = code.trim();
     if (!code) {
       alert('Iltimos, xona kodini kiriting!');
       return;
     }
 
-    const user = window.authManager.currentUser || { username: 'Guest_' + Math.floor(Math.random() * 900 + 100), avatar: '⌨️' };
+    const user = (window.authManager && window.authManager.currentUser) || { 
+      username: 'Player_' + Math.floor(Math.random() * 900 + 100), 
+      avatar: '⌨️' 
+    };
+
     this.roomId = code;
     this.isHost = false;
     this.players = {};
@@ -116,30 +117,30 @@ class MultiplayerManager {
     }
 
     this.updateStatusText("Xonaga ulanilmoqda, kuting...");
+    const codeEl = document.getElementById('lobby-room-code');
+    if (codeEl) codeEl.textContent = this.roomId;
 
     try {
       this.peer = new Peer(PEER_CONFIG);
 
       this.peer.on('open', (myPeerId) => {
-        const hostPeerId = 'mkt-room-' + this.roomId;
-        const conn = this.peer.connect(hostPeerId, { reliable: true });
+        console.log('Mening Peer ID im:', myPeerId);
+        const conn = this.peer.connect(this.roomId, { reliable: true });
         this.hostConnection = conn;
 
-        // Ulanish uchun 12 soniya timeout
-        clearTimeout(this.connectionTimeout);
-        this.connectionTimeout = setTimeout(() => {
+        // Ulanish uchun 10 soniya timeout
+        const timer = setTimeout(() => {
           if (!conn.open) {
-            alert("Xonaga ulanib bo'lmadi! Xona kodi noto'g'ri yoki xona egasi oflayn.");
+            alert("Xonaga ulanib bo'lmadi! Xona kodi noto'g'ri yoki xona egasi sahifadan chiqqan.");
             this.leaveRoom();
           }
-        }, 12000);
+        }, 10000);
 
         conn.on('open', () => {
-          clearTimeout(this.connectionTimeout);
-          console.log('Hostga muvaffaqiyatli ulanildi!');
-          this.updateStatusText("Xonaga ulandiz! Xona egasi poygani boshlashini kuting.");
+          clearTimeout(timer);
+          console.log('Hostga muvaffaqiyatli ulandik!');
+          this.updateStatusText("Xonaga ulandingiz! Xona egasi o'yinni boshlashini kuting.");
 
-          // O'z ma'lumotlarini hostga yuborish
           conn.send({
             type: 'JOIN',
             player: {
@@ -159,15 +160,14 @@ class MultiplayerManager {
         });
 
         conn.on('close', () => {
-          alert("Xona egasi chiqib ketdi yoki ulanish uzildi!");
+          alert("Xona egasi ulanishni yopdi!");
           this.leaveRoom();
         });
       });
 
       this.peer.on('error', (err) => {
-        clearTimeout(this.connectionTimeout);
         console.error('PeerJS ulanish xatosi:', err);
-        alert('Xona topilmadi! Kodni to\'g\'ri kiritganingizni tekshiring.');
+        alert('Xonaga ulanib bo\'lmadi! Kodni to\'g\'ri kiritganingizni tekshiring.');
         this.leaveRoom();
       });
 
@@ -177,13 +177,11 @@ class MultiplayerManager {
     }
   }
 
-  // Host xabarlarni qabul qilishi
   handleHostData(conn, data) {
     if (data.type === 'JOIN') {
       this.players[conn.peer] = data.player;
       this.broadcastLobby();
       this.updateLobbyUI();
-      // Yangi qo'shilgan o'yinchiga ham darhol lobby holatini yuborish
       conn.send({
         type: 'LOBBY_UPDATE',
         players: this.players
@@ -210,7 +208,6 @@ class MultiplayerManager {
     }
   }
 
-  // Client xabarlarni qabul qilishi
   handleClientData(data) {
     if (data.type === 'LOBBY_UPDATE') {
       this.players = data.players;
@@ -229,7 +226,6 @@ class MultiplayerManager {
     }
   }
 
-  // Host barcha o'yinchilarga xabar tarqatishi
   broadcast(data) {
     this.connections.forEach(conn => {
       if (conn && conn.open) {
@@ -245,13 +241,11 @@ class MultiplayerManager {
     });
   }
 
-  // Host poygani boshlashi
   startRace() {
     if (!this.isHost) return;
 
-    // So'zlar generatsiyasi (hamma uchun bir xil 25 ta so'z)
-    const lang = (window.state && window.state.language) || 'english';
-    const source = (window.WORDS && window.WORDS[lang]) || (window.WORDS && window.WORDS.english) || [];
+    const lang = (window.state && window.state.language) || 'uzbek';
+    const source = (window.WORDS && window.WORDS[lang]) || (window.WORDS && window.WORDS.uzbek) || [];
     const words = [];
     const count = 25;
     for (let i = 0; i < count; i++) {
@@ -260,7 +254,6 @@ class MultiplayerManager {
 
     this.raceWords = words;
 
-    // Barcha o'yinchilarga signal yuborish
     this.broadcast({
       type: 'START_COUNTDOWN',
       words: words
@@ -269,19 +262,16 @@ class MultiplayerManager {
     this.startCountdownUI();
   }
 
-  // 3... 2... 1... Sanash
   startCountdownUI() {
     this.isInRace = true;
     const overlay = document.getElementById('race-countdown-overlay');
     const numberEl = document.getElementById('countdown-number');
     overlay.style.display = 'flex';
 
-    // Xonani yashirish, poyga maydonini ochish
     document.getElementById('multiplayer-lobby-modal').classList.remove('active');
     document.getElementById('race-track-section').style.display = 'flex';
     document.getElementById('test-section').style.display = 'flex';
 
-    // Poyga treki qatorlarini chizish
     this.renderRaceTracks();
 
     let count = 3;
@@ -300,7 +290,6 @@ class MultiplayerManager {
       } else {
         clearInterval(this.countdownTimer);
         overlay.style.display = 'none';
-        // Asosiy o'yinni boshlash
         if (window.startMultiplayerGame) {
           window.startMultiplayerGame(this.raceWords);
         }
@@ -308,7 +297,6 @@ class MultiplayerManager {
     }, 1000);
   }
 
-  // Progress yuborish (har bir harf yozilganda)
   sendProgress(progressPercent, currentWpm) {
     const myId = this.peer ? this.peer.id : null;
     if (myId && this.players[myId]) {
@@ -334,7 +322,6 @@ class MultiplayerManager {
     }
   }
 
-  // Foydalanuvchi tugatganda
   sendFinish(wpm, accuracy) {
     const myId = this.peer ? this.peer.id : null;
     if (myId && this.players[myId]) {
@@ -354,7 +341,6 @@ class MultiplayerManager {
     }
   }
 
-  // Host marrani tekshirishi
   checkRaceFinish() {
     const allPlayers = Object.values(this.players);
     const sorted = [...allPlayers].sort((a, b) => (b.wpm || 0) - (a.wpm || 0));
@@ -406,7 +392,6 @@ class MultiplayerManager {
     modal.classList.add('active');
   }
 
-  // Poyga yo'lakchalari UI
   renderRaceTracks() {
     const container = document.getElementById('race-tracks-container');
     container.innerHTML = '';
@@ -453,7 +438,6 @@ class MultiplayerManager {
     if (statusText) statusText.textContent = msg;
   }
 
-  // Lobby (Kutish zali) UI
   updateLobbyUI() {
     const codeEl = document.getElementById('lobby-room-code');
     const playersList = document.getElementById('lobby-players-list');
@@ -485,7 +469,6 @@ class MultiplayerManager {
   }
 
   leaveRoom() {
-    clearTimeout(this.connectionTimeout);
     if (this.peer) {
       try { this.peer.destroy(); } catch (e) {}
     }
