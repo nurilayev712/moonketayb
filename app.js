@@ -612,6 +612,13 @@ function handleKeyDown(e) {
     return;
   }
 
+  // Zen rejimida Shift + Enter orqali testni yakunlash
+  if (state.mode === 'zen' && e.shiftKey && e.key === 'Enter') {
+    e.preventDefault();
+    finishTest();
+    return;
+  }
+
   // Modifier tugmalarini e'tiborsiz qoldirish
   if (['Shift', 'Control', 'Alt', 'Meta', 'CapsLock'].includes(e.key)) {
     return;
@@ -641,14 +648,18 @@ function handleKeyDown(e) {
     for (let i = state.currentLetterIndex; i < targetWord.length; i++) {
       letters[i].classList.add('incorrect');
       state.missedChars++;
+      if (state.masterMode) {
+        finishTest();
+        return;
+      }
     }
 
     currentWordEl.classList.remove('active');
     state.currentWordIndex++;
     state.currentLetterIndex = 0;
 
-    // Words, Code va Quote rejimlarida limit tekshirish
-    const isWordBasedMode = (state.mode === 'words' || state.mode === 'code' || state.mode === 'quote');
+    // Words, Code, Quote va Custom rejimlarida limit tekshirish
+    const isWordBasedMode = (state.mode === 'words' || state.mode === 'code' || state.mode === 'quote' || state.mode === 'custom');
     if (isWordBasedMode) {
       const targetCount = state.mode === 'words' ? state.wordsLimit : state.words.length;
       elements.liveStats.textContent = `${state.currentWordIndex} / ${targetCount}`;
@@ -658,7 +669,7 @@ function handleKeyDown(e) {
       }
     }
 
-    // Time rejimida so'zlar tugab qolmasligi uchun yangi so'zlar qo'shish
+    // Time yoki Zen rejimida so'zlar tugab qolmasligi uchun yangi so'zlar qo'shish
     if (state.currentWordIndex >= state.words.length - 10) {
       appendMoreWords(30);
     }
@@ -678,6 +689,11 @@ function handleKeyDown(e) {
   // BACKSPACE BOSILGANDA
   if (e.key === 'Backspace') {
     e.preventDefault();
+
+    // No Backspace rejimi yoqilgan bo'lsa xatolarni o'chirish taqiqlanadi
+    if (state.noBackspace) {
+      return;
+    }
 
     if (state.currentLetterIndex > 0) {
       state.currentLetterIndex--;
@@ -731,10 +747,22 @@ function handleKeyDown(e) {
         letterEl.classList.add('incorrect');
         state.incorrectChars++;
         soundManager.playKey(true, false);
+
+        // Master Mode (Sudden Death): Birinchi xato bilanoq to'xtatish!
+        if (state.masterMode) {
+          updateCaretPosition();
+          finishTest();
+          return;
+        }
       }
       state.currentLetterIndex++;
     } else {
       // Ortiqcha (extra) harflar qo'shish
+      if (state.masterMode) {
+        soundManager.playKey(true, false);
+        finishTest();
+        return;
+      }
       if (state.currentLetterIndex < targetWord.length + 10) { // maksimal 10 ta ortiqcha
         const extraSpan = document.createElement('span');
         extraSpan.className = 'letter extra incorrect';
@@ -746,8 +774,15 @@ function handleKeyDown(e) {
       }
     }
 
-    // Words / Code / Quote rejimida oxirgi so'zning oxirgi harfi kiritilganda yakunlash
-    const isWordBased = (state.mode === 'words' || state.mode === 'code' || state.mode === 'quote');
+    // Jonli HUD ko'rsatkichlarini tezkor yangilash
+    if (state.timeElapsed > 0) {
+      const live = calculateLiveStats();
+      if (elements.hudWpm) elements.hudWpm.textContent = live.netWpm;
+      if (elements.hudAcc) elements.hudAcc.textContent = `${live.acc}%`;
+    }
+
+    // Words / Code / Quote / Custom rejimida oxirgi so'zning oxirgi harfi kiritilganda yakunlash
+    const isWordBased = (state.mode === 'words' || state.mode === 'code' || state.mode === 'quote' || state.mode === 'custom');
     const totalWordCount = state.mode === 'words' ? state.wordsLimit : state.words.length;
     if (isWordBased && 
         state.currentWordIndex === totalWordCount - 1 && 
