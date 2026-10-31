@@ -367,6 +367,26 @@ function calculateLiveWpm() {
 // Klaviaturadan harflarni qabul qilish (Input handler)
 // ----------------------------------------------------
 function handleKeyDown(e) {
+  // 1. Agar birorta modal ochiq bo'lsa yoki Command Palette ochiq bo'lsa
+  const isModalOpen = document.querySelector('.modal-overlay.active') || 
+                      (document.getElementById('command-palette-overlay') && document.getElementById('command-palette-overlay').style.display === 'flex');
+  
+  if (isModalOpen) {
+    if (e.key === 'Escape') {
+      // Escape bosilsa ochiq modalni yopish
+      document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+      if (window.closeCommandPalette) window.closeCommandPalette();
+    }
+    return; // Test klaviaturasi mutlaqo ishlamaydi!
+  }
+
+  // 2. Agar foydalanuvchi boshqa input yoki select maydonida yozayotgan bo'lsa
+  if (e.target && e.target.tagName && ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+    if (e.target.id !== 'typing-input') {
+      return; // Oddiy matn kiritishga ruxsat
+    }
+  }
+
   if (state.isFinished) {
     if (e.key === 'Tab' || e.key === 'Enter') {
       e.preventDefault();
