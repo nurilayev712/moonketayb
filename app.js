@@ -1876,6 +1876,15 @@ function setupEventListeners() {
     });
   }
 
+  const joinPublicBtn = document.getElementById('join-public-room-btn');
+  if (joinPublicBtn) {
+    joinPublicBtn.addEventListener('click', () => {
+      window.closeAppModal(multiModal);
+      window.openAppModal(lobbyModal);
+      window.multiplayerManager.joinRoom('arena_public');
+    });
+  }
+
   if (createRoomBtn) {
     createRoomBtn.addEventListener('click', () => {
       window.closeAppModal(multiModal);
@@ -1904,7 +1913,7 @@ function setupEventListeners() {
       const url = window.location.origin + window.location.pathname + '?room=' + room;
       navigator.clipboard.writeText(url).then(() => {
         copyLinkBtn.textContent = "✅ Nusxalandi!";
-        setTimeout(() => { copyLinkBtn.textContent = "📋 Copy Room Link"; }, 2000);
+        setTimeout(() => { copyLinkBtn.textContent = "📋 Nusxalash"; }, 2000);
       });
     });
   }
@@ -1939,6 +1948,31 @@ function setupEventListeners() {
         window.multiplayerManager.setRoomConfig(mode, limit);
       }
     });
+  });
+
+  document.querySelectorAll('.lobby-lang-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (window.multiplayerManager && window.multiplayerManager.isHost) {
+        const lang = btn.dataset.lobbyLang;
+        window.multiplayerManager.setRoomLang(lang);
+      }
+    });
+  });
+
+  // Shift + Enter tezkor klaviatura buyrug'i
+  document.addEventListener('keydown', (e) => {
+    if (lobbyModal && lobbyModal.classList.contains('active')) {
+      if (e.key === 'Enter' && e.shiftKey) {
+        e.preventDefault();
+        if (window.multiplayerManager) {
+          if (window.multiplayerManager.isHost) {
+            window.multiplayerManager.startRace();
+          } else {
+            window.multiplayerManager.toggleReady();
+          }
+        }
+      }
+    }
   });
 
   if (closeLobbyBtn) {
@@ -1999,16 +2033,14 @@ function setupEventListeners() {
     });
   }
 
-  // URL da ?room=XXXXXX bormi tekshirish
+  // URL da ?room=XXXXXX bormi tekshirish (Bir zumda avtomatik ulanish)
   const urlParams = new URLSearchParams(window.location.search);
   const roomParam = urlParams.get('room');
   if (roomParam) {
     setTimeout(() => {
-      if (confirm(`Siz ${roomParam} xonasiga taklif qilindingiz. Qo'shilasizmi?`)) {
-        window.openAppModal(lobbyModal);
-        window.multiplayerManager.joinRoom(roomParam);
-      }
-    }, 500);
+      window.openAppModal(lobbyModal);
+      window.multiplayerManager.joinRoom(roomParam);
+    }, 400);
   }
 
   // Oyna o'lchami o'zgarganda kursor joyini to'g'rilash
