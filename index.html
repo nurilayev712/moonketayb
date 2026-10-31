@@ -481,120 +481,159 @@
     <div class="countdown-number" id="countdown-number">3</div>
   </div>
 
-  <!-- MULTIPLAYER (XONA TANLASH) MODALI -->
+  <!-- MULTIPLAYER (MONKEYTYPE TRIBE) MODALI -->
   <div class="modal-overlay" id="multiplayer-modal">
-    <div class="modal" style="max-width: 540px;">
-      <div class="modal-header">
-        <div class="modal-title">👥 Do'stlar bilan poyga (Multiplayer)</div>
+    <div class="modal tribe-modal" style="max-width: 560px;">
+      <div class="modal-header tribe-modal-header">
+        <div class="modal-title" style="display: flex; align-items: center; gap: 0.5rem; text-transform: lowercase;">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+          tribe / do'stlar bilan poyga
+        </div>
         <button class="modal-close" id="close-multiplayer-btn">&times;</button>
       </div>
-      <div class="modal-body">
-        <p style="color: var(--sub-color); font-size: 0.88rem; margin-bottom: 1.25rem;">
-          Bir vaqtda xuddi Monkeytype kabi do'stlaringiz yoki onlayn o'yinchilar bilan poygalashing!
-        </p>
+      <div class="modal-body" style="padding-top: 1rem;">
         
-        <div style="display: flex; flex-direction: column; gap: 0.85rem;">
-          <!-- 1. Ommaviy Arena (Quick Match) -->
-          <div class="multi-choice-card" id="card-public-match">
-            <div style="display: flex; align-items: center; gap: 0.75rem;">
-              <span style="font-size: 1.8rem;">⚡</span>
-              <div>
-                <div style="font-weight: 700; color: var(--text-color); font-size: 0.95rem;">Ochiq Arena (Tezkor o'yin)</div>
-                <div style="color: var(--sub-color); font-size: 0.78rem;">Saytdagi istalgan faol o'yinchilar bilan bir zumda poygalashing</div>
-              </div>
-            </div>
-            <button class="action-btn primary" id="join-public-room-btn" style="padding: 0.5rem 1.15rem; font-size: 0.85rem;">
-              Kirish
-            </button>
-          </div>
-
-          <!-- 2. Shaxsiy Xona Yaratish -->
-          <div class="multi-choice-card" id="card-create-room">
-            <div style="display: flex; align-items: center; gap: 0.75rem;">
-              <span style="font-size: 1.8rem;">🔒</span>
-              <div>
-                <div style="font-weight: 700; color: var(--text-color); font-size: 0.95rem;">Shaxsiy Xona Yaratish</div>
-                <div style="color: var(--sub-color); font-size: 0.78rem;">O'zingiz xona oching va kod yoki havolani do'stingizga yuboring</div>
-              </div>
-            </div>
-            <button class="action-btn" id="create-room-btn" style="padding: 0.5rem 1.15rem; font-size: 0.85rem;">
-              + Ochish
-            </button>
-          </div>
-
-          <!-- 3. Kod orqali kirish -->
-          <div class="multi-choice-card" style="flex-direction: column; align-items: stretch; gap: 0.75rem;">
-            <div style="display: flex; align-items: center; gap: 0.75rem;">
-              <span style="font-size: 1.8rem;">🔑</span>
-              <div>
-                <div style="font-weight: 700; color: var(--text-color); font-size: 0.95rem;">Do'stingiz xonasiga kirish</div>
-                <div style="color: var(--sub-color); font-size: 0.78rem;">Do'stingiz bergan 6 xonali xona kodini kiriting</div>
-              </div>
-            </div>
-            <div style="display: flex; gap: 0.5rem;">
-              <input type="text" class="form-control" id="join-room-input" placeholder="Xona kodi (masalan: 749201)" style="flex: 1; letter-spacing: 2px; font-weight: 700;">
-              <button class="action-btn primary" id="join-room-btn" style="padding: 0.5rem 1.25rem;">Ulanish</button>
-            </div>
-          </div>
+        <!-- Monkeytype Sub-bar Nav Tabs -->
+        <div class="tribe-nav-tabs">
+          <button type="button" class="tribe-tab-btn active" data-tribe-tab="create">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            shaxsiy xona
+          </button>
+          <button type="button" class="tribe-tab-btn" data-tribe-tab="join">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
+            kod bilan kirish
+          </button>
+          <button type="button" class="tribe-tab-btn" data-tribe-tab="public">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+            ochiq arena
+          </button>
         </div>
+
+        <!-- 1. TAB: SHAXSIY XONA YARATISH (CREATE) -->
+        <div class="tribe-tab-content active" id="tribe-tab-create">
+          <div style="font-size: 0.8rem; color: var(--sub-color); margin-bottom: 0.85rem;">
+            do'stlaringiz bilan birgalikda yozish uchun shaxsiy xona parametrlari:
+          </div>
+
+          <div class="tribe-config-capsule">
+            <div class="tribe-config-row">
+              <span class="tribe-cfg-label">rejim:</span>
+              <div class="tribe-cfg-pills" id="tribe-create-mode">
+                <button type="button" class="tribe-cfg-pill active" data-mode="time">vaqt</button>
+                <button type="button" class="tribe-cfg-pill" data-mode="words">so'zlar</button>
+              </div>
+            </div>
+            <div class="tribe-config-row">
+              <span class="tribe-cfg-label">miqdor:</span>
+              <div class="tribe-cfg-pills" id="tribe-create-limit">
+                <button type="button" class="tribe-cfg-pill" data-limit="15">15</button>
+                <button type="button" class="tribe-cfg-pill active" data-limit="30">30</button>
+                <button type="button" class="tribe-cfg-pill" data-limit="60">60</button>
+              </div>
+            </div>
+            <div class="tribe-config-row">
+              <span class="tribe-cfg-label">lug'at:</span>
+              <div class="tribe-cfg-pills" id="tribe-create-lang">
+                <button type="button" class="tribe-cfg-pill active" data-lang="uzbek">o'zbekcha</button>
+                <button type="button" class="tribe-cfg-pill" data-lang="english">english</button>
+                <button type="button" class="tribe-cfg-pill" data-lang="russian">русский</button>
+              </div>
+            </div>
+          </div>
+
+          <button class="action-btn primary large" id="create-room-btn" style="width: 100%; justify-content: center; margin-top: 1.25rem;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            xona yaratish va boshlash
+          </button>
+        </div>
+
+        <!-- 2. TAB: KOD BILAN KIRISH (JOIN) -->
+        <div class="tribe-tab-content" id="tribe-tab-join" style="display: none;">
+          <div style="font-size: 0.8rem; color: var(--sub-color); margin-bottom: 0.75rem;">
+            do'stingiz yuborgan 6 xonali xona kodini kiriting:
+          </div>
+          <div class="tribe-code-wrapper">
+            <input type="text" class="tribe-code-input" id="join-room-input" placeholder="000000" maxlength="8" autocomplete="off" spellcheck="false">
+          </div>
+          <button class="action-btn primary large" id="join-room-btn" style="width: 100%; justify-content: center; margin-top: 1.25rem;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+            xonaga ulanish
+          </button>
+        </div>
+
+        <!-- 3. TAB: OCHIQ ARENA (PUBLIC) -->
+        <div class="tribe-tab-content" id="tribe-tab-public" style="display: none;">
+          <div style="font-size: 0.82rem; color: var(--text-color); margin-bottom: 0.35rem; font-weight: 600;">
+            ⚡ global ochiq arena
+          </div>
+          <div style="font-size: 0.78rem; color: var(--sub-color); margin-bottom: 1rem; line-height: 1.5;">
+            saytda hozir faol bo'lgan istalgan o'yinchilar bilan bir zumda tezkor match.
+          </div>
+          <div class="arena-live-chip">
+            <span class="live-pulse-dot"></span>
+            <span>arena serveri onlayn (24/7 tayyor)</span>
+          </div>
+          <button class="action-btn primary large" id="join-public-room-btn" style="width: 100%; justify-content: center; margin-top: 1.25rem;">
+            arenaga kirish
+          </button>
+        </div>
+
       </div>
     </div>
   </div>
 
-  <!-- LOBBY (KUTISH ZALI) MODALI -->
+  <!-- LOBBY (MONKEYTYPE TRIBE KUTISH ZALI) MODALI -->
   <div class="modal-overlay" id="multiplayer-lobby-modal">
-    <div class="modal" style="max-width: 680px; width: 95%;">
-      <div class="modal-header">
-        <div style="display: flex; align-items: center; gap: 0.65rem;">
-          <div class="modal-title">🏁 Poyga Zali (Room Lounge)</div>
-          <span class="room-live-badge">🟢 Onlayn</span>
+    <div class="modal tribe-lobby-modal" style="max-width: 680px; width: 95%;">
+      <div class="modal-header tribe-lobby-header">
+        <div class="tribe-header-left">
+          <span class="tribe-logo-text">tribe</span>
+          <span class="tribe-room-code-tag" id="lobby-room-code">#000000</span>
+          <button class="tribe-copy-pill" id="copy-room-link-btn" title="xona havolasini nusxalash">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+            havolani nusxalash
+          </button>
         </div>
-        <button class="modal-close" id="close-lobby-btn">&times;</button>
+        <div class="tribe-header-right">
+          <span class="tribe-status-pill" id="lobby-ping-badge" title="tarmoq tezligi">📶 --ms</span>
+          <span class="tribe-status-pill" id="lobby-mode-badge">⏱ 30s</span>
+          <span class="tribe-status-pill" id="lobby-lang-badge">🌐 o'zbekcha</span>
+          <span class="tribe-status-pill" id="lobby-players-badge">👥 1/8</span>
+          <button class="modal-close" id="close-lobby-btn">&times;</button>
+        </div>
       </div>
-      <div class="modal-body">
+      <div class="modal-body tribe-lobby-body">
         
-        <!-- Xona ma'lumotlari kartasi -->
-        <div class="lobby-header-bar">
-          <div class="lobby-room-info">
-            <span class="lobby-label">XONA KODI:</span>
-            <div class="room-code-badge" id="lobby-room-code">------</div>
-            <button class="action-btn" id="copy-room-link-btn" title="Xona havolasini nusxalash" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;">
-              📋 Nusxalash
-            </button>
-          </div>
-          <div class="lobby-meta-tags">
-            <span class="room-chip" id="lobby-ping-badge" title="Tarmoq tezligi (Ping)">📶 --ms</span>
-            <span class="room-chip" id="lobby-mode-badge">⏱ 30s</span>
-            <span class="room-chip" id="lobby-lang-badge">🌐 O'zbekcha</span>
-            <span class="room-chip" id="lobby-players-badge">👥 1/8 o'yinchi</span>
-          </div>
-        </div>
-
-        <!-- Host uchun: Poyga rejimini boshqarish -->
+        <!-- Host uchun: Poyga rejimini boshqarish (Monkeytype Capsule Bar) -->
         <div class="lobby-config-card" id="lobby-config-card" style="display: none;">
-          <div class="lobby-cfg-title">⚙️ Poyga parametrlari (Xona egasi):</div>
-          <div class="lobby-cfg-buttons">
-            <button type="button" class="lobby-cfg-btn active" data-lobby-mode="time" data-lobby-limit="30">⏱ 30 soniya</button>
-            <button type="button" class="lobby-cfg-btn" data-lobby-mode="time" data-lobby-limit="60">⏱ 60 soniya</button>
-            <button type="button" class="lobby-cfg-btn" data-lobby-mode="time" data-lobby-limit="15">⏱ 15 soniya</button>
-            <button type="button" class="lobby-cfg-btn" data-lobby-mode="words" data-lobby-limit="25">📝 25 so'z</button>
-            <button type="button" class="lobby-cfg-btn" data-lobby-mode="words" data-lobby-limit="50">📝 50 so'z</button>
-          </div>
-          <div class="lobby-cfg-lang-row">
-            <span style="font-size: 0.8rem; color: var(--sub-color); font-weight: 600;">Lug'at tili:</span>
-            <div style="display: flex; gap: 0.4rem;">
-              <button type="button" class="lobby-lang-btn active" data-lobby-lang="uzbek">O'zbekcha</button>
-              <button type="button" class="lobby-lang-btn" data-lobby-lang="english">English</button>
-              <button type="button" class="lobby-lang-btn" data-lobby-lang="russian">Русский</button>
+          <div class="tribe-cfg-bar">
+            <div class="tribe-cfg-group">
+              <span class="tribe-cfg-sub-label">vaqt:</span>
+              <button type="button" class="lobby-cfg-btn active" data-lobby-mode="time" data-lobby-limit="30">30</button>
+              <button type="button" class="lobby-cfg-btn" data-lobby-mode="time" data-lobby-limit="60">60</button>
+              <button type="button" class="lobby-cfg-btn" data-lobby-mode="time" data-lobby-limit="15">15</button>
+            </div>
+            <div class="tribe-cfg-divider"></div>
+            <div class="tribe-cfg-group">
+              <span class="tribe-cfg-sub-label">so'zlar:</span>
+              <button type="button" class="lobby-cfg-btn" data-lobby-mode="words" data-lobby-limit="25">25</button>
+              <button type="button" class="lobby-cfg-btn" data-lobby-mode="words" data-lobby-limit="50">50</button>
+            </div>
+            <div class="tribe-cfg-divider"></div>
+            <div class="tribe-cfg-group">
+              <span class="tribe-cfg-sub-label">til:</span>
+              <button type="button" class="lobby-lang-btn active" data-lobby-lang="uzbek">o'zbekcha</button>
+              <button type="button" class="lobby-lang-btn" data-lobby-lang="english">english</button>
+              <button type="button" class="lobby-lang-btn" data-lobby-lang="russian">русский</button>
             </div>
           </div>
         </div>
 
         <!-- O'yinchilar ro'yxati -->
-        <div style="margin-top: 1.25rem;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-            <span style="font-weight: 600; font-size: 0.9rem; color: var(--text-color);">Zaldagi ishtirokchilar:</span>
-            <span id="lobby-status-text" style="color: var(--main-color); font-size: 0.8rem; font-weight: 500;">Ishtirokchilar kutilmoqda...</span>
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.65rem;">
+            <span style="font-size: 0.8rem; color: var(--sub-color); text-transform: lowercase;">ishtirokchilar:</span>
+            <span id="lobby-status-text" style="color: var(--main-color); font-size: 0.78rem;">ishtirokchilar kutilmoqda...</span>
           </div>
           <div class="lobby-players-grid" id="lobby-players-list">
             <!-- Dinamik o'yinchilar kartasi -->
@@ -603,24 +642,24 @@
 
         <!-- Boshqaruv tugmalari (Host uchun boshlash, Guest uchun Tayyorman) -->
         <div class="lobby-actions-row">
-          <button class="action-btn primary" id="lobby-start-btn" style="display: none; flex: 1; justify-content: center; font-size: 1.05rem; padding: 0.85rem;">
-            🏁 Poygani boshlash
+          <button class="action-btn primary large" id="lobby-start-btn" style="display: none; flex: 2; justify-content: center;">
+            🏁 poygani boshlash
           </button>
-          <button class="action-btn primary" id="lobby-ready-btn" style="display: none; flex: 1; justify-content: center; font-size: 1.05rem; padding: 0.85rem;">
-            ✅ Tayyorman (Ready)
+          <button class="action-btn primary large" id="lobby-ready-btn" style="display: none; flex: 2; justify-content: center;">
+            ✅ tayyorman
           </button>
-          <button class="action-btn" id="lobby-leave-btn" style="padding: 0.85rem 1.25rem;">
-            Chiqish
+          <button class="action-btn" id="lobby-leave-btn" style="flex: 1; justify-content: center;">
+            chiqish
           </button>
         </div>
-        <div style="text-align: center; margin-top: 0.4rem; font-size: 0.75rem; color: var(--sub-color);">
-          Tezkor tugma: <kbd style="background: var(--bg-color); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1);">Shift + Enter</kbd> orqali tayyor bo'lishingiz mumkin
+        <div class="tribe-key-hint">
+          <kbd>shift</kbd> + <kbd>enter</kbd> — tayyor bo'lish / poygani boshlash
         </div>
 
         <!-- LOBBY JONLI CHAT VA EMOJILAR -->
         <div class="lobby-chat-card">
           <div class="lobby-chat-title">
-            <span>💬 Jonli Chat & Reaksiyalar</span>
+            <span>💬 jonli chat</span>
             <div class="emoji-fast-bar">
               <button type="button" class="emoji-btn" data-emoji="🔥">🔥</button>
               <button type="button" class="emoji-btn" data-emoji="🏎️">🏎️</button>
@@ -632,12 +671,12 @@
             </div>
           </div>
           <div class="lobby-chat-messages" id="lobby-chat-messages">
-            <div class="chat-hint">Xonadagilar bilan emoji yoki qisqa xabar orqali suhbatlashing!</div>
+            <div class="chat-hint">xonadagilar bilan suhbatlashish uchun xabar yoki emoji yuboring...</div>
           </div>
           <form id="lobby-chat-form" class="lobby-chat-form">
-            <input type="text" id="lobby-chat-input" class="form-control" placeholder="Xabar yozing (masalan: Hammaga omad!)..." maxlength="100">
+            <input type="text" id="lobby-chat-input" class="form-control" placeholder="xabar yozing..." maxlength="100" autocomplete="off">
             <button type="submit" class="action-btn primary" id="lobby-chat-send-btn" style="padding: 0.5rem 0.9rem;">
-              <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: currentColor;"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+              <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; fill: currentColor;"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
             </button>
           </form>
         </div>
