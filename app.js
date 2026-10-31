@@ -157,6 +157,25 @@ function loadStoredSettings() {
   const savedCaret = localStorage.getItem('mk_caret_style') || 'line';
   state.caretStyle = savedCaret;
   applyCaretStyle(state.caretStyle);
+
+  const savedFocus = localStorage.getItem('mkt_focus_mode');
+  state.focusModeEnabled = (savedFocus !== 'off');
+  if (elements.focusModeSelect) elements.focusModeSelect.value = state.focusModeEnabled ? 'on' : 'off';
+
+  const savedVk = localStorage.getItem('mkt_virtual_keyboard');
+  state.virtualKeyboardEnabled = (savedVk === 'on');
+  if (elements.virtualKeyboardSelect) elements.virtualKeyboardSelect.value = state.virtualKeyboardEnabled ? 'on' : 'off';
+  if (elements.virtualKeyboard) {
+    elements.virtualKeyboard.classList.toggle('hidden', !state.virtualKeyboardEnabled);
+  }
+
+  const savedMaster = localStorage.getItem('mkt_master_mode');
+  state.masterMode = (savedMaster === 'on');
+  if (elements.masterModeSelect) elements.masterModeSelect.value = state.masterMode ? 'on' : 'off';
+
+  const savedNoBack = localStorage.getItem('mkt_no_backspace');
+  state.noBackspace = (savedNoBack === 'on');
+  if (elements.noBackspaceSelect) elements.noBackspaceSelect.value = state.noBackspace ? 'on' : 'off';
 }
 
 // ----------------------------------------------------
