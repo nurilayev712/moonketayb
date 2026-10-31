@@ -1,0 +1,932 @@
+// MonkeyType Asosiy Logic
+const WORDS = window.WORDS;
+const soundManager = window.soundManager;
+
+// Holat va Sozlamalar
+const state = {
+  mode: 'time', // 'time' yoki 'words'
+  timeLimit: 30, // 15, 30, 60, 120
+  wordsLimit: 25, // 10, 25, 50, 100
+  language: 'uzbek', // 'uzbek', 'english', 'russian'
+  punctuation: false,
+  numbers: false,
+  theme: 'serika_dark',
+  sound: true,
+
+  // Test jarayoni
+  words: [],
+  currentWordIndex: 0,
+  currentLetterIndex: 0,
+  isRunning: false,
+  isFinished: false,
+  timer: null,
+  timeRemaining: 30,
+  timeElapsed: 0,
+  
+  // Statistika
+  correctChars: 0,
+  incorrectChars: 0,
+  extraChars: 0,
+  missedChars: 0,
+  historyChartData: [], // Har soniyadagi { second, wpm, errors }
+
+  // Chart obyekti
+  chartInstance: null
+};
+
+// DOM Elementlar
+const elements = {
+  wordsContainer: document.getElementById('words-container'),
+  wordsWrapper: document.getElementById('words-wrapper'),
+  caret: document.getElementById('caret'),
+  typingInput: document.getElementById('typing-input'),
+  liveStats: document.getElementById('live-stats'),
+  testSection: document.getElementById('test-section'),
+  resultSection: document.getElementById('result-section'),
+  restartBtn: document.getElementById('restart-btn'),
+  retryBtn: document.getElementById('retry-btn'),
+  nextTestBtn: document.getElementById('next-test-btn'),
+  
+  // Natija elementlari
+  resultWpm: document.getElementById('result-wpm'),
+  resultAcc: document.getElementById('result-acc'),
+  resultRaw: document.getElementById('result-raw'),
+  resultChars: document.getElementById('result-chars'),
+  resultTime: document.getElementById('result-time'),
+  resultChart: document.getElementById('result-chart'),
+
+  // Sozlamalar tugmalari
+  modeBtns: document.querySelectorAll('[data-mode]'),
+  timeBtns: document.querySelectorAll('[data-time]'),
+  wordsBtns: document.querySelectorAll('[data-words]'),
+  timeGroup: document.getElementById('time-config-group'),
+  wordsGroup: document.getElementById('words-config-group'),
+  punctToggle: document.getElementById('punct-toggle'),
+  numbersToggle: document.getElementById('numbers-toggle'),
+  
+  // Modallar
+  settingsModal: document.getElementById('settings-modal'),
+  historyModal: document.getElementById('history-modal'),
+  openSettingsBtn: document.getElementById('open-settings-btn'),
+  openHistoryBtn: document.getElementById('open-history-btn'),
+  closeSettingsBtn: document.getElementById('close-settings-btn'),
+  closeHistoryBtn: document.getElementById('close-history-btn'),
+  soundToggle: document.getElementById('sound-toggle-btn'),
+  languageSelect: document.getElementById('language-select'),
+  themeButtons: document.querySelectorAll('.theme-btn'),
+  historyList: document.getElementById('history-list'),
+  clearHistoryBtn: document.getElementById('clear-history-btn'),
+  bestWpmDisplay: document.getElementById('best-wpm-display')
+};
+
+// ----------------------------------------------------
+// Dasturni ishga tushirish (Initialization)
+// ----------------------------------------------------
+function init() {
+  loadStoredSettings();
+  setupEventListeners();
+  applyTheme(state.theme);
+  updateConfigUI();
+  resetTest();
+}
+
+// LocalStorage dan sozlamalarni yuklash
+function loadStoredSettings() {
+  const savedTheme = localStorage.getItem('mk_theme');
+  if (savedTheme) state.theme = savedTheme;
+
+  const savedMode = localStorage.getItem('mk_mode');
+  if (savedMode) state.mode = savedMode;
+
+  const savedTime = localStorage.getItem('mk_time');
+  if (savedTime) state.timeLimit = parseInt(savedTime, 10);
+
+  const savedWords = localStorage.getItem('mk_words');
+  if (savedWords) state.wordsLimit = parseInt(savedWords, 10);
+
+  const savedLang = localStorage.getItem('mk_lang');
+  if (savedLang) state.language = savedLang;
+
+  const savedPunct = localStorage.getItem('mk_punct');
+  if (savedPunct !== null) state.punctuation = savedPunct === 'true';
+
+  const savedNums = localStorage.getItem('mk_nums');
+  if (savedNums !== null) state.numbers = savedNums === 'true';
+
+  const savedSound = localStorage.getItem('mk_sound');
+  if (savedSound !== null) {
+    state.sound = savedSound === 'true';
+    soundManager.enabled = state.sound;
+  }
+}
+
+// ----------------------------------------------------
+// Mavzu va UI boshqaruvi
+// ----------------------------------------------------
+function applyTheme(themeName) {
+  state.theme = themeName;
+  document.body.setAttribute('data-theme', themeName);
+  localStorage.setItem('mk_theme', themeName);
+
+  elements.themeButtons.forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.themeName === themeName);
+  });
+}
+
+function updateConfigUI() {
+  // Rejim tugmalari
+  elements.modeBtns.forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.mode === state.mode);
+  });
+
+  if (state.mode === 'time') {
+    elements.timeGroup.style.display = 'flex';
+    elements.wordsGroup.style.display = 'none';
+  } else {
+    elements.timeGroup.style.display = 'none';
+    elements.wordsGroup.style.display = 'flex';
+  }
+
+  // Vaqt tugmalari
+  elements.timeBtns.forEach(btn => {
+    btn.classList.toggle('active', parseInt(btn.dataset.time, 10) === state.timeLimit);
+  });
+
+  // So'zlar soni tugmalari
+  elements.wordsBtns.forEach(btn => {
+    btn.classList.toggle('active', parseInt(btn.dataset.words, 10) === state.wordsLimit);
+  });
+
+  // Tinish belgilari va Raqamlar
+  elements.punctToggle.classList.toggle('active', state.punctuation);
+  elements.numbersToggle.classList.toggle('active', state.numbers);
+
+  // Til tanlash
+  if (elements.languageSelect) {
+    elements.languageSelect.value = state.language;
+  }
+
+  // Ovoz holati
+  if (elements.soundToggle) {
+    elements.soundToggle.classList.toggle('active', state.sound);
+  }
+}
+
+// ----------------------------------------------------
+// So'zlar generatsiyasi
+// ----------------------------------------------------
+function generateWords() {
+  const source = WORDS[state.language] || WORDS.uzbek;
+  const count = state.mode === 'words' ? state.wordsLimit : Math.max(80, state.timeLimit * 3);
+  const result = [];
+
+  const punctuationList = [',', '.', '!', '?', ';', ':'];
+
+  for (let i = 0; i < count; i++) {
+    // Tasodifiy so'z
+    let word = source[Math.floor(Math.random() * source.length)];
+
+    // Raqamlar qo'shish
+    if (state.numbers && Math.random() < 0.15) {
+      word = String(Math.floor(Math.random() * 9000) + 10);
+    }
+
+    // Tinish belgilari
+    if (state.punctuation && Math.random() < 0.25) {
+      // 50% bosh harf
+      if (Math.random() < 0.5) {
+        word = word.charAt(0).toUpperCase() + word.slice(1);
+      }
+      // Tasodifiy belgi oxiriga
+      const mark = punctuationList[Math.floor(Math.random() * punctuationList.length)];
+      word += mark;
+    }
+
+    result.push(word);
+  }
+
+  return result;
+}
+
+// ----------------------------------------------------
+// DOM da so'zlarni chizish
+// ----------------------------------------------------
+function renderWords() {
+  elements.wordsContainer.innerHTML = '';
+  state.words = generateWords();
+
+  state.words.forEach((wordText, wIdx) => {
+    const wordEl = document.createElement('div');
+    wordEl.className = 'word' + (wIdx === 0 ? ' active' : '');
+    wordEl.dataset.wordIndex = wIdx;
+
+    for (let i = 0; i < wordText.length; i++) {
+      const letterEl = document.createElement('span');
+      letterEl.className = 'letter';
+      letterEl.textContent = wordText[i];
+      wordEl.appendChild(letterEl);
+    }
+
+    elements.wordsContainer.appendChild(wordEl);
+  });
+
+  state.currentWordIndex = 0;
+  state.currentLetterIndex = 0;
+
+  // Caretni boshlang'ich harf ustiga qo'yish
+  setTimeout(updateCaretPosition, 10);
+}
+
+// ----------------------------------------------------
+// Caret (kursor) joylashuvini yangilash
+// ----------------------------------------------------
+function updateCaretPosition() {
+  const currentWordEl = elements.wordsContainer.children[state.currentWordIndex];
+  if (!currentWordEl) return;
+
+  // Avval so'zlar konteynerini silliq avtomatik scroll qilish
+  const wordTop = currentWordEl.offsetTop;
+  if (wordTop > 48) {
+    elements.wordsContainer.scrollTop = wordTop - 48;
+  } else {
+    elements.wordsContainer.scrollTop = 0;
+  }
+
+  const letters = currentWordEl.querySelectorAll('.letter');
+  const containerRect = elements.wordsContainer.getBoundingClientRect();
+
+  let targetX = 0;
+  let targetY = 0;
+
+  if (state.currentLetterIndex < letters.length) {
+    const targetLetter = letters[state.currentLetterIndex];
+    const letterRect = targetLetter.getBoundingClientRect();
+    targetX = letterRect.left - containerRect.left;
+    targetY = letterRect.top - containerRect.top + (letterRect.height - 30) / 2;
+  } else if (letters.length > 0) {
+    // So'zning oxirgi harfidan keyingi pozitsiya
+    const lastLetter = letters[letters.length - 1];
+    const letterRect = lastLetter.getBoundingClientRect();
+    targetX = letterRect.right - containerRect.left;
+    targetY = letterRect.top - containerRect.top + (letterRect.height - 30) / 2;
+  } else {
+    const wordRect = currentWordEl.getBoundingClientRect();
+    targetX = wordRect.left - containerRect.left;
+    targetY = wordRect.top - containerRect.top;
+  }
+
+  elements.caret.style.left = `${targetX}px`;
+  elements.caret.style.top = `${targetY}px`;
+}
+
+// ----------------------------------------------------
+// Testni qayta boshlash (Reset)
+// ----------------------------------------------------
+function resetTest() {
+  clearInterval(state.timer);
+  state.isRunning = false;
+  state.isFinished = false;
+  state.timeElapsed = 0;
+  state.timeRemaining = state.timeLimit;
+  state.correctChars = 0;
+  state.incorrectChars = 0;
+  state.extraChars = 0;
+  state.missedChars = 0;
+  state.historyChartData = [];
+
+  // Fokus rejimidan chiqish
+  document.body.classList.remove('focus-mode');
+  elements.caret.classList.add('blink');
+
+  // UI elementlarni tiklash
+  elements.testSection.style.display = 'flex';
+  elements.resultSection.classList.remove('active');
+  elements.wordsContainer.scrollTop = 0;
+
+  if (state.mode === 'time') {
+    elements.liveStats.textContent = state.timeLimit;
+    elements.liveStats.classList.remove('hidden');
+  } else {
+    elements.liveStats.textContent = `0 / ${state.wordsLimit}`;
+    elements.liveStats.classList.remove('hidden');
+  }
+
+  renderWords();
+  elements.typingInput.value = '';
+  elements.typingInput.focus();
+}
+
+// ----------------------------------------------------
+// Testni boshlash (Start)
+// ----------------------------------------------------
+function startTest() {
+  if (state.isRunning) return;
+  state.isRunning = true;
+  document.body.classList.add('focus-mode');
+  elements.caret.classList.remove('blink');
+
+  soundManager.init();
+
+  const startTime = Date.now();
+
+  state.timer = setInterval(() => {
+    state.timeElapsed++;
+
+    if (state.mode === 'time') {
+      state.timeRemaining--;
+      elements.liveStats.textContent = state.timeRemaining;
+
+      if (state.timeRemaining <= 0) {
+        finishTest();
+        return;
+      }
+    } else {
+      // Words rejimi: vaqtni 1, 2, 3 sanaydi
+      elements.liveStats.textContent = `${state.currentWordIndex} / ${state.wordsLimit}`;
+    }
+
+    // Grafik uchun har soniyada WPM saqlash
+    const currentWpm = calculateLiveWpm();
+    state.historyChartData.push({
+      second: state.timeElapsed,
+      wpm: currentWpm,
+      errors: state.incorrectChars + state.extraChars
+    });
+
+  }, 1000);
+}
+
+// Joriy WPM hisoblash (Live)
+function calculateLiveWpm() {
+  const minutes = Math.max(state.timeElapsed / 60, 0.016); // kamida 1 soniya
+  const words = state.correctChars / 5;
+  return Math.round(words / minutes);
+}
+
+// ----------------------------------------------------
+// Klaviaturadan harflarni qabul qilish (Input handler)
+// ----------------------------------------------------
+function handleKeyDown(e) {
+  if (state.isFinished) {
+    if (e.key === 'Tab' || e.key === 'Enter') {
+      e.preventDefault();
+      resetTest();
+    }
+    return;
+  }
+
+  // Tab yoki Esc orqali tezkor qayta boshlash
+  if (e.key === 'Tab' || e.key === 'Escape') {
+    e.preventDefault();
+    resetTest();
+    return;
+  }
+
+  // Modifier tugmalarini e'tiborsiz qoldirish
+  if (['Shift', 'Control', 'Alt', 'Meta', 'CapsLock'].includes(e.key)) {
+    return;
+  }
+
+  // Birinchi harf kiritilganda testni boshlash
+  if (!state.isRunning) {
+    startTest();
+  }
+
+  const currentWordEl = elements.wordsContainer.children[state.currentWordIndex];
+  if (!currentWordEl) return;
+
+  const targetWord = state.words[state.currentWordIndex];
+  const letters = currentWordEl.querySelectorAll('.letter');
+
+  // SPACE BOSILGANDA (Keyingi so'zga o'tish)
+  if (e.key === ' ') {
+    e.preventDefault();
+
+    // Agar so'zda hech narsa yozilmagan bo'lsa, o'tmaydi
+    if (state.currentLetterIndex === 0) return;
+
+    soundManager.playKey(false, true);
+
+    // Kiritilmagan qolgan harflarni "missed" deb hisoblash
+    for (let i = state.currentLetterIndex; i < targetWord.length; i++) {
+      letters[i].classList.add('incorrect');
+      state.missedChars++;
+    }
+
+    currentWordEl.classList.remove('active');
+    state.currentWordIndex++;
+    state.currentLetterIndex = 0;
+
+    // Words rejimida limit tekshirish
+    if (state.mode === 'words') {
+      elements.liveStats.textContent = `${state.currentWordIndex} / ${state.wordsLimit}`;
+      if (state.currentWordIndex >= state.wordsLimit) {
+        finishTest();
+        return;
+      }
+    }
+
+    // Time rejimida so'zlar tugab qolmasligi uchun yangi so'zlar qo'shish
+    if (state.currentWordIndex >= state.words.length - 10) {
+      appendMoreWords(30);
+    }
+
+    const nextWordEl = elements.wordsContainer.children[state.currentWordIndex];
+    if (nextWordEl) {
+      nextWordEl.classList.add('active');
+    }
+
+    updateCaretPosition();
+    return;
+  }
+
+  // BACKSPACE BOSILGANDA
+  if (e.key === 'Backspace') {
+    e.preventDefault();
+
+    if (state.currentLetterIndex > 0) {
+      state.currentLetterIndex--;
+      const letterToUndo = letters[state.currentLetterIndex];
+
+      if (letterToUndo.classList.contains('extra')) {
+        letterToUndo.remove();
+        state.extraChars = Math.max(0, state.extraChars - 1);
+      } else {
+        if (letterToUndo.classList.contains('correct')) {
+          state.correctChars = Math.max(0, state.correctChars - 1);
+        } else if (letterToUndo.classList.contains('incorrect')) {
+          state.incorrectChars = Math.max(0, state.incorrectChars - 1);
+        }
+        letterToUndo.className = 'letter';
+      }
+
+      soundManager.playKey(false, false);
+      updateCaretPosition();
+    } else if (state.currentWordIndex > 0) {
+      // Oldingi so'zga qaytish (agar xatoliklar bo'lsa)
+      const prevWordEl = elements.wordsContainer.children[state.currentWordIndex - 1];
+      const prevWordErrors = prevWordEl.querySelectorAll('.letter.incorrect, .letter.extra');
+      if (prevWordErrors.length > 0) {
+        currentWordEl.classList.remove('active');
+        state.currentWordIndex--;
+        prevWordEl.classList.add('active');
+        state.currentLetterIndex = prevWordEl.querySelectorAll('.letter').length;
+        soundManager.playKey(false, false);
+        updateCaretPosition();
+      }
+    }
+    return;
+  }
+
+  // ODDIY HARF BOSILGANDA (Faqat 1 ta belgi)
+  if (e.key.length === 1) {
+    e.preventDefault();
+    const typedChar = e.key;
+
+    if (state.currentLetterIndex < targetWord.length) {
+      // Kutilayotgan harf bilan solishtirish
+      const expectedChar = targetWord[state.currentLetterIndex];
+      const letterEl = letters[state.currentLetterIndex];
+
+      if (typedChar === expectedChar) {
+        letterEl.classList.add('correct');
+        state.correctChars++;
+        soundManager.playKey(false, false);
+      } else {
+        letterEl.classList.add('incorrect');
+        state.incorrectChars++;
+        soundManager.playKey(true, false);
+      }
+      state.currentLetterIndex++;
+    } else {
+      // Ortiqcha (extra) harflar qo'shish
+      if (state.currentLetterIndex < targetWord.length + 10) { // maksimal 10 ta ortiqcha
+        const extraSpan = document.createElement('span');
+        extraSpan.className = 'letter extra incorrect';
+        extraSpan.textContent = typedChar;
+        currentWordEl.appendChild(extraSpan);
+        state.extraChars++;
+        state.currentLetterIndex++;
+        soundManager.playKey(true, false);
+      }
+    }
+
+    // Words rejimida oxirgi so'zning oxirgi harfi kiritilganda yakunlash
+    if (state.mode === 'words' && 
+        state.currentWordIndex === state.wordsLimit - 1 && 
+        state.currentLetterIndex >= targetWord.length) {
+      finishTest();
+      return;
+    }
+
+    updateCaretPosition();
+  }
+}
+
+// Qo'shimcha so'zlar ulash (Time rejimi uchun)
+function appendMoreWords(count) {
+  const source = WORDS[state.language] || WORDS.uzbek;
+  for (let i = 0; i < count; i++) {
+    let word = source[Math.floor(Math.random() * source.length)];
+    if (state.numbers && Math.random() < 0.15) {
+      word = String(Math.floor(Math.random() * 9000) + 10);
+    }
+    state.words.push(word);
+
+    const wordEl = document.createElement('div');
+    wordEl.className = 'word';
+    wordEl.dataset.wordIndex = state.words.length - 1;
+
+    for (let c = 0; c < word.length; c++) {
+      const letterEl = document.createElement('span');
+      letterEl.className = 'letter';
+      letterEl.textContent = word[c];
+      wordEl.appendChild(letterEl);
+    }
+
+    elements.wordsContainer.appendChild(wordEl);
+  }
+}
+
+// ----------------------------------------------------
+// Testni Yakunlash (Finish)
+// ----------------------------------------------------
+function finishTest() {
+  clearInterval(state.timer);
+  state.isRunning = false;
+  state.isFinished = true;
+  document.body.classList.remove('focus-mode');
+
+  // Test vaqti
+  const testDuration = state.mode === 'time' ? state.timeLimit : Math.max(state.timeElapsed, 1);
+  const minutes = testDuration / 60;
+
+  // WPM va Aniqlik hisoblash
+  const totalTypedChars = state.correctChars + state.incorrectChars + state.extraChars;
+  const netWpm = Math.max(0, Math.round((state.correctChars / 5) / minutes));
+  const rawWpm = Math.max(0, Math.round((totalTypedChars / 5) / minutes));
+  const accuracy = totalTypedChars > 0 ? Math.round((state.correctChars / totalTypedChars) * 100) : 0;
+
+  // Agar test juda tez tugasa, grafik uchun kamida 1 ta nuqta qo'shish
+  if (state.historyChartData.length === 0) {
+    state.historyChartData.push({ second: 1, wpm: netWpm, errors: state.incorrectChars });
+  }
+
+  // Natijalarni ko'rsatish
+  elements.resultWpm.textContent = netWpm;
+  elements.resultAcc.textContent = `${accuracy}%`;
+  elements.resultRaw.textContent = rawWpm;
+  elements.resultChars.textContent = `${state.correctChars}/${state.incorrectChars}/${state.extraChars}/${state.missedChars}`;
+  elements.resultTime.textContent = `${testDuration}s`;
+
+  // UI almashtirish
+  elements.testSection.style.display = 'none';
+  elements.resultSection.classList.add('active');
+
+  // Natijani saqlash
+  saveResultToStorage({
+    wpm: netWpm,
+    acc: accuracy,
+    raw: rawWpm,
+    mode: state.mode,
+    modeValue: state.mode === 'time' ? `${state.timeLimit}s` : `${state.wordsLimit} so'z`,
+    lang: state.language,
+    date: new Date().toLocaleDateString('uz-UZ', { hour: '2-digit', minute: '2-digit' })
+  });
+
+  // Chiziqli grafik chizish
+  renderLineChart();
+}
+
+// ----------------------------------------------------
+// Chiziqli Grafik (Line Chart - Chart.js)
+// ----------------------------------------------------
+function renderLineChart() {
+  const ctx = elements.resultChart.getContext('2d');
+  
+  if (state.chartInstance) {
+    state.chartInstance.destroy();
+  }
+
+  const labels = state.historyChartData.map(d => `${d.second}s`);
+  const wpmData = state.historyChartData.map(d => d.wpm);
+  const errorData = state.historyChartData.map(d => d.errors);
+
+  const style = getComputedStyle(document.body);
+  const mainColor = style.getPropertyValue('--main-color').trim() || '#e2b714';
+  const subColor = style.getPropertyValue('--sub-color').trim() || '#646669';
+  const errorColor = style.getPropertyValue('--error-color').trim() || '#ca4754';
+  const textClr = style.getPropertyValue('--text-color').trim() || '#d1d0c5';
+
+  // Chart.js kutubxonasi yuklanganligini tekshirish
+  if (typeof Chart === 'undefined') {
+    console.warn("Chart.js kutubxonasi mavjud emas");
+    return;
+  }
+
+  // Fon uchun chiroyli gradient
+  const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+  gradient.addColorStop(0, hexToRgba(mainColor, 0.25));
+  gradient.addColorStop(1, hexToRgba(mainColor, 0.01));
+
+  state.chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'WPM',
+          data: wpmData,
+          borderColor: mainColor,
+          backgroundColor: gradient,
+          fill: true,
+          tension: 0.35,
+          borderWidth: 3,
+          pointRadius: 2,
+          pointHoverRadius: 5,
+          pointBackgroundColor: mainColor,
+          yAxisID: 'y'
+        },
+        {
+          label: 'Xatolar',
+          data: errorData,
+          borderColor: errorColor,
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          pointRadius: 3,
+          pointStyle: 'crossRot',
+          showLine: false,
+          yAxisID: 'y1'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false
+      },
+      plugins: {
+        legend: {
+          display: true,
+          labels: {
+            color: textClr,
+            font: { family: 'JetBrains Mono', size: 12 }
+          }
+        },
+        tooltip: {
+          backgroundColor: style.getPropertyValue('--sub-alt-color').trim() || '#2c2e31',
+          titleColor: textClr,
+          bodyColor: textClr,
+          borderColor: subColor,
+          borderWidth: 1,
+          padding: 10,
+          titleFont: { family: 'JetBrains Mono' },
+          bodyFont: { family: 'JetBrains Mono' }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(255, 255, 255, 0.05)' },
+          ticks: { color: subColor, font: { family: 'JetBrains Mono', size: 11 } }
+        },
+        y: {
+          beginAtZero: true,
+          grid: { color: 'rgba(255, 255, 255, 0.05)' },
+          ticks: { color: subColor, font: { family: 'JetBrains Mono', size: 11 } }
+        },
+        y1: {
+          position: 'right',
+          beginAtZero: true,
+          grid: { display: false },
+          ticks: { color: errorColor, precision: 0, font: { family: 'JetBrains Mono', size: 11 } }
+        }
+      }
+    }
+  });
+}
+
+function hexToRgba(hex, alpha) {
+  let c = hex.replace('#', '');
+  if (c.length === 3) {
+    c = c.split('').map(x => x + x).join('');
+  }
+  const num = parseInt(c, 16);
+  if (isNaN(num)) return `rgba(226, 183, 20, ${alpha})`;
+  return `rgba(${(num >> 16) & 255}, ${(num >> 8) & 255}, ${num & 255}, ${alpha})`;
+}
+
+// ----------------------------------------------------
+// LocalStorage (Tarix va Rekordlar)
+// ----------------------------------------------------
+function saveResultToStorage(result) {
+  let history = JSON.parse(localStorage.getItem('mk_history') || '[]');
+  history.unshift(result);
+  if (history.length > 50) history.pop(); // Oxirgi 50 ta natija
+  localStorage.setItem('mk_history', JSON.stringify(history));
+
+  // Eng yaxshi WPM
+  const bestWpm = parseInt(localStorage.getItem('mk_best_wpm') || '0', 10);
+  if (result.wpm > bestWpm) {
+    localStorage.setItem('mk_best_wpm', result.wpm);
+  }
+  updateBestWpmUI();
+}
+
+function updateBestWpmUI() {
+  const best = localStorage.getItem('mk_best_wpm') || '0';
+  if (elements.bestWpmDisplay) {
+    elements.bestWpmDisplay.textContent = `${best} WPM`;
+  }
+}
+
+function renderHistoryUI() {
+  const history = JSON.parse(localStorage.getItem('mk_history') || '[]');
+  elements.historyList.innerHTML = '';
+
+  if (history.length === 0) {
+    elements.historyList.innerHTML = '<div class="empty-state">Hali hech qanday natija saqlanmagan.</div>';
+    return;
+  }
+
+  history.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'history-item';
+    row.innerHTML = `
+      <div>
+        <div class="hist-wpm">${item.wpm} WPM</div>
+        <div class="hist-meta">Aniqlik: ${item.acc}% | Raw: ${item.raw}</div>
+      </div>
+      <div style="text-align: right;">
+        <div style="color: var(--text-color); font-weight: 500;">${item.modeValue} (${item.lang})</div>
+        <div class="hist-meta">${item.date}</div>
+      </div>
+    `;
+    elements.historyList.appendChild(row);
+  });
+}
+
+// ----------------------------------------------------
+// Hodisalar (Event Listeners)
+// ----------------------------------------------------
+function setupEventListeners() {
+  // Input va Klaviatura
+  document.addEventListener('keydown', handleKeyDown);
+
+  // Mobil virtual klaviatura (input hodisasi)
+  elements.typingInput.addEventListener('input', (e) => {
+    if (e.inputType === 'deleteContentBackward') {
+      handleKeyDown({ key: 'Backspace', preventDefault: () => {} });
+    } else if (e.data) {
+      for (const char of e.data) {
+        handleKeyDown({ key: char, preventDefault: () => {} });
+      }
+    }
+    elements.typingInput.value = '';
+  });
+
+  // Logo bosilganda qayta boshlash
+  const logoBtn = document.getElementById('logo-refresh');
+  if (logoBtn) {
+    logoBtn.addEventListener('click', resetTest);
+  }
+
+  // Fokusni doimo yashirin inputda ushlab turish (mobil va sichqoncha bosilganda)
+  elements.wordsWrapper.addEventListener('click', () => {
+    elements.typingInput.focus();
+  });
+
+  document.addEventListener('click', (e) => {
+    // Agar modal yoki tugma bosilmagan bo'lsa, inputga fokus qaytarish
+    if (!e.target.closest('button') && !e.target.closest('select') && !e.target.closest('.modal')) {
+      elements.typingInput.focus();
+    }
+  });
+
+  // Qayta boshlash tugmalari
+  elements.restartBtn.addEventListener('click', resetTest);
+  elements.retryBtn.addEventListener('click', resetTest);
+  elements.nextTestBtn.addEventListener('click', resetTest);
+
+  // Rejim tanlash (time / words)
+  elements.modeBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.mode = btn.dataset.mode;
+      localStorage.setItem('mk_mode', state.mode);
+      updateConfigUI();
+      resetTest();
+    });
+  });
+
+  // Vaqt tanlash (15, 30, 60, 120s)
+  elements.timeBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.timeLimit = parseInt(btn.dataset.time, 10);
+      localStorage.setItem('mk_time', state.timeLimit);
+      updateConfigUI();
+      resetTest();
+    });
+  });
+
+  // So'zlar soni tanlash (10, 25, 50, 100)
+  elements.wordsBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.wordsLimit = parseInt(btn.dataset.words, 10);
+      localStorage.setItem('mk_words', state.wordsLimit);
+      updateConfigUI();
+      resetTest();
+    });
+  });
+
+  // Tinish belgilari
+  elements.punctToggle.addEventListener('click', () => {
+    state.punctuation = !state.punctuation;
+    localStorage.setItem('mk_punct', state.punctuation);
+    updateConfigUI();
+    resetTest();
+  });
+
+  // Raqamlar
+  elements.numbersToggle.addEventListener('click', () => {
+    state.numbers = !state.numbers;
+    localStorage.setItem('mk_nums', state.numbers);
+    updateConfigUI();
+    resetTest();
+  });
+
+  // Ovoz tugmasi
+  if (elements.soundToggle) {
+    elements.soundToggle.addEventListener('click', () => {
+      state.sound = !state.sound;
+      soundManager.enabled = state.sound;
+      localStorage.setItem('mk_sound', state.sound);
+      updateConfigUI();
+    });
+  }
+
+  // Til tanlash
+  if (elements.languageSelect) {
+    elements.languageSelect.addEventListener('change', (e) => {
+      state.language = e.target.value;
+      localStorage.setItem('mk_lang', state.language);
+      resetTest();
+    });
+  }
+
+  // Mavzular tugmalari
+  elements.themeButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      applyTheme(btn.dataset.themeName);
+    });
+  });
+
+  // Modallar
+  elements.openSettingsBtn.addEventListener('click', () => {
+    elements.settingsModal.classList.add('active');
+  });
+
+  elements.closeSettingsBtn.addEventListener('click', () => {
+    elements.settingsModal.classList.remove('active');
+    elements.typingInput.focus();
+  });
+
+  elements.openHistoryBtn.addEventListener('click', () => {
+    renderHistoryUI();
+    updateBestWpmUI();
+    elements.historyModal.classList.add('active');
+  });
+
+  elements.closeHistoryBtn.addEventListener('click', () => {
+    elements.historyModal.classList.remove('active');
+    elements.typingInput.focus();
+  });
+
+  // Modal tashqarisiga bosilganda yopish
+  [elements.settingsModal, elements.historyModal].forEach(modal => {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.classList.remove('active');
+        elements.typingInput.focus();
+      }
+    });
+  });
+
+  // Tarixni tozalash
+  if (elements.clearHistoryBtn) {
+    elements.clearHistoryBtn.addEventListener('click', () => {
+      if (confirm("Haqiqatan ham barcha natijalar tarixini tozalamoqchimisiz?")) {
+        localStorage.removeItem('mk_history');
+        localStorage.removeItem('mk_best_wpm');
+        renderHistoryUI();
+        updateBestWpmUI();
+      }
+    });
+  }
+
+  // Oyna o'lchami o'zgarganda kursor joyini to'g'rilash
+  window.addEventListener('resize', updateCaretPosition);
+}
+
+// Boshlash
+window.addEventListener('DOMContentLoaded', init);
