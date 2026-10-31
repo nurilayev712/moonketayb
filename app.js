@@ -1047,6 +1047,19 @@ function setupEventListeners() {
   // Input va Klaviatura
   document.addEventListener('keydown', handleKeyDown);
 
+  // Caps Lock tekshiruvi (Monkeytype imzo ogohlantirish xususiyati)
+  const updateCapsLock = (e) => {
+    const capsEl = document.getElementById('caps-lock-warning');
+    if (!capsEl) return;
+    if (e.getModifierState && e.getModifierState('CapsLock')) {
+      capsEl.style.display = 'inline-flex';
+    } else {
+      capsEl.style.display = 'none';
+    }
+  };
+  document.addEventListener('keydown', updateCapsLock);
+  document.addEventListener('keyup', updateCapsLock);
+
   // Mobil virtual klaviatura (input hodisasi)
   elements.typingInput.addEventListener('input', (e) => {
     if (elements.typingInput.disabled) {
