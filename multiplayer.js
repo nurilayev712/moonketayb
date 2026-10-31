@@ -1,4 +1,13 @@
-// MoonKeyType — Ultra-Tezkor va 100% Barqaror Real-Time Multiplayer Tizimi (Paho MQTT)
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/[&<>"']/g, m => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  }[m]));
+}
 
 class MultiplayerManager {
   constructor() {
