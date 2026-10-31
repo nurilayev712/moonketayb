@@ -1418,3 +1418,175 @@ footer {
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
   letter-spacing: -0.5px;
 }
+
+/* ===================================================
+   MONKEYTYPE ACTIVITY HEATMAP (FAOLIYAT XARITASI)
+   =================================================== */
+#profile-modal .modal {
+  max-width: 840px;
+}
+
+.heatmap-section {
+  background-color: #121314;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 1.15rem 1.25rem;
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.heatmap-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.heatmap-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.heatmap-select {
+  background-color: #18191a;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-color);
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.heatmap-select:hover {
+  border-color: var(--main-color);
+}
+
+.heatmap-count-tag {
+  color: var(--sub-color);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+}
+
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--sub-color);
+}
+
+.heatmap-main-wrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  overflow-x: auto;
+  padding-bottom: 0.4rem;
+}
+
+.heatmap-days-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 98px; /* 7 qator * (11px + 3px gap) = 98px */
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: #55575a;
+  padding-top: 1px;
+  text-align: right;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.heatmap-days-col span {
+  line-height: 11px;
+}
+
+.heatmap-scroll-area {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.heatmap-grid {
+  display: flex;
+  gap: 3px;
+  height: 98px;
+}
+
+.heatmap-col {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.heat-box {
+  width: 11px;
+  height: 11px;
+  border-radius: 2.5px;
+  background-color: #1a1c1e;
+  transition: transform 0.15s, outline 0.15s;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.heat-box:hover {
+  transform: scale(1.35);
+  outline: 1px solid #fff;
+  z-index: 10;
+}
+
+/* Heatmap rang darajalari (Screenshotdagi yashil tonlar) */
+.heat-box.lvl-0 {
+  background-color: #1a1c1e;
+}
+
+.heat-box.lvl-1 {
+  background-color: #2b471d;
+}
+
+.heat-box.lvl-2 {
+  background-color: #487319;
+}
+
+.heat-box.lvl-3 {
+  background-color: #72a114;
+}
+
+.heat-box.lvl-4 {
+  background-color: #a3e635; /* Screenshotdagi yorqin neon yashil */
+  box-shadow: 0 0 6px rgba(163, 230, 53, 0.4);
+}
+
+.heatmap-months-row {
+  position: relative;
+  height: 16px;
+  width: 100%;
+}
+
+.heatmap-month-label {
+  position: absolute;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: #55575a;
+  user-select: none;
+  transform: translateX(-50%);
+}
+
+.heatmap-footer-note {
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  color: #484b4e;
+  margin-top: 0.35rem;
+  user-select: none;
+}
