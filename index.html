@@ -383,7 +383,7 @@
         <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--sub-color)">
           <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
         </svg>
-        <input type="text" class="command-input" id="command-input" placeholder="Type a command or setting..." autocomplete="off">
+        <input type="text" class="command-input" id="command-input" placeholder="Buyruq yoki sozlamani qidiring..." autocomplete="off">
       </div>
       <div class="command-list" id="command-list">
         <!-- Dinamik komandalar -->
@@ -400,32 +400,32 @@
   <div class="modal-overlay" id="multiplayer-modal">
     <div class="modal">
       <div class="modal-header">
-        <div class="modal-title">👥 Custom Room (Multiplayer)</div>
+        <div class="modal-title">👥 Xususiy Xona (Multiplayer)</div>
         <button class="modal-close" id="close-multiplayer-btn">&times;</button>
       </div>
       <div class="modal-body">
         <p style="color: var(--sub-color); font-size: 0.9rem;">
-          Type against your friends in a private room. Create a room and invite friends by sharing the room code or link.
+          Do'stlaringiz bilan maxsus xonada poygalashing. Yangi xona oching va kod yoki havolani do'stlaringizga yuboring.
         </p>
         
         <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem;">
           <!-- Xona yaratish -->
           <div style="background-color: var(--sub-alt-color); padding: 1.25rem; border-radius: 12px; display: flex; flex-direction: column; gap: 0.75rem;">
-            <div style="font-weight: 700; color: var(--text-color);">Create Room</div>
-            <div style="color: var(--sub-color); font-size: 0.8rem;">Host your own race and invite other players</div>
+            <div style="font-weight: 700; color: var(--text-color);">Xona Yaratish</div>
+            <div style="color: var(--sub-color); font-size: 0.8rem;">O'zingiz poyga xonasi oching va do'stlaringizni taklif qiling</div>
             <button class="action-btn primary" id="create-room-btn" style="justify-content: center;">
-              Create Room
+              Xona Yaratish
             </button>
           </div>
 
-          <div style="text-align: center; color: var(--sub-color); font-weight: 600;">— OR —</div>
+          <div style="text-align: center; color: var(--sub-color); font-weight: 600;">— YOKI —</div>
 
           <!-- Xonaga qo'shilish -->
           <div style="background-color: var(--sub-alt-color); padding: 1.25rem; border-radius: 12px; display: flex; flex-direction: column; gap: 0.75rem;">
-            <div style="font-weight: 700; color: var(--text-color);">Join Room</div>
+            <div style="font-weight: 700; color: var(--text-color);">Xonaga Qo'shilish</div>
             <div style="display: flex; gap: 0.5rem;">
-              <input type="text" class="form-control" id="join-room-input" placeholder="Room code (e.g. 482910)" style="flex: 1; letter-spacing: 2px;">
-              <button class="action-btn" id="join-room-btn">Join</button>
+              <input type="text" class="form-control" id="join-room-input" placeholder="Xona kodi (masalan: 482910)" style="flex: 1; letter-spacing: 2px;">
+              <button class="action-btn" id="join-room-btn">Qo'shilish</button>
             </div>
           </div>
         </div>
@@ -437,33 +437,33 @@
   <div class="modal-overlay" id="multiplayer-lobby-modal">
     <div class="modal">
       <div class="modal-header">
-        <div class="modal-title">🏁 Room Lobby</div>
+        <div class="modal-title">🏁 Poyga Lobbisi</div>
         <button class="modal-close" id="close-lobby-btn">&times;</button>
       </div>
       <div class="modal-body">
         <div style="text-align: center;">
-          <div style="font-size: 0.85rem; color: var(--sub-color); margin-bottom: 0.5rem;">ROOM CODE:</div>
+          <div style="font-size: 0.85rem; color: var(--sub-color); margin-bottom: 0.5rem;">XONA KODI:</div>
           <div class="room-code-badge" id="lobby-room-code">------</div>
           <div style="margin-top: 0.5rem;">
-            <button class="action-btn" id="copy-room-link-btn" style="font-size: 0.8rem; margin: 0 auto;">📋 Copy Room Link</button>
+            <button class="action-btn" id="copy-room-link-btn" style="font-size: 0.8rem; margin: 0 auto;">📋 Havolani nusxalash</button>
           </div>
         </div>
 
         <div style="margin-top: 1.5rem;">
-          <div style="font-weight: 600; font-size: 0.9rem; color: var(--text-color); margin-bottom: 0.5rem;">Players in Lobby:</div>
+          <div style="font-weight: 600; font-size: 0.9rem; color: var(--text-color); margin-bottom: 0.5rem;">Loddagi Ishtirokchilar:</div>
           <div class="lobby-players-grid" id="lobby-players-list">
             <!-- Dinamik o'yinchilar kartasi -->
           </div>
         </div>
 
         <div id="lobby-status-text" style="text-align: center; color: var(--main-color); font-size: 0.85rem; margin: 0.75rem 0;">
-          Waiting for players to join...
+          Ishtirokchilar kutilmoqda...
         </div>
 
         <!-- LOBBY JONLI CHAT VA EMOJILAR -->
         <div class="lobby-chat-card">
           <div class="lobby-chat-title">
-            <span>💬 Live Chat & Reactions</span>
+            <span>💬 Jonli Chat & Reaksiyalar</span>
             <div class="emoji-fast-bar">
               <button type="button" class="emoji-btn" data-emoji="🔥">🔥</button>
               <button type="button" class="emoji-btn" data-emoji="🏎️">🏎️</button>
@@ -486,7 +486,7 @@
         </div>
 
         <button class="action-btn primary" id="lobby-start-btn" style="width: 100%; justify-content: center; font-size: 1.1rem; padding: 0.85rem; margin-top: 1rem;">
-          Start Game
+          Poygani boshlash
         </button>
       </div>
     </div>
@@ -496,7 +496,7 @@
   <div class="modal-overlay" id="race-results-modal">
     <div class="modal">
       <div class="modal-header">
-        <div class="modal-title">🏆 Race Results</div>
+        <div class="modal-title">🏆 Poyga Natijalari</div>
         <button class="modal-close" id="close-race-results-btn">&times;</button>
       </div>
       <div class="modal-body">
@@ -505,8 +505,8 @@
         </div>
 
         <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem;">
-          <button class="action-btn primary" id="race-again-btn">Play Again</button>
-          <button class="action-btn" id="race-exit-btn">Close</button>
+          <button class="action-btn primary" id="race-again-btn">Yana o'ynash</button>
+          <button class="action-btn" id="race-exit-btn">Yopish</button>
         </div>
       </div>
     </div>
