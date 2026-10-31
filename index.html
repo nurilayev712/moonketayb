@@ -466,34 +466,57 @@
 
   <!-- MULTIPLAYER (XONA TANLASH) MODALI -->
   <div class="modal-overlay" id="multiplayer-modal">
-    <div class="modal">
+    <div class="modal" style="max-width: 540px;">
       <div class="modal-header">
-        <div class="modal-title">👥 Xususiy Xona (Multiplayer)</div>
+        <div class="modal-title">👥 Do'stlar bilan poyga (Multiplayer)</div>
         <button class="modal-close" id="close-multiplayer-btn">&times;</button>
       </div>
       <div class="modal-body">
-        <p style="color: var(--sub-color); font-size: 0.9rem;">
-          Do'stlaringiz bilan maxsus xonada poygalashing. Yangi xona oching va kod yoki havolani do'stlaringizga yuboring.
+        <p style="color: var(--sub-color); font-size: 0.88rem; margin-bottom: 1.25rem;">
+          Bir vaqtda xuddi Monkeytype kabi do'stlaringiz yoki onlayn o'yinchilar bilan poygalashing!
         </p>
         
-        <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem;">
-          <!-- Xona yaratish -->
-          <div style="background-color: var(--sub-alt-color); padding: 1.25rem; border-radius: 12px; display: flex; flex-direction: column; gap: 0.75rem;">
-            <div style="font-weight: 700; color: var(--text-color);">Xona Yaratish</div>
-            <div style="color: var(--sub-color); font-size: 0.8rem;">O'zingiz poyga xonasi oching va do'stlaringizni taklif qiling</div>
-            <button class="action-btn primary" id="create-room-btn" style="justify-content: center;">
-              Xona Yaratish
+        <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+          <!-- 1. Ommaviy Arena (Quick Match) -->
+          <div class="multi-choice-card" id="card-public-match">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <span style="font-size: 1.8rem;">⚡</span>
+              <div>
+                <div style="font-weight: 700; color: var(--text-color); font-size: 0.95rem;">Ochiq Arena (Tezkor o'yin)</div>
+                <div style="color: var(--sub-color); font-size: 0.78rem;">Saytdagi istalgan faol o'yinchilar bilan bir zumda poygalashing</div>
+              </div>
+            </div>
+            <button class="action-btn primary" id="join-public-room-btn" style="padding: 0.5rem 1.15rem; font-size: 0.85rem;">
+              Kirish
             </button>
           </div>
 
-          <div style="text-align: center; color: var(--sub-color); font-weight: 600;">— YOKI —</div>
+          <!-- 2. Shaxsiy Xona Yaratish -->
+          <div class="multi-choice-card" id="card-create-room">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <span style="font-size: 1.8rem;">🔒</span>
+              <div>
+                <div style="font-weight: 700; color: var(--text-color); font-size: 0.95rem;">Shaxsiy Xona Yaratish</div>
+                <div style="color: var(--sub-color); font-size: 0.78rem;">O'zingiz xona oching va kod yoki havolani do'stingizga yuboring</div>
+              </div>
+            </div>
+            <button class="action-btn" id="create-room-btn" style="padding: 0.5rem 1.15rem; font-size: 0.85rem;">
+              + Ochish
+            </button>
+          </div>
 
-          <!-- Xonaga qo'shilish -->
-          <div style="background-color: var(--sub-alt-color); padding: 1.25rem; border-radius: 12px; display: flex; flex-direction: column; gap: 0.75rem;">
-            <div style="font-weight: 700; color: var(--text-color);">Xonaga Qo'shilish</div>
+          <!-- 3. Kod orqali kirish -->
+          <div class="multi-choice-card" style="flex-direction: column; align-items: stretch; gap: 0.75rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <span style="font-size: 1.8rem;">🔑</span>
+              <div>
+                <div style="font-weight: 700; color: var(--text-color); font-size: 0.95rem;">Do'stingiz xonasiga kirish</div>
+                <div style="color: var(--sub-color); font-size: 0.78rem;">Do'stingiz bergan 6 xonali xona kodini kiriting</div>
+              </div>
+            </div>
             <div style="display: flex; gap: 0.5rem;">
-              <input type="text" class="form-control" id="join-room-input" placeholder="Xona kodi (masalan: 482910)" style="flex: 1; letter-spacing: 2px;">
-              <button class="action-btn" id="join-room-btn">Qo'shilish</button>
+              <input type="text" class="form-control" id="join-room-input" placeholder="Xona kodi (masalan: 749201)" style="flex: 1; letter-spacing: 2px; font-weight: 700;">
+              <button class="action-btn primary" id="join-room-btn" style="padding: 0.5rem 1.25rem;">Ulanish</button>
             </div>
           </div>
         </div>
