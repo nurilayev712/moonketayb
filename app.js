@@ -594,6 +594,11 @@ function finishTest() {
     date: new Date().toLocaleDateString('uz-UZ', { hour: '2-digit', minute: '2-digit' })
   });
 
+  // Foydalanuvchi hisobiga XP va statistika qo'shish
+  if (window.authManager) {
+    window.authManager.addTestStats(state.correctChars, testDuration, netWpm, state.mode, state.mode === 'time' ? state.timeLimit : state.wordsLimit);
+  }
+
   // Chiziqli grafik chizish
   renderLineChart();
 }
