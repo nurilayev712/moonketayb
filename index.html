@@ -307,8 +307,11 @@
         <span>CAPS LOCK YONIQ</span>
       </div>
 
-      <!-- Jonli taymer / hisoblagich (Original Monkeytype toza uslub) -->
-      <div class="live-stats" id="live-stats">30</div>
+      <!-- Jonli taymer va Tribe Delta (Monkeytype Live Lead/Gap) -->
+      <div style="display: flex; align-items: baseline; gap: 1rem; margin-bottom: 0.5rem;">
+        <div class="live-stats" id="live-stats">30</div>
+        <div class="tribe-delta" id="tribe-delta" style="display: none;">Δ +0 wpm</div>
+      </div>
 
       <!-- Yashirin input (klaviatura fokus uchun) -->
       <input type="text" id="typing-input" autocomplete="off" autocapitalize="off" spellcheck="false" autofocus>
@@ -317,6 +320,7 @@
       <div class="words-wrapper" id="words-wrapper">
         <div class="caret blink" id="caret"></div>
         <div class="pace-caret" id="pace-caret" style="display: none;"></div>
+        <div class="tribe-carets-container" id="tribe-carets-container"></div>
         <div class="words-container" id="words-container">
           <!-- So'zlar dinamik JS orqali qo'shiladi -->
         </div>
