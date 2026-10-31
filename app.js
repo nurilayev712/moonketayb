@@ -721,9 +721,20 @@ function finishTest() {
   });
 
   // Foydalanuvchi hisobiga XP va statistika qo'shish
-  if (window.authManager) {
+  const todayDateStr = new Date().toISOString().split('T')[0];
+  if (window.authManager && window.authManager.currentUser) {
     window.authManager.addTestStats(state.correctChars, testDuration, netWpm, state.mode, state.mode === 'time' ? state.timeLimit : state.wordsLimit);
+  } else {
+    try {
+      const guestAct = JSON.parse(localStorage.getItem('mkt_guest_activity') || '{}');
+      guestAct[todayDateStr] = (guestAct[todayDateStr] || 0) + 1;
+      localStorage.setItem('mkt_guest_activity', JSON.stringify(guestAct));
+    } catch (e) {}
   }
+
+  // Faollik xaritasini avtomatik yangilash
+  const currentHeatmapRange = document.getElementById('heatmap-range-select') ? document.getElementById('heatmap-range-select').value : '12months';
+  renderActivityHeatmap(currentHeatmapRange);
 
   // Chiziqli grafik chizish
   renderLineChart();
