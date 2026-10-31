@@ -1915,6 +1915,32 @@ function setupEventListeners() {
     });
   }
 
+  const lobbyReadyBtn = document.getElementById('lobby-ready-btn');
+  if (lobbyReadyBtn) {
+    lobbyReadyBtn.addEventListener('click', () => {
+      if (window.multiplayerManager) {
+        window.multiplayerManager.toggleReady();
+      }
+    });
+  }
+
+  const lobbyLeaveBtn = document.getElementById('lobby-leave-btn');
+  if (lobbyLeaveBtn) {
+    lobbyLeaveBtn.addEventListener('click', () => {
+      window.multiplayerManager.leaveRoom();
+    });
+  }
+
+  document.querySelectorAll('.lobby-cfg-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (window.multiplayerManager && window.multiplayerManager.isHost) {
+        const mode = btn.dataset.lobbyMode;
+        const limit = parseInt(btn.dataset.lobbyLimit, 10);
+        window.multiplayerManager.setRoomConfig(mode, limit);
+      }
+    });
+  });
+
   if (closeLobbyBtn) {
     closeLobbyBtn.addEventListener('click', () => {
       window.closeAppModal(lobbyModal);
@@ -1967,12 +1993,8 @@ function setupEventListeners() {
 
   if (raceAgainBtn) {
     raceAgainBtn.addEventListener('click', () => {
-      window.closeAppModal(raceResultsModal);
-      if (window.multiplayerManager.isHost) {
-        window.openAppModal(lobbyModal);
-        document.getElementById('race-track-section').style.display = 'none';
-      } else {
-        alert("Xona egasi yangi poyga boshlashini kuting.");
+      if (window.multiplayerManager) {
+        window.multiplayerManager.requestRaceAgain();
       }
     });
   }
@@ -1996,10 +2018,15 @@ function setupEventListeners() {
 // ===================================================
 // MULTIPLAYER POYGA BOSHLANISH FUNKSIYASI
 // ===================================================
-window.startMultiplayerGame = function(words) {
+window.startMultiplayerGame = function(words, mode = 'words', limit = 25) {
   state.isMultiplayer = true;
-  state.mode = 'words';
-  state.wordsLimit = words.length;
+  state.mode = mode || 'words';
+  if (state.mode === 'time') {
+    state.timeLimit = limit || 30;
+    state.timeRemaining = state.timeLimit;
+  } else {
+    state.wordsLimit = (limit || words.length);
+  }
 
   // UI tayyorlash
   document.getElementById('test-section').style.display = 'flex';
@@ -2030,7 +2057,11 @@ window.startMultiplayerGame = function(words) {
   state.timeElapsed = 0;
   state.historyChartData = [];
 
-  elements.liveStats.textContent = `0 / ${words.length}`;
+  if (state.mode === 'time') {
+    elements.liveStats.textContent = state.timeLimit;
+  } else {
+    elements.liveStats.textContent = `0 / ${state.wordsLimit}`;
+  }
   elements.typingInput.value = '';
   elements.typingInput.focus();
 
@@ -2048,7 +2079,12 @@ window.checkMultiplayerProgress = function() {
     }
     typedChars += state.currentLetterIndex;
 
-    const progress = Math.min(Math.round((typedChars / totalChars) * 100), 100);
+    let progress = 0;
+    if (state.mode === 'time') {
+      progress = Math.min(Math.round(((state.timeLimit - state.timeRemaining) / state.timeLimit) * 100), 100);
+    } else {
+      progress = Math.min(Math.round((typedChars / totalChars) * 100), 100);
+    }
     const liveWpm = calculateLiveWpm();
     window.multiplayerManager.sendProgress(progress, liveWpm);
   }
@@ -2063,6 +2099,8 @@ finishTest = function() {
     const netWpm = Math.max(0, Math.round((state.correctChars / 5) / minutes));
     const totalTyped = state.correctChars + state.incorrectChars + state.extraChars;
     const accuracy = totalTyped > 0 ? Math.round((state.correctChars / totalTyped) * 100) : 0;
+    elements.resultSection.classList.remove('active');
+    elements.testSection.style.display = 'flex';
     window.multiplayerManager.sendFinish(netWpm, accuracy);
     document.getElementById('main-config-bar').style.display = 'flex';
   }
