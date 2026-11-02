@@ -2224,6 +2224,7 @@ function setupEventListeners() {
       localStorage.setItem('mkt_virtual_keyboard', state.virtualKeyboardEnabled ? 'on' : 'off');
       if (elements.virtualKeyboardSelect) elements.virtualKeyboardSelect.value = state.virtualKeyboardEnabled ? 'on' : 'off';
       if (elements.virtualKeyboard) elements.virtualKeyboard.classList.toggle('hidden', !state.virtualKeyboardEnabled);
+    }},
     { label: "tab title: toggle dynamic live title", action: () => {
       state.dynamicTabTitle = !state.dynamicTabTitle;
       if (!state.dynamicTabTitle) resetTabTitle();
