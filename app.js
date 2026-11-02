@@ -599,6 +599,7 @@ function stopPaceCaret() {
 function resetTest() {
   clearInterval(state.timer);
   stopPaceCaret();
+  resetTabTitle();
   state.isRunning = false;
   state.isFinished = false;
   state.timeElapsed = 0;
