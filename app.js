@@ -2406,25 +2406,19 @@ window.startMultiplayerGame = function(words, mode = 'words', limit = 25) {
 // Har safar harf yozilganda progressni do'stlarga yuborish
 window.checkMultiplayerProgress = function() {
   if (state.isMultiplayer && window.multiplayerManager && window.multiplayerManager.isInRace) {
-    const totalWords = state.mode === 'words' ? state.wordsLimit : state.words.length;
-    const totalChars = Math.max(state.words.slice(0, totalWords).join(' ').length, 1);
-    let typedChars = 0;
-    for (let i = 0; i < state.currentWordIndex; i++) {
-      typedChars += (state.words[i] ? state.words[i].length : 0) + 1;
-    }
-    typedChars += state.currentLetterIndex;
-
-    let progress = 0;
+    let targetLetters = 0;
     if (state.mode === 'time') {
-      const timePercent = Math.min(Math.round(((state.timeLimit - state.timeRemaining) / state.timeLimit) * 100), 100);
-      const expectedChars = Math.max(Math.round(state.timeLimit * 4), 40);
-      const charPercent = Math.min(Math.round((typedChars / expectedChars) * 100), 100);
-      progress = Math.max(charPercent, Math.min(timePercent, 98));
+      // Vaqt rejimida ham progress FAQAT to'g'ri kiritilgan harflar bilan yuradi (vaqt o'zi surib ketmaydi!)
+      targetLetters = Math.max(Math.round(state.timeLimit * 4.5), 30);
     } else {
-      progress = Math.min(Math.round((typedChars / totalChars) * 100), 100);
+      const targetWords = state.mode === 'words' ? state.wordsLimit : state.words.length;
+      targetLetters = Math.max(state.words.slice(0, targetWords).join('').length, 1);
     }
 
+    // Progress FAQAT to'g'ri yozilgan harflar (correctChars) hisobiga oldinga siljiydi!
+    const progress = Math.min(100, Math.round((state.correctChars / targetLetters) * 100));
     const liveWpm = calculateLiveWpm();
+
     window.multiplayerManager.sendProgress(progress, liveWpm);
     window.multiplayerManager.updateTribeDelta(liveWpm);
   }
@@ -2441,6 +2435,10 @@ finishTest = function() {
     const accuracy = totalTyped > 0 ? Math.round((state.correctChars / totalTyped) * 100) : 0;
     elements.resultSection.classList.remove('active');
     elements.testSection.style.display = 'flex';
+
+    const isWordBased = (state.mode === 'words' || state.mode === 'code' || state.mode === 'quote' || state.mode === 'custom');
+    const finalProg = isWordBased ? 100 : Math.min(100, Math.round((state.correctChars / Math.max(Math.round(state.timeLimit * 4.5), 30)) * 100));
+    window.multiplayerManager.sendProgress(finalProg, netWpm);
     window.multiplayerManager.sendFinish(netWpm, accuracy);
     document.getElementById('main-config-bar').style.display = 'flex';
   }
