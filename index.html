@@ -910,19 +910,27 @@
           </div>
         </div>
 
-        <!-- Umumiy testlar statistikasi -->
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; text-align: center; margin-bottom: 1.5rem;">
-          <div style="background: var(--sub-alt-color); padding: 0.85rem; border-radius: 10px;">
-            <div style="font-size: 0.75rem; color: var(--sub-color);">Bajarilgan testlar</div>
-            <div style="font-size: 1.4rem; font-weight: 700; color: var(--text-color);" id="prof-tests">0</div>
+        <!-- Umumiy testlar statistikasi & Kunlik Streak (Monkeytype 1:1) -->
+        <div class="prof-stats-grid">
+          <div class="prof-stat-card">
+            <div class="prof-stat-label">bajarilgan testlar</div>
+            <div class="prof-stat-val" id="prof-tests">0</div>
           </div>
-          <div style="background: var(--sub-alt-color); padding: 0.85rem; border-radius: 10px;">
-            <div style="font-size: 0.75rem; color: var(--sub-color);">G'alabalar</div>
-            <div style="font-size: 1.4rem; font-weight: 700; color: var(--main-color);" id="prof-wins">0</div>
+          <div class="prof-stat-card">
+            <div class="prof-stat-label">joriy streak</div>
+            <div class="prof-stat-val highlight" id="prof-streak"><span class="flame-icon">🔥</span> 0 kun</div>
           </div>
-          <div style="background: var(--sub-alt-color); padding: 0.85rem; border-radius: 10px;">
-            <div style="font-size: 0.75rem; color: var(--sub-color);">Yozish vaqti</div>
-            <div style="font-size: 1.4rem; font-weight: 700; color: var(--text-color);" id="prof-time">0m</div>
+          <div class="prof-stat-card">
+            <div class="prof-stat-label">maks streak</div>
+            <div class="prof-stat-val" id="prof-max-streak">⚡ 0 kun</div>
+          </div>
+          <div class="prof-stat-card">
+            <div class="prof-stat-label">yozish vaqti</div>
+            <div class="prof-stat-val" id="prof-time">0 daq</div>
+          </div>
+          <div class="prof-stat-card">
+            <div class="prof-stat-label">g'alabalar</div>
+            <div class="prof-stat-val" style="color: var(--main-color);" id="prof-wins">0</div>
           </div>
         </div>
 
@@ -936,6 +944,7 @@
                 <option value="3months">so'nggi 3 oy</option>
               </select>
               <span class="heatmap-count-tag" id="heatmap-total-tests">0 ta test</span>
+              <span class="heatmap-count-tag" id="heatmap-active-days" style="color: var(--main-color, #e2b714);">• 0 faol kun</span>
             </div>
 
             <div class="heatmap-legend">
@@ -950,12 +959,15 @@
           </div>
 
           <div class="heatmap-main-wrapper">
-            <!-- Chap tarafdagi kunlar -->
+            <!-- Chap tarafdagi kunlar: Monkeytype 1:1 format (7 qator balandligiga mos) -->
             <div class="heatmap-days-col">
-              <span>dushanba</span>
-              <span>chorshanba</span>
-              <span>juma</span>
-              <span>yakshanba</span>
+              <span class="day-lbl">du</span>
+              <span class="day-lbl"></span>
+              <span class="day-lbl">ch</span>
+              <span class="day-lbl"></span>
+              <span class="day-lbl">ju</span>
+              <span class="day-lbl"></span>
+              <span class="day-lbl">ya</span>
             </div>
 
             <!-- Heatmap kataklari va oylar qatori -->
