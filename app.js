@@ -34,6 +34,8 @@ const state = {
   fontFamily: "'Roboto Mono', monospace",
   caretAnim: 'smooth',
   blindMode: false,
+  dynamicTabTitle: true,
+  baseTitle: 'moonketayb | typex712',
   paceCaretTimer: null,
   testStartTime: 0,
 
