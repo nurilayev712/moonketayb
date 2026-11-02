@@ -99,20 +99,70 @@ class SoundManager {
       osc.stop(t + 0.03);
 
     } else if (this.soundPack === 'typewriter') {
-      // Vintage Mechanical Typewriter
-      const osc = this.audioCtx.createOscillator();
-      const gain = this.audioCtx.createGain();
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(isSpace ? 420 : 680 + Math.random() * 120, t);
-      osc.frequency.exponentialRampToValueAtTime(120, t + 0.04);
+      if (isSpace) {
+        // 1. Carriage mechanism click
+        const osc = this.audioCtx.createOscillator();
+        const gain = this.audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(320, t);
+        osc.frequency.exponentialRampToValueAtTime(80, t + 0.06);
+        gain.gain.setValueAtTime(this.volume * 0.45, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+        osc.connect(gain);
+        gain.connect(this.audioCtx.destination);
+        osc.start(t);
+        osc.stop(t + 0.06);
 
-      gain.gain.setValueAtTime(this.volume * (isSpace ? 0.35 : 0.24), t);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+        // 2. Classic Vintage Typewriter Bell "DING!"
+        const bell = this.audioCtx.createOscillator();
+        const bellGain = this.audioCtx.createGain();
+        bell.type = 'sine';
+        bell.frequency.setValueAtTime(2637, t); // E7 bright brass bell
+        bellGain.gain.setValueAtTime(this.volume * 0.4, t);
+        bellGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
+        bell.connect(bellGain);
+        bellGain.connect(this.audioCtx.destination);
+        bell.start(t);
+        bell.stop(t + 0.7);
 
-      osc.connect(gain);
-      gain.connect(this.audioCtx.destination);
-      osc.start(t);
-      osc.stop(t + 0.04);
+        // Bell overtone for rich metallic resonance
+        const bellHarmonic = this.audioCtx.createOscillator();
+        const harmGain = this.audioCtx.createGain();
+        bellHarmonic.type = 'sine';
+        bellHarmonic.frequency.setValueAtTime(5274, t); // E8 harmonic overtone
+        harmGain.gain.setValueAtTime(this.volume * 0.18, t);
+        harmGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
+        bellHarmonic.connect(harmGain);
+        harmGain.connect(this.audioCtx.destination);
+        bellHarmonic.start(t);
+        bellHarmonic.stop(t + 0.45);
+      } else {
+        // Sharp metallic typewriter key strike
+        const osc = this.audioCtx.createOscillator();
+        const gain = this.audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(750 + Math.random() * 160, t);
+        osc.frequency.exponentialRampToValueAtTime(100, t + 0.035);
+        gain.gain.setValueAtTime(this.volume * 0.32, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.035);
+        osc.connect(gain);
+        gain.connect(this.audioCtx.destination);
+        osc.start(t);
+        osc.stop(t + 0.035);
+
+        // Metallic clatter overtone
+        const click = this.audioCtx.createOscillator();
+        const clickGain = this.audioCtx.createGain();
+        click.type = 'triangle';
+        click.frequency.setValueAtTime(1500 + Math.random() * 300, t);
+        click.frequency.exponentialRampToValueAtTime(250, t + 0.025);
+        clickGain.gain.setValueAtTime(this.volume * 0.25, t);
+        clickGain.gain.exponentialRampToValueAtTime(0.001, t + 0.025);
+        click.connect(clickGain);
+        clickGain.connect(this.audioCtx.destination);
+        click.start(t);
+        click.stop(t + 0.025);
+      }
     }
   }
 
