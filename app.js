@@ -2,6 +2,15 @@
 const WORDS = window.WORDS;
 const soundManager = window.soundManager;
 
+// Mahalliy vaqt bo'yicha YYYY-MM-DD formatlovchi yordamchi funksiya
+function getLocalDateString(d = new Date()) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+window.getLocalDateString = getLocalDateString;
+
 // Holat va Sozlamalar
 const state = {
   mode: 'time', // 'time', 'words', 'code', 'quote', 'custom', 'zen'
