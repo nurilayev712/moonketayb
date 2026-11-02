@@ -2335,19 +2335,21 @@ function setupEventListeners() {
 // ===================================================
 // MULTIPLAYER POYGA BOSHLANISH FUNKSIYASI
 // ===================================================
-window.startMultiplayerGame = function(words, mode = 'words', limit = 25) {
+window.startMultiplayerGame = function(words, mode = 'time', limit = 30) {
   // Avvalgi intervallarni tozalash va holatni boshlang'ichga qaytarish
   clearInterval(state.timer);
   state.timer = null;
   state.isRunning = false;
   state.isFinished = false;
   state.isMultiplayer = true;
-  state.mode = mode || 'words';
+  state.mode = (mode === 'words' || mode === 'time') ? mode : 'time';
+
+  const parsedLimit = parseInt(limit, 10);
   if (state.mode === 'time') {
-    state.timeLimit = limit || 30;
+    state.timeLimit = (!isNaN(parsedLimit) && parsedLimit > 0) ? parsedLimit : 30;
     state.timeRemaining = state.timeLimit;
   } else {
-    state.wordsLimit = (limit || words.length);
+    state.wordsLimit = (!isNaN(parsedLimit) && parsedLimit > 0) ? parsedLimit : (words ? words.length : 25);
   }
 
   // Barcha modal overlaylarni yopish va olib tashlash
@@ -2382,8 +2384,11 @@ window.startMultiplayerGame = function(words, mode = 'words', limit = 25) {
   state.timeElapsed = 0;
   state.historyChartData = [];
 
+  // Sekund nomer / taymerni ekranda aniq ko'rsatish
+  elements.liveStats.classList.remove('hidden');
+  elements.liveStats.style.display = 'block';
   if (state.mode === 'time') {
-    elements.liveStats.textContent = state.timeLimit;
+    elements.liveStats.textContent = state.timeRemaining;
   } else {
     elements.liveStats.textContent = `0 / ${state.wordsLimit}`;
   }
