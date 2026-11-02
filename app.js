@@ -1078,6 +1078,9 @@ function finishTest() {
   elements.testSection.style.display = 'none';
   elements.resultSection.classList.add('active');
 
+  // Dinamik tab sarlavhasi (Yakuniy natija bilan)
+  setFinishedTabTitle(netWpm, accuracy);
+
   // Natijani saqlash
   const todayDateStr = getLocalDateString();
   saveResultToStorage({
