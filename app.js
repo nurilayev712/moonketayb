@@ -858,6 +858,7 @@ function handleKeyDown(e) {
   // BACKSPACE BOSILGANDA
   if (e.key === 'Backspace') {
     e.preventDefault();
+    if (window.triggerVKeyGlow) window.triggerVKeyGlow('Backspace');
 
     // No Backspace rejimi yoqilgan bo'lsa xatolarni o'chirish taqiqlanadi
     if (state.noBackspace) {
