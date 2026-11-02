@@ -1816,14 +1816,6 @@ footer {
   50% { transform: translateY(-3px); }
 }
 
-.race-track-row.is-leading {
-  border-color: rgba(226, 183, 20, 0.45);
-  box-shadow: 0 0 14px rgba(226, 183, 20, 0.18);
-}
-
-.race-track-row.is-me {
-  border-left: 3px solid var(--main-color);
-}
 
 .lobby-actions-row {
   display: flex;
