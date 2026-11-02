@@ -1042,6 +1042,7 @@ function finishTest() {
   elements.resultSection.classList.add('active');
 
   // Natijani saqlash
+  const todayDateStr = getLocalDateString();
   saveResultToStorage({
     wpm: netWpm,
     acc: accuracy,
@@ -1049,11 +1050,12 @@ function finishTest() {
     mode: state.mode,
     modeValue: state.mode === 'time' ? `${state.timeLimit}s` : `${state.wordsLimit} so'z`,
     lang: state.language,
-    date: new Date().toLocaleDateString('uz-UZ', { hour: '2-digit', minute: '2-digit' })
+    date: new Date().toLocaleDateString('uz-UZ', { hour: '2-digit', minute: '2-digit' }),
+    dateStr: todayDateStr,
+    timestamp: Date.now()
   });
 
   // Foydalanuvchi hisobiga XP va statistika qo'shish
-  const todayDateStr = new Date().toISOString().split('T')[0];
   if (window.authManager && window.authManager.currentUser) {
     window.authManager.addTestStats(state.correctChars, testDuration, netWpm, state.mode, state.mode === 'time' ? state.timeLimit : state.wordsLimit);
   } else {
