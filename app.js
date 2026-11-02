@@ -1549,20 +1549,31 @@ function setupEventListeners() {
     });
   }
 
-  // Ekrandagi klaviatura tugmalarini jonli yoritish (Interaktivlik)
+  // Ekrandagi klaviatura tugmalarini jonli yoritish (Interaktivlik & Ripple Glow)
+  function triggerVKeyGlow(keyChar) {
+    if (!elements.virtualKeyboard || !state.virtualKeyboardEnabled) return;
+    const key = (keyChar === ' ' ? ' ' : (keyChar || '').toLowerCase());
+    const vkey = elements.virtualKeyboard.querySelector(`.vkey[data-key="${key}"]`);
+    if (vkey) {
+      vkey.classList.remove('glow-pulse');
+      void vkey.offsetWidth; // trigger reflow
+      vkey.classList.add('active', 'glow-pulse');
+      setTimeout(() => {
+        vkey.classList.remove('active');
+      }, 160);
+    }
+  }
+  window.triggerVKeyGlow = triggerVKeyGlow;
+
   window.addEventListener('keydown', (e) => {
     if (elements.virtualKeyboard && state.virtualKeyboardEnabled) {
-      let key = e.key.toLowerCase();
-      if (e.key === ' ') key = ' ';
-      const vkey = elements.virtualKeyboard.querySelector(`.vkey[data-key="${key}"]`);
-      if (vkey) vkey.classList.add('active');
+      triggerVKeyGlow(e.key);
     }
   });
 
   window.addEventListener('keyup', (e) => {
     if (elements.virtualKeyboard && state.virtualKeyboardEnabled) {
-      let key = e.key.toLowerCase();
-      if (e.key === ' ') key = ' ';
+      let key = e.key === ' ' ? ' ' : e.key.toLowerCase();
       const vkey = elements.virtualKeyboard.querySelector(`.vkey[data-key="${key}"]`);
       if (vkey) vkey.classList.remove('active');
     }
