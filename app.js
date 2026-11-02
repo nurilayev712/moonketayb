@@ -894,6 +894,9 @@ function handleKeyDown(e) {
         updateCaretPosition();
       }
     }
+    if (state.isMultiplayer && window.checkMultiplayerProgress) {
+      window.checkMultiplayerProgress();
+    }
     return;
   }
 
