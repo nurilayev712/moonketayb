@@ -906,6 +906,7 @@ function handleKeyDown(e) {
   if (e.key.length === 1) {
     e.preventDefault();
     const typedChar = e.key;
+    if (window.triggerVKeyGlow) window.triggerVKeyGlow(typedChar);
 
     if (state.currentLetterIndex < targetWord.length) {
       // Kutilayotgan harf bilan solishtirish
