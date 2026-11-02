@@ -2336,6 +2336,11 @@ function setupEventListeners() {
 // MULTIPLAYER POYGA BOSHLANISH FUNKSIYASI
 // ===================================================
 window.startMultiplayerGame = function(words, mode = 'words', limit = 25) {
+  // Avvalgi intervallarni tozalash va holatni boshlang'ichga qaytarish
+  clearInterval(state.timer);
+  state.timer = null;
+  state.isRunning = false;
+  state.isFinished = false;
   state.isMultiplayer = true;
   state.mode = mode || 'words';
   if (state.mode === 'time') {
@@ -2344,6 +2349,9 @@ window.startMultiplayerGame = function(words, mode = 'words', limit = 25) {
   } else {
     state.wordsLimit = (limit || words.length);
   }
+
+  // Barcha modal overlaylarni yopish va olib tashlash
+  document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
 
   // UI tayyorlash
   document.getElementById('test-section').style.display = 'flex';
@@ -2379,29 +2387,43 @@ window.startMultiplayerGame = function(words, mode = 'words', limit = 25) {
   } else {
     elements.liveStats.textContent = `0 / ${state.wordsLimit}`;
   }
-  elements.typingInput.value = '';
-  elements.typingInput.focus();
+
+  if (elements.typingInput) {
+    elements.typingInput.disabled = false;
+    elements.typingInput.value = '';
+    elements.typingInput.focus();
+  }
 
   startTest();
   setTimeout(updateCaretPosition, 20);
+
+  // Poyga boshlanganda darhol 0% holatni yangilash
+  if (window.checkMultiplayerProgress) {
+    window.checkMultiplayerProgress();
+  }
 };
 
 // Har safar harf yozilganda progressni do'stlarga yuborish
 window.checkMultiplayerProgress = function() {
   if (state.isMultiplayer && window.multiplayerManager && window.multiplayerManager.isInRace) {
-    const totalChars = Math.max(state.words.join(' ').length, 1);
+    const totalWords = state.mode === 'words' ? state.wordsLimit : state.words.length;
+    const totalChars = Math.max(state.words.slice(0, totalWords).join(' ').length, 1);
     let typedChars = 0;
     for (let i = 0; i < state.currentWordIndex; i++) {
-      typedChars += state.words[i].length + 1;
+      typedChars += (state.words[i] ? state.words[i].length : 0) + 1;
     }
     typedChars += state.currentLetterIndex;
 
     let progress = 0;
     if (state.mode === 'time') {
-      progress = Math.min(Math.round(((state.timeLimit - state.timeRemaining) / state.timeLimit) * 100), 100);
+      const timePercent = Math.min(Math.round(((state.timeLimit - state.timeRemaining) / state.timeLimit) * 100), 100);
+      const expectedChars = Math.max(Math.round(state.timeLimit * 4), 40);
+      const charPercent = Math.min(Math.round((typedChars / expectedChars) * 100), 100);
+      progress = Math.max(charPercent, Math.min(timePercent, 98));
     } else {
       progress = Math.min(Math.round((typedChars / totalChars) * 100), 100);
     }
+
     const liveWpm = calculateLiveWpm();
     window.multiplayerManager.sendProgress(progress, liveWpm);
     window.multiplayerManager.updateTribeDelta(liveWpm);
