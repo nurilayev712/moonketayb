@@ -58,10 +58,23 @@ class AuthManager {
         time120: 0,
         words25: 0
       },
+      activity: {},
       races: 0,
       wins: 0,
       joinedDate: new Date().toLocaleDateString('uz-UZ', { month: 'short', year: 'numeric' })
     };
+
+    // Mehmon davridagi mavjud faollikni yangi hisobga xavfsiz o'tkazish
+    try {
+      const guestAct = JSON.parse(localStorage.getItem('mkt_guest_activity') || '{}');
+      if (guestAct && typeof guestAct === 'object') {
+        newUser.activity = { ...guestAct };
+        const guestTests = Object.values(guestAct).reduce((a, b) => a + (Number(b) || 0), 0);
+        if (guestTests > 0) {
+          newUser.testsCompleted = guestTests;
+        }
+      }
+    } catch (e) {}
 
     users[key] = newUser;
     this.saveUsers(users);
@@ -82,6 +95,17 @@ class AuthManager {
     if (user.password !== password) {
       return { success: false, message: "Parol noto'g'ri!" };
     }
+
+    // Mehmon paytidagi faollikni qo'shib olish
+    try {
+      const guestAct = JSON.parse(localStorage.getItem('mkt_guest_activity') || '{}');
+      if (!user.activity) user.activity = {};
+      for (const [date, count] of Object.entries(guestAct)) {
+        user.activity[date] = Math.max(user.activity[date] || 0, count);
+      }
+      users[key] = user;
+      this.saveUsers(users);
+    } catch (e) {}
 
     this.setCurrentUser(user);
     return { success: true, user: user };
@@ -127,8 +151,8 @@ class AuthManager {
       }
     }
 
-    // Kunlik faollik xaritasi (Activity Heatmap)
-    const today = new Date().toISOString().split('T')[0];
+    // Kunlik faollik xaritasi (Activity Heatmap) - Mahalliy vaqt bo'yicha
+    const today = window.getLocalDateString ? window.getLocalDateString() : new Date().toLocaleDateString('en-CA');
     if (!this.currentUser.activity) this.currentUser.activity = {};
     this.currentUser.activity[today] = (this.currentUser.activity[today] || 0) + 1;
 
@@ -139,12 +163,17 @@ class AuthManager {
   recordRace(won = false, wpm = 0) {
     if (!this.currentUser) return;
     this.currentUser.races = (this.currentUser.races || 0) + 1;
+    this.currentUser.testsCompleted = (this.currentUser.testsCompleted || 0) + 1; // Poyga testi ham hisoblanadi
     if (won) {
       this.currentUser.wins = (this.currentUser.wins || 0) + 1;
       this.currentUser.xp += 150; // G'alaba uchun bonus XP
     } else {
       this.currentUser.xp += 50;
     }
+
+    const today = window.getLocalDateString ? window.getLocalDateString() : new Date().toLocaleDateString('en-CA');
+    if (!this.currentUser.activity) this.currentUser.activity = {};
+    this.currentUser.activity[today] = (this.currentUser.activity[today] || 0) + 1;
 
     this.saveCurrentUserData();
     this.updateUI();
