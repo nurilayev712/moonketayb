@@ -687,17 +687,30 @@ function startTest() {
       errors: state.incorrectChars + state.extraChars
     });
 
+    if (state.isMultiplayer && window.checkMultiplayerProgress) {
+      window.checkMultiplayerProgress();
+    }
+
   }, 1000);
 }
 
 // Joriy jonli statistika (Live WPM, Raw va Aniqlik)
 function calculateLiveStats() {
-  const minutes = Math.max(state.timeElapsed / 60, 0.016); // kamida 1 soniya
+  let elapsedSeconds = state.timeElapsed;
+  if (state.testStartTime && state.isRunning) {
+    elapsedSeconds = Math.max(0.5, (Date.now() - state.testStartTime) / 1000);
+  }
+  const minutes = Math.max(elapsedSeconds / 60, 0.008);
   const totalTyped = state.correctChars + state.incorrectChars + state.extraChars;
   const netWpm = Math.max(0, Math.round((state.correctChars / 5) / minutes));
   const rawWpm = Math.max(0, Math.round((totalTyped / 5) / minutes));
   const acc = totalTyped > 0 ? Math.round((state.correctChars / totalTyped) * 100) : 100;
   return { netWpm, rawWpm, acc };
+}
+
+// Jonli WPM olish (Do'stlar poygasi va indikatorlar uchun)
+function calculateLiveWpm() {
+  return calculateLiveStats().netWpm;
 }
 
 // Monkeytype Barqarorlik (Consistency %) hisoblash formulasi
