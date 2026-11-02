@@ -809,28 +809,41 @@ class MultiplayerManager {
 
   renderRaceTracks() {
     const container = document.getElementById('race-tracks-container');
+    if (!container) return;
     container.innerHTML = '';
 
-    Object.values(this.players).forEach(player => {
+    const roomLabel = document.getElementById('arena-room-label');
+    if (roomLabel) roomLabel.textContent = `tribe #${this.roomId || '------'}`;
+    const modeLabel = document.getElementById('arena-spec-mode');
+    if (modeLabel) modeLabel.textContent = this.roomMode === 'time' ? `${this.roomLimit}s` : `${this.roomLimit} so'z`;
+    const langLabel = document.getElementById('arena-spec-lang');
+    if (langLabel) langLabel.textContent = this.roomLang || 'uzbek';
+
+    const playerColors = [
+      '#e2b714', '#3b82f6', '#ec4899', '#8b5cf6', '#10b981', '#06b6d4', '#f97316'
+    ];
+
+    Object.values(this.players).forEach((player, idx) => {
       const isMe = player.id === this.myId;
+      const color = isMe ? 'var(--main-color)' : playerColors[idx % playerColors.length];
       const track = document.createElement('div');
-      track.className = 'race-track-row' + (isMe ? ' is-me' : '');
+      track.className = 'tribe-track-row' + (isMe ? ' is-me' : '');
       track.id = 'track-' + player.id;
       track.innerHTML = `
-        <div class="player-info-badge">
-          <div style="display: flex; align-items: center; gap: 0.4rem;">
-            <span class="p-avatar">${player.avatar || '⌨️'}</span>
-            <span class="p-name">${escapeHtml(player.name)}${isMe ? ' <span style="font-size:0.75rem; color:var(--main-color);">(siz)</span>' : ''}</span>
-            <span class="leader-crown" id="crown-${player.id}" style="display: none;">👑</span>
+        <div class="tribe-track-header">
+          <div class="tribe-track-left">
+            <span class="tribe-player-pip" style="background: ${color}; box-shadow: 0 0 6px ${color};"></span>
+            <span class="tribe-player-name">${escapeHtml(player.name)}</span>
+            ${isMe ? '<span class="tribe-me-badge">siz</span>' : ''}
+            <span class="tribe-leader-crown" id="crown-${player.id}" style="display: none;">👑</span>
           </div>
-          <span class="p-wpm" id="wpm-tag-${player.id}">${player.wpm || 0} WPM • 0%</span>
+          <div class="tribe-track-right" id="wpm-tag-${player.id}">
+            <span class="t-wpm">${player.wpm || 0}</span> <span class="t-unit">wpm</span> • <span class="t-prog">0%</span>
+          </div>
         </div>
-        <div class="track-line">
-          <div class="track-fill" id="track-fill-${player.id}" style="width: 0%;"></div>
-          <div class="car-runner" id="car-${player.id}" style="left: 0%;">
-            ${player.avatar || '🏎️'}
-          </div>
-          <div class="finish-line">🏁</div>
+        <div class="tribe-progress-bar">
+          <div class="tribe-progress-fill" id="track-fill-${player.id}" style="width: 0%; background: ${color};"></div>
+          <div class="tribe-progress-head" id="car-${player.id}" style="left: 0%; background: ${color}; box-shadow: 0 0 8px ${color};"></div>
         </div>
       `;
       container.appendChild(track);
@@ -852,7 +865,7 @@ class MultiplayerManager {
 
     playerList.forEach(player => {
       const fillEl = document.getElementById('track-fill-' + player.id);
-      const carEl = document.getElementById('car-' + player.id);
+      const headEl = document.getElementById('car-' + player.id);
       const wpmTag = document.getElementById('wpm-tag-' + player.id);
       const crownEl = document.getElementById('crown-' + player.id);
       const trackRow = document.getElementById('track-' + player.id);
@@ -862,15 +875,14 @@ class MultiplayerManager {
       if (fillEl) {
         fillEl.style.width = `${percent}%`;
       }
-      if (carEl) {
-        const runnerLeft = Math.min(percent, 94);
-        carEl.style.left = `${runnerLeft}%`;
+      if (headEl) {
+        headEl.style.left = `${percent}%`;
       }
       if (wpmTag) {
         if (player.finished) {
-          wpmTag.innerHTML = `🏁 <span style="color:#a3e635; font-weight:700;">Marrada: ${player.wpm || 0} WPM (${player.accuracy || 100}%)</span>`;
+          wpmTag.innerHTML = `🏁 <span style="color: #a3e635; font-weight: 700;">marrada: ${player.wpm || 0} wpm (${player.accuracy || 100}%)</span>`;
         } else {
-          wpmTag.textContent = `${player.wpm || 0} WPM • ${percent}%`;
+          wpmTag.innerHTML = `<span class="t-wpm">${player.wpm || 0}</span> <span class="t-unit">wpm</span> • <span class="t-prog">${percent}%</span>`;
         }
       }
       if (crownEl) {
