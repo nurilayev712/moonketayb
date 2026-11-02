@@ -10,8 +10,37 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=JetBrains+Mono:wght@400;600;700&family=Roboto+Mono:wght@400;500;700&family=Ubuntu+Mono:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    /* Heatmap Keshdan Mustaqil Asosiy Stillar */
-    #profile-modal .modal { max-width: 860px !important; width: 95% !important; }
+    /* Heatmap Keshdan Mustaqil Asosiy Stillar - Monkeytype Serika Dark 1:1 */
+    #profile-modal .modal { max-width: 880px !important; width: 95% !important; }
+    .prof-stats-grid {
+      display: grid !important;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)) !important;
+      gap: 0.75rem !important;
+      margin-bottom: 1.25rem !important;
+    }
+    .prof-stat-card {
+      background-color: #242629 !important;
+      border: 1px solid rgba(255, 255, 255, 0.05) !important;
+      border-radius: 8px !important;
+      padding: 0.75rem !important;
+      text-align: center !important;
+    }
+    .prof-stat-label {
+      font-size: 0.72rem !important;
+      color: #646669 !important;
+      text-transform: lowercase !important;
+      font-family: 'JetBrains Mono', monospace !important;
+    }
+    .prof-stat-val {
+      font-size: 1.25rem !important;
+      font-weight: 700 !important;
+      color: #d1d0c5 !important;
+      margin-top: 0.2rem !important;
+      font-family: 'JetBrains Mono', monospace !important;
+    }
+    .prof-stat-val.highlight {
+      color: #e2b714 !important;
+    }
     .heatmap-section {
       background-color: #242629 !important;
       border: 1px solid rgba(255, 255, 255, 0.05) !important;
@@ -53,7 +82,7 @@
     .heatmap-count-tag {
       color: #646669 !important;
       font-family: 'JetBrains Mono', monospace !important;
-      font-size: 0.85rem !important;
+      font-size: 0.82rem !important;
     }
     .heatmap-legend {
       display: flex !important;
@@ -67,24 +96,31 @@
     .heatmap-main-wrapper {
       display: flex !important;
       align-items: flex-start !important;
-      gap: 0.75rem !important;
+      gap: 0.6rem !important;
       overflow-x: auto !important;
       padding-bottom: 0.5rem !important;
     }
     .heatmap-days-col {
       display: flex !important;
       flex-direction: column !important;
-      justify-content: space-between !important;
       height: 95px !important;
       font-family: 'JetBrains Mono', monospace !important;
-      font-size: 0.68rem !important;
-      color: #646669 !important;
-      text-align: right !important;
       user-select: none !important;
       flex-shrink: 0 !important;
-      padding-top: 1px !important;
+      width: 20px !important;
+      text-align: right !important;
     }
-    .heatmap-days-col span { line-height: 11px !important; }
+    .heatmap-days-col .day-lbl {
+      height: 11px !important;
+      line-height: 11px !important;
+      font-size: 0.65rem !important;
+      color: #646669 !important;
+      margin-bottom: 3px !important;
+      display: block !important;
+    }
+    .heatmap-days-col .day-lbl:last-child {
+      margin-bottom: 0 !important;
+    }
     .heatmap-scroll-area {
       display: flex !important;
       flex-direction: column !important;
@@ -119,13 +155,14 @@
       outline: 1.5px solid #d1d0c5 !important;
       z-index: 10 !important;
     }
+    /* Monkeytype Serika Yellow Palette */
     .heat-box.lvl-0 { background-color: #2c2e31 !important; }
-    .heat-box.lvl-1 { background-color: #344a27 !important; }
-    .heat-box.lvl-2 { background-color: #4d6b2c !important; }
-    .heat-box.lvl-3 { background-color: #7aa333 !important; }
+    .heat-box.lvl-1 { background-color: #4a4322 !important; }
+    .heat-box.lvl-2 { background-color: #7d6e24 !important; }
+    .heat-box.lvl-3 { background-color: #b59c20 !important; }
     .heat-box.lvl-4 {
-      background-color: #a3e635 !important;
-      box-shadow: 0 0 5px rgba(163, 230, 53, 0.4) !important;
+      background-color: #e2b714 !important;
+      box-shadow: 0 0 6px rgba(226, 183, 20, 0.45) !important;
     }
     .heatmap-months-row {
       position: relative !important;
@@ -138,7 +175,6 @@
       font-size: 0.7rem !important;
       color: #646669 !important;
       user-select: none !important;
-      transform: translateX(-50%) !important;
       white-space: nowrap !important;
     }
     .heatmap-footer-note {
@@ -148,6 +184,21 @@
       color: #646669 !important;
       margin-top: 0.4rem !important;
       user-select: none !important;
+    }
+    .heatmap-tooltip {
+      position: fixed;
+      background: #1e2022;
+      color: #d1d0c5;
+      border: 1px solid rgba(226, 183, 20, 0.35);
+      padding: 0.35rem 0.65rem;
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      pointer-events: none;
+      z-index: 10000;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+      white-space: nowrap;
+      transform: translate(-50%, -120%);
     }
   </style>
   <!-- Chart.js Mahalliy va Barqaror -->
