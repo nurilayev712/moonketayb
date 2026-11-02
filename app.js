@@ -806,6 +806,7 @@ function handleKeyDown(e) {
   // SPACE BOSILGANDA (Keyingi so'zga o'tish)
   if (e.key === ' ') {
     e.preventDefault();
+    if (window.triggerVKeyGlow) window.triggerVKeyGlow(' ');
 
     // Agar so'zda hech narsa yozilmagan bo'lsa, o'tmaydi
     if (state.currentLetterIndex === 0) return;
