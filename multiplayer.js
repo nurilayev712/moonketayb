@@ -14,9 +14,8 @@ class MultiplayerManager {
     this.client = null;
     this.roomId = null;
     this.isHost = false;
-    this.isReady = false;
-    this.roomMode = 'time'; // 'time' yoki 'words'
-    this.roomLimit = 30; // 15, 30, 60 yoki 25, 50
+    this.roomMode = 'words'; // 'words' yoki 'time' (Monkeytype standard)
+    this.roomLimit = 25; // 25, 50, 100 yoki 15, 30, 60
     this.roomLang = 'uzbek'; // 'uzbek', 'english', 'russian'
     this.myId = 'usr_' + Math.random().toString(36).substring(2, 9);
     this.players = {}; // { id: { id, name, avatar, isHost, isReady, progress, wpm, finished, accuracy } }
