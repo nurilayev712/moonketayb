@@ -2110,8 +2110,8 @@ function setupEventListeners() {
   });
 
   // Tribe Create Room Capsule Configuration
-  let tribeSelectedMode = 'time';
-  let tribeSelectedLimit = 30;
+  let tribeSelectedMode = 'words';
+  let tribeSelectedLimit = 25;
   let tribeSelectedLang = 'uzbek';
 
   function attachTribeLimitListeners() {
