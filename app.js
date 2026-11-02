@@ -699,6 +699,9 @@ function startTest() {
       errors: state.incorrectChars + state.extraChars
     });
 
+    // Dinamik tab sarlavhasi (Live Tab Title)
+    updateLiveTabTitle();
+
     if (state.isMultiplayer && window.checkMultiplayerProgress) {
       window.checkMultiplayerProgress();
     }
