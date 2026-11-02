@@ -737,6 +737,37 @@ function calculateConsistency(chartData) {
 }
 
 // ----------------------------------------------------
+// Monkeytype Dinamik Brauzer Sarlavhasi (Live Tab Title)
+// ----------------------------------------------------
+function updateLiveTabTitle() {
+  if (!state.dynamicTabTitle) return;
+  if (!state.isRunning || state.isFinished) return;
+
+  const live = calculateLiveStats();
+  const wpm = live.netWpm;
+
+  if (state.mode === 'time') {
+    document.title = `(${state.timeRemaining}s) ${wpm} wpm | moonketayb`;
+  } else if (state.mode === 'words') {
+    document.title = `(${state.currentWordIndex}/${state.wordsLimit}) ${wpm} wpm | moonketayb`;
+  } else if (state.mode === 'code' || state.mode === 'custom' || state.mode === 'quote') {
+    const totalWords = state.words.length || 25;
+    document.title = `(${state.currentWordIndex}/${totalWords}) ${wpm} wpm | moonketayb`;
+  } else {
+    document.title = `(${state.timeElapsed}s) ${wpm} wpm | moonketayb`;
+  }
+}
+
+function resetTabTitle() {
+  document.title = state.baseTitle || 'moonketayb | typex712';
+}
+
+function setFinishedTabTitle(wpm, acc) {
+  if (!state.dynamicTabTitle) return;
+  document.title = `${wpm} wpm • ${acc}% | moonketayb`;
+}
+
+// ----------------------------------------------------
 // Klaviaturadan harflarni qabul qilish (Input handler)
 // ----------------------------------------------------
 function handleKeyDown(e) {
