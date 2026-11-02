@@ -2426,19 +2426,25 @@ footer {
 .heatmap-days-col {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   height: 95px; /* 7 qator * (11px + 3px gap) - 3px = 95px */
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.68rem;
-  color: #646669;
+  width: 20px;
   text-align: right;
-  user-select: none;
   flex-shrink: 0;
-  padding-top: 1px;
+  user-select: none;
 }
 
-.heatmap-days-col span {
+.heatmap-days-col .day-lbl {
+  height: 11px;
   line-height: 11px;
+  font-size: 0.65rem;
+  color: #646669;
+  margin-bottom: 3px;
+  display: block;
+}
+
+.heatmap-days-col .day-lbl:last-child {
+  margin-bottom: 0;
 }
 
 .heatmap-scroll-area {
@@ -2480,26 +2486,26 @@ footer {
   z-index: 10;
 }
 
-/* Heatmap rang darajalari (Screenshotdagi yashil tonlar) */
+/* Monkeytype Serika Yellow Rang Darajalari */
 .heat-box.lvl-0 {
   background-color: #2c2e31;
 }
 
 .heat-box.lvl-1 {
-  background-color: #344a27;
+  background-color: #4a4322;
 }
 
 .heat-box.lvl-2 {
-  background-color: #4d6b2c;
+  background-color: #7d6e24;
 }
 
 .heat-box.lvl-3 {
-  background-color: #7aa333;
+  background-color: #b59c20;
 }
 
 .heat-box.lvl-4 {
-  background-color: #a3e635;
-  box-shadow: 0 0 5px rgba(163, 230, 53, 0.4);
+  background-color: #e2b714;
+  box-shadow: 0 0 6px rgba(226, 183, 20, 0.45);
 }
 
 .heatmap-months-row {
@@ -2514,7 +2520,6 @@ footer {
   font-size: 0.7rem;
   color: #646669;
   user-select: none;
-  transform: translateX(-50%);
   white-space: nowrap;
 }
 
