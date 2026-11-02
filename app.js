@@ -2019,7 +2019,14 @@ function setupEventListeners() {
     { label: "sound: thock", action: () => soundManager.setSoundPack('thock') },
     { label: "sound: clicky", action: () => soundManager.setSoundPack('click') },
     { label: "sound: bubble pop", action: () => soundManager.setSoundPack('pop') },
+    { label: "sound: typewriter", action: () => soundManager.setSoundPack('typewriter') },
     { label: "sound: off", action: () => soundManager.setSoundPack('off') },
+    { label: "virtual keyboard: on/off", action: () => {
+      state.virtualKeyboardEnabled = !state.virtualKeyboardEnabled;
+      localStorage.setItem('mkt_virtual_keyboard', state.virtualKeyboardEnabled ? 'on' : 'off');
+      if (elements.virtualKeyboardSelect) elements.virtualKeyboardSelect.value = state.virtualKeyboardEnabled ? 'on' : 'off';
+      if (elements.virtualKeyboard) elements.virtualKeyboard.classList.toggle('hidden', !state.virtualKeyboardEnabled);
+    }},
     { label: "multiplayer: custom room", action: () => window.openAppModal(document.getElementById('multiplayer-modal')) },
     { label: "view: account / profile", action: () => profileBtn.click() },
     { label: "restart test", action: () => resetTest() }
