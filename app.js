@@ -1260,42 +1260,172 @@ function renderHistoryUI() {
 // ----------------------------------------------------
 // MONKEYTYPE ACTIVITY HEATMAP (HAQIQIY FOYDALANUVCHI FAOLLIGI)
 // ----------------------------------------------------
+
+// Kunlik ketma-ketlik (Streak) hisoblash funksiyasi
+function calculateStreakStats(activity) {
+  const dates = Object.keys(activity).filter(d => (activity[d] || 0) > 0).sort();
+  if (dates.length === 0) {
+    return { currentStreak: 0, maxStreak: 0, activeDays: 0 };
+  }
+
+  const activeDays = dates.length;
+  const todayStr = getLocalDateString();
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = getLocalDateString(yesterday);
+
+  // Joriy streak (Current streak)
+  let currentStreak = 0;
+  let checkDate = null;
+  if ((activity[todayStr] || 0) > 0) {
+    checkDate = new Date();
+  } else if ((activity[yesterdayStr] || 0) > 0) {
+    checkDate = yesterday;
+  }
+
+  if (checkDate) {
+    const iter = new Date(checkDate.getFullYear(), checkDate.getMonth(), checkDate.getDate());
+    while (true) {
+      const dStr = getLocalDateString(iter);
+      if ((activity[dStr] || 0) > 0) {
+        currentStreak++;
+        iter.setDate(iter.getDate() - 1);
+      } else {
+        break;
+      }
+    }
+  }
+
+  // Maksimal streak (Max streak)
+  let maxStreak = 0;
+  let runningStreak = 0;
+  let prevDate = null;
+
+  dates.forEach(dStr => {
+    const parts = dStr.split('-').map(Number);
+    const cur = new Date(parts[0], parts[1] - 1, parts[2]);
+    if (!prevDate) {
+      runningStreak = 1;
+    } else {
+      const diffTime = cur.getTime() - prevDate.getTime();
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+      if (diffDays === 1) {
+        runningStreak++;
+      } else if (diffDays > 1) {
+        runningStreak = 1;
+      }
+    }
+    if (runningStreak > maxStreak) maxStreak = runningStreak;
+    prevDate = cur;
+  });
+
+  return { currentStreak, maxStreak, activeDays };
+}
+
+// Barcha haqiqiy faoliyatni xavfsiz birlashtirib olish (hech qanday kun o'chirilmaydi!)
 function getRealActivityData() {
   const user = window.authManager && window.authManager.currentUser;
-  const today = new Date().toISOString().split('T')[0];
+  let activity = {};
 
   if (user) {
     if (!user.activity || typeof user.activity !== 'object') {
       user.activity = {};
     }
-    // Agar oldingi versiyalardagi soxta mock 492 ta test saqlanib qolgan bo'lsa:
-    // Faqat haqiqiy testsCompleted bo'yicha tozalaymiz!
-    const totalInAct = Object.values(user.activity).reduce((a, b) => a + b, 0);
-    const realTests = user.testsCompleted || 0;
-    if (totalInAct > realTests) {
-      user.activity = {};
-      if (realTests > 0) {
-        user.activity[today] = realTests;
-      }
-      if (window.authManager) window.authManager.saveCurrentUserData();
-    }
-    return user.activity;
-  } else {
-    // Mehmon (Guest) uchun haqiqiy faoliyat
+    // Mehmon paytidagi faollik bo'lsa uni ham birlashtiramiz
     try {
-      return JSON.parse(localStorage.getItem('mkt_guest_activity') || '{}');
+      const guestAct = JSON.parse(localStorage.getItem('mkt_guest_activity') || '{}');
+      for (const [d, count] of Object.entries(guestAct)) {
+        user.activity[d] = Math.max(user.activity[d] || 0, Number(count) || 0);
+      }
+    } catch (e) {}
+    activity = user.activity;
+  } else {
+    // Mehmon foydalanuvchi
+    try {
+      activity = JSON.parse(localStorage.getItem('mkt_guest_activity') || '{}');
     } catch (e) {
-      return {};
+      activity = {};
     }
+  }
+
+  // mk_history orqali mavjud bo'lgan testlarni ham qayta tiklash
+  try {
+    const history = JSON.parse(localStorage.getItem('mk_history') || '[]');
+    let historyChanged = false;
+    history.forEach(item => {
+      let dStr = item.dateStr;
+      if (!dStr && item.timestamp) {
+        dStr = getLocalDateString(new Date(item.timestamp));
+        item.dateStr = dStr;
+        historyChanged = true;
+      }
+      if (dStr) {
+        if (!activity[dStr]) {
+          activity[dStr] = 1;
+        }
+      }
+    });
+    if (historyChanged) {
+      localStorage.setItem('mk_history', JSON.stringify(history));
+    }
+  } catch (e) {}
+
+  // O'zgarishlarni doimiy saqlash
+  if (user) {
+    user.activity = activity;
+    if (window.authManager) window.authManager.saveCurrentUserData();
+  } else {
+    try {
+      localStorage.setItem('mkt_guest_activity', JSON.stringify(activity));
+    } catch (e) {}
+  }
+
+  return activity;
+}
+
+// Floating Tooltip ko'rsatish
+function showHeatmapTooltip(e, text) {
+  let tip = document.getElementById('heatmap-tooltip');
+  if (!tip) {
+    tip = document.createElement('div');
+    tip.id = 'heatmap-tooltip';
+    tip.className = 'heatmap-tooltip';
+    document.body.appendChild(tip);
+  }
+  tip.textContent = text;
+  tip.style.display = 'block';
+  const rect = e.target.getBoundingClientRect();
+  tip.style.left = `${rect.left + rect.width / 2}px`;
+  tip.style.top = `${rect.top - 8}px`;
+}
+
+function hideHeatmapTooltip() {
+  const tip = document.getElementById('heatmap-tooltip');
+  if (tip) {
+    tip.style.display = 'none';
   }
 }
 
 function renderActivityHeatmap(range = '12months') {
   const container = document.getElementById('heatmap-grid-container');
   const countEl = document.getElementById('heatmap-total-tests');
+  const activeDaysEl = document.getElementById('heatmap-active-days');
+  const streakEl = document.getElementById('prof-streak');
+  const maxStreakEl = document.getElementById('prof-max-streak');
   if (!container) return;
 
   const activity = getRealActivityData();
+  const streakStats = calculateStreakStats(activity);
+
+  if (streakEl) {
+    streakEl.innerHTML = `<span class="flame-icon">🔥</span> ${streakStats.currentStreak} kun`;
+  }
+  if (maxStreakEl) {
+    maxStreakEl.textContent = `⚡ ${streakStats.maxStreak} kun`;
+  }
+  if (activeDaysEl) {
+    activeDaysEl.textContent = `• ${streakStats.activeDays} faol kun`;
+  }
 
   let numWeeks = 52;
   if (range === '6months') numWeeks = 26;
@@ -1315,6 +1445,9 @@ function renderActivityHeatmap(range = '12months') {
   const monthLabels = [];
   let lastMonth = -1;
 
+  const uzbekMonths = ['yan', 'fev', 'mar', 'apr', 'may', 'iyn', 'iyl', 'avg', 'sen', 'okt', 'noy', 'dek'];
+  const uzbekFullMonths = ['yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun', 'iyul', 'avgust', 'sentabr', 'oktabr', 'noyabr', 'dekabr'];
+
   for (let w = 0; w < numWeeks; w++) {
     const colEl = document.createElement('div');
     colEl.className = 'heatmap-col';
@@ -1324,15 +1457,14 @@ function renderActivityHeatmap(range = '12months') {
       cellDate.setDate(startDate.getDate() + (w * 7) + d);
 
       const isFuture = cellDate > endDate;
-      const dateStr = cellDate.toISOString().split('T')[0];
-      const count = isFuture ? 0 : (activity[dateStr] || 0);
+      const dateStr = getLocalDateString(cellDate);
+      const count = isFuture ? 0 : (Number(activity[dateStr]) || 0);
       if (!isFuture) totalTests += count;
 
-      // Oy o'zgarishi (O'zbekcha qisqa oylar)
+      // Oy o'zgarishi
       if (d === 0) {
         const m = cellDate.getMonth();
         if (m !== lastMonth) {
-          const uzbekMonths = ['yan', 'fev', 'mar', 'apr', 'may', 'iyn', 'iyl', 'avg', 'sen', 'okt', 'noy', 'dek'];
           monthLabels.push({ colIndex: w, name: uzbekMonths[m] });
           lastMonth = m;
         }
@@ -1352,10 +1484,20 @@ function renderActivityHeatmap(range = '12months') {
         else if (count >= 10) lvl = 4;
 
         cellEl.classList.add('lvl-' + lvl);
+        cellEl.dataset.date = dateStr;
+        cellEl.dataset.count = count;
+
         const dayNum = cellDate.getDate();
-        const uzbekFullMonths = ['yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun', 'iyul', 'avgust', 'sentabr', 'oktabr', 'noyabr', 'dekabr'];
-        const dateFormatted = `${dayNum}-${uzbekFullMonths[cellDate.getMonth()]}`;
-        cellEl.title = count > 0 ? `${count} ta test (${dateFormatted})` : `0 ta test (${dateFormatted})`;
+        const dateFormatted = `${dayNum}-${uzbekFullMonths[cellDate.getMonth()]}, ${cellDate.getFullYear()}`;
+        const tooltipText = count > 0 ? `${count} ta test • ${dateFormatted}` : `Faollik yo'q • ${dateFormatted}`;
+        cellEl.title = tooltipText;
+
+        cellEl.addEventListener('mouseenter', (e) => {
+          showHeatmapTooltip(e, tooltipText);
+        });
+        cellEl.addEventListener('mouseleave', () => {
+          hideHeatmapTooltip();
+        });
       }
 
       colEl.appendChild(cellEl);
@@ -1382,8 +1524,8 @@ function renderHeatmapMonths(monthLabels, numWeeks) {
     const span = document.createElement('span');
     span.className = 'heatmap-month-label';
     span.textContent = item.name;
-    const percent = ((item.colIndex + 0.5) / numWeeks) * 100;
-    span.style.left = `${percent}%`;
+    // Har bir colEl 11px + 3px gap = 14px
+    span.style.left = `${item.colIndex * 14}px`;
     monthsRow.appendChild(span);
   });
 }
