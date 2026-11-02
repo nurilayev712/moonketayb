@@ -1992,6 +1992,11 @@ function setupEventListeners() {
         document.getElementById('prof-time').textContent = `${mins} daq`;
         renderActivityHeatmap('12months');
       } else {
+        const act = getRealActivityData();
+        const totalGuestTests = Object.values(act).reduce((a, b) => a + (Number(b) || 0), 0);
+        if (document.getElementById('prof-tests')) document.getElementById('prof-tests').textContent = totalGuestTests;
+        if (document.getElementById('prof-wins')) document.getElementById('prof-wins').textContent = 0;
+        if (document.getElementById('prof-time')) document.getElementById('prof-time').textContent = `0 daq`;
         renderActivityHeatmap('12months');
       }
       window.openAppModal(profileModal);
