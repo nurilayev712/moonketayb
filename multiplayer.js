@@ -22,6 +22,21 @@ class MultiplayerManager {
     this.raceWords = [];
     this.countdownTimer = null;
     this.pingInterval = null;
+    this.raceFinishTimeout = null;
+    this.isVerifyingRoom = false;
+    this.joinVerificationTimeout = null;
+
+    window.addEventListener('resize', () => {
+      if (this.isInRace) this.renderTribeCarets();
+    });
+    window.addEventListener('DOMContentLoaded', () => {
+      const wc = document.getElementById('words-container');
+      if (wc) {
+        wc.addEventListener('scroll', () => {
+          if (this.isInRace) this.renderTribeCarets();
+        });
+      }
+    });
   }
 
   // 6 xonali tasodifiy xona kodi (masalan: 749201)
@@ -137,13 +152,27 @@ class MultiplayerManager {
   joinRoom(code) {
     code = (code || '').trim();
     if (!code) {
-      alert("Iltimos, xona kodini kiriting!");
+      alert("⚠️ Iltimos, xona kodini kiriting!");
       return;
+    }
+
+    const isPublic = (code === 'arena_public');
+    if (!isPublic && !/^\d{6}$/.test(code)) {
+      alert("⚠️ Noto'g'ri xona kodi!\n\nXona kodi 6 xonali raqamdan iborat bo'lishi kerak (masalan: 123456).");
+      return;
+    }
+
+    // Tugmani yuklanish holatiga o'tkazish
+    const joinBtn = document.getElementById('join-room-btn');
+    if (joinBtn) {
+      joinBtn.disabled = true;
+      joinBtn.innerHTML = '⏳ Xona tekshirilmoqda...';
     }
 
     this.roomId = code;
     this.isHost = false;
     this.isReady = false;
+    this.isVerifyingRoom = true;
     this.players = {};
 
     const user = (window.authManager && window.authManager.currentUser) || {
@@ -163,12 +192,88 @@ class MultiplayerManager {
       accuracy: 100
     };
 
+    // 2.8 soniyada xona egasi javob bermasa xatolik berish
+    if (this.joinVerificationTimeout) {
+      clearTimeout(this.joinVerificationTimeout);
+    }
+
+    this.joinVerificationTimeout = setTimeout(() => {
+      this.joinVerificationTimeout = null;
+      if (this.isVerifyingRoom) {
+        if (isPublic) {
+          // Umumiy arenada hech kim bo'lmasa kirgan odam avtomatik host bo'ladi
+          this.isHost = true;
+          this.isReady = true;
+          this.players[this.myId].isHost = true;
+          this.players[this.myId].isReady = true;
+          this.isVerifyingRoom = false;
+          this.onRoomJoinSuccess();
+        } else {
+          this.onRoomNotFound();
+        }
+      }
+    }, 2800);
+
+    this.connectToBroker();
+  }
+
+  onRoomJoinSuccess() {
+    this.restoreJoinBtnUI();
+
+    const multiModal = document.getElementById('multiplayer-modal');
+    const lobbyModal = document.getElementById('multiplayer-lobby-modal');
+
+    if (window.closeAppModal) {
+      window.closeAppModal(multiModal);
+    } else if (multiModal) {
+      multiModal.classList.remove('active');
+    }
+
+    if (window.openAppModal) {
+      window.openAppModal(lobbyModal);
+    } else if (lobbyModal) {
+      lobbyModal.classList.add('active');
+    }
+
     const codeEl = document.getElementById('lobby-room-code');
     if (codeEl) codeEl.textContent = this.roomId;
 
     this.updateLobbyUI();
-    this.updateStatusText("Xonaga ulanilmoqda, kuting...");
-    this.connectToBroker();
+    this.updateStatusText("Xonaga muvaffaqiyatli ulandingiz! Tayyor bo'lgach 'Tayyorman' tugmasini bosing.");
+  }
+
+  onRoomNotFound() {
+    this.cleanupFailedJoin();
+    alert("❌ Bunday xona topilmadi!\n\nXona kodi noto'g'ri kiritilgan yoki xona egasi xonani tark etgan. Iltimos, xona kodini tekshirib qaytadan urinib ko'ring.");
+  }
+
+  cleanupFailedJoin() {
+    this.isVerifyingRoom = false;
+    if (this.joinVerificationTimeout) {
+      clearTimeout(this.joinVerificationTimeout);
+      this.joinVerificationTimeout = null;
+    }
+    if (this.client) {
+      try {
+        this.client.disconnect();
+      } catch (e) {}
+      this.client = null;
+    }
+    this.roomId = null;
+    this.players = {};
+    this.stopPingLoop();
+    this.restoreJoinBtnUI();
+  }
+
+  restoreJoinBtnUI() {
+    const joinBtn = document.getElementById('join-room-btn');
+    if (joinBtn) {
+      joinBtn.disabled = false;
+      joinBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+        xonaga ulanish
+      `;
+    }
   }
 
   // Host: Xona parametrlarini o'zgartirish (Vaqt yoki So'zlar)
@@ -370,8 +475,16 @@ class MultiplayerManager {
 
       // Agar biz host bo'lsak, yangi o'yinchiga butun lobby holatini yuboramiz
       if (this.isHost) {
+        if (this.isInRace) {
+          this.sendMessage({
+            type: 'ROOM_BUSY',
+            targetId: data.player.id
+          });
+          return;
+        }
         this.sendMessage({
           type: 'SYNC_LOBBY',
+          hostId: this.myId,
           players: this.players,
           roomMode: this.roomMode,
           roomLimit: this.roomLimit,
@@ -382,6 +495,15 @@ class MultiplayerManager {
 
     // 2. Lobby sinxronizatsiyasi
     else if (data.type === 'SYNC_LOBBY') {
+      if (this.isVerifyingRoom) {
+        this.isVerifyingRoom = false;
+        if (this.joinVerificationTimeout) {
+          clearTimeout(this.joinVerificationTimeout);
+          this.joinVerificationTimeout = null;
+        }
+        this.onRoomJoinSuccess();
+      }
+
       this.players = Object.assign({}, this.players, data.players);
       if (data.roomMode) this.roomMode = data.roomMode;
       if (data.roomLimit) this.roomLimit = data.roomLimit;
@@ -390,6 +512,14 @@ class MultiplayerManager {
         if (window.state) window.state.language = data.roomLang;
       }
       this.updateLobbyUI();
+    }
+
+    // Xona band bo'lganda (poyga ketayotgan bo'lsa)
+    else if (data.type === 'ROOM_BUSY') {
+      if (data.targetId === this.myId) {
+        this.cleanupFailedJoin();
+        alert("⚠️ Bu xonada ayni paytda poyga ketmoqda!\n\nIltimos, poyga tugashini kuting yoki o'zingiz yangi xona oching.");
+      }
     }
 
     // 3. Xona egasi parametrlarni o'zgartirganda
@@ -428,6 +558,8 @@ class MultiplayerManager {
       if (this.players[data.id]) {
         this.players[data.id].progress = data.progress;
         this.players[data.id].wpm = data.wpm;
+        if (typeof data.wordIndex === 'number') this.players[data.id].wordIndex = data.wordIndex;
+        if (typeof data.letterIndex === 'number') this.players[data.id].letterIndex = data.letterIndex;
         this.updateRaceTrackUI();
       }
     }
@@ -482,6 +614,13 @@ class MultiplayerManager {
       const leftPlayer = this.players[data.id];
       const leftName = leftPlayer ? leftPlayer.name : "Ishtirokchi";
       const wasHost = leftPlayer ? leftPlayer.isHost : false;
+
+      // Kursor va trek elementlarini tozalash
+      const caretEl = document.getElementById('tribe-caret-' + data.id);
+      if (caretEl) caretEl.remove();
+      const trackEl = document.getElementById('track-' + data.id);
+      if (trackEl) trackEl.remove();
+
       delete this.players[data.id];
 
       // Agar xona egasi chiqib ketgan bo'lsa, navbatdagi o'yinchiga host topshiriladi
@@ -501,6 +640,12 @@ class MultiplayerManager {
 
       this.displaySystemMessage(`🚪 ${escapeHtml(leftName)} xonadan chiqdi`);
       this.updateLobbyUI();
+      if (this.isInRace) {
+        this.updateRaceTrackUI();
+        if (this.isHost) {
+          this.checkRaceFinish();
+        }
+      }
     }
   }
 
@@ -632,10 +777,12 @@ class MultiplayerManager {
   }
 
   // Har bir harf bosilganda progress yuborish
-  sendProgress(progressPercent, currentWpm) {
+  sendProgress(progressPercent, currentWpm, wordIndex, letterIndex) {
     if (this.players[this.myId]) {
       this.players[this.myId].progress = progressPercent;
       this.players[this.myId].wpm = currentWpm;
+      if (typeof wordIndex === 'number') this.players[this.myId].wordIndex = wordIndex;
+      if (typeof letterIndex === 'number') this.players[this.myId].letterIndex = letterIndex;
     }
     this.updateRaceTrackUI();
 
@@ -643,7 +790,9 @@ class MultiplayerManager {
       type: 'PROGRESS',
       id: this.myId,
       progress: progressPercent,
-      wpm: currentWpm
+      wpm: currentWpm,
+      wordIndex: typeof wordIndex === 'number' ? wordIndex : 0,
+      letterIndex: typeof letterIndex === 'number' ? letterIndex : 0
     });
   }
 
@@ -664,14 +813,29 @@ class MultiplayerManager {
   }
 
   // Host marrani tekshirib shohsupa e'lon qilishi
-  checkRaceFinish() {
+  checkRaceFinish(force = false) {
     const allPlayers = Object.values(this.players);
-    const sorted = [...allPlayers].sort((a, b) => (b.wpm || 0) - (a.wpm || 0));
+    if (allPlayers.length === 0) return;
+    const allFinished = allPlayers.every(p => p.finished);
 
-    this.sendMessage({
-      type: 'LEADERBOARD',
-      leaderboard: sorted
-    });
+    if (allFinished || force) {
+      if (this.raceFinishTimeout) {
+        clearTimeout(this.raceFinishTimeout);
+        this.raceFinishTimeout = null;
+      }
+      const sorted = [...allPlayers].sort((a, b) => (b.wpm || 0) - (a.wpm || 0));
+
+      this.sendMessage({
+        type: 'LEADERBOARD',
+        leaderboard: sorted
+      });
+    } else if (!this.raceFinishTimeout) {
+      // Birinchi o'yinchi marraga yetganda boshqalarga yakunlash uchun 8 soniya muhlat berish
+      this.raceFinishTimeout = setTimeout(() => {
+        this.raceFinishTimeout = null;
+        this.checkRaceFinish(true);
+      }, 8000);
+    }
   }
 
   showRaceResults(leaderboard) {
@@ -763,11 +927,17 @@ class MultiplayerManager {
 
   resetToLobby() {
     this.isInRace = false;
+    if (this.raceFinishTimeout) {
+      clearTimeout(this.raceFinishTimeout);
+      this.raceFinishTimeout = null;
+    }
 
     // Reset player scores
     Object.values(this.players).forEach(p => {
       p.progress = 0;
       p.wpm = 0;
+      p.wordIndex = 0;
+      p.letterIndex = 0;
       p.finished = false;
       if (!p.isHost) p.isReady = false;
     });
@@ -851,15 +1021,30 @@ class MultiplayerManager {
   updateRaceTrackUI() {
     const playerList = Object.values(this.players);
     let leaderId = null;
-    let maxProg = -1;
 
-    playerList.forEach(p => {
-      const prog = p.progress || 0;
-      if (prog > maxProg && prog > 5) {
-        maxProg = prog;
-        leaderId = p.id;
-      }
-    });
+    if (this.roomMode === 'words') {
+      let maxProg = -1;
+      let maxWpm = -1;
+      playerList.forEach(p => {
+        const prog = p.progress || 0;
+        const wpm = p.wpm || 0;
+        if (prog > maxProg || (prog === maxProg && wpm > maxWpm && prog > 0)) {
+          maxProg = prog;
+          maxWpm = wpm;
+          if (prog > 0) leaderId = p.id;
+        }
+      });
+    } else {
+      // 'time' mode: yetakchi eng yuqori WPM ga ega bo'lgan o'yinchi
+      let maxWpm = 0;
+      playerList.forEach(p => {
+        const wpm = p.wpm || 0;
+        if (wpm > maxWpm) {
+          maxWpm = wpm;
+          leaderId = p.id;
+        }
+      });
+    }
 
     playerList.forEach(player => {
       const fillEl = document.getElementById('track-fill-' + player.id);
@@ -898,7 +1083,7 @@ class MultiplayerManager {
     this.renderTribeCarets();
   }
 
-  // Monkeytype Tribe Carets (Raqib kursorlarini matn ustida ko'rsatish)
+  // Monkeytype Tribe Carets (Raqib kursorlarini matn ustida aniq ko'rsatish)
   renderTribeCarets() {
     const container = document.getElementById('tribe-carets-container');
     if (!container) return;
@@ -911,16 +1096,12 @@ class MultiplayerManager {
     if (!wordsContainer) return;
     const containerRect = wordsContainer.getBoundingClientRect();
 
-    const allLetters = wordsContainer.querySelectorAll('.letter');
-    const totalLetters = allLetters.length;
-    if (totalLetters === 0) return;
-
     const playerColors = [
       '#3b82f6', '#ec4899', '#8b5cf6', '#10b981', '#f59e0b', '#06b6d4', '#e2b714'
     ];
 
     Object.values(this.players).forEach((p, idx) => {
-      if (p.id === this.myId) return; // O'zimizning kursorimiz bor
+      if (p.id === this.myId) return; // O'zimizning kursorimiz bor (#caret)
       let caretEl = document.getElementById('tribe-caret-' + p.id);
       if (!caretEl) {
         caretEl = document.createElement('div');
@@ -932,16 +1113,50 @@ class MultiplayerManager {
         container.appendChild(caretEl);
       }
 
-      const percent = Math.min(Math.max(p.progress || 0, 0), 100);
-      const targetIndex = Math.min(Math.floor((percent / 100) * totalLetters), totalLetters - 1);
-      const letterEl = allLetters[targetIndex];
-      if (letterEl) {
-        const lRect = letterEl.getBoundingClientRect();
-        const left = lRect.left - containerRect.left;
-        const top = lRect.top - containerRect.top + wordsContainer.scrollTop;
-        caretEl.style.left = `${left}px`;
-        caretEl.style.top = `${top}px`;
+      // Agar o'yinchi poygani yakunlagan bo'lsa
+      if (p.finished) {
+        caretEl.style.display = 'none';
+        return;
+      }
+
+      const wordIdx = typeof p.wordIndex === 'number' ? p.wordIndex : 0;
+      const letterIdx = typeof p.letterIndex === 'number' ? p.letterIndex : 0;
+
+      const targetWordEl = wordsContainer.children[wordIdx];
+      if (targetWordEl) {
+        const letters = targetWordEl.querySelectorAll('.letter');
+        let targetX = 0;
+        let targetY = 0;
+
+        if (letterIdx < letters.length) {
+          const targetLetter = letters[letterIdx];
+          const letterRect = targetLetter.getBoundingClientRect();
+          targetX = letterRect.left - containerRect.left;
+          targetY = letterRect.top - containerRect.top + (letterRect.height - 28) / 2;
+        } else if (letters.length > 0) {
+          // So'zning oxirgi harfidan keyingi pozitsiya
+          const lastLetter = letters[letters.length - 1];
+          const letterRect = lastLetter.getBoundingClientRect();
+          targetX = letterRect.right - containerRect.left;
+          targetY = letterRect.top - containerRect.top + (letterRect.height - 28) / 2;
+        } else {
+          const wordRect = targetWordEl.getBoundingClientRect();
+          targetX = wordRect.left - containerRect.left;
+          targetY = wordRect.top - containerRect.top;
+        }
+
+        // Ko'rinadigan sohadan tashqarida bo'lsa xiralashtirish
+        if (targetY < -35 || targetY > containerRect.height + 25) {
+          caretEl.style.opacity = '0';
+        } else {
+          caretEl.style.opacity = '1';
+        }
+
+        caretEl.style.left = `${targetX}px`;
+        caretEl.style.top = `${targetY}px`;
         caretEl.style.display = 'block';
+      } else {
+        caretEl.style.display = 'none';
       }
     });
   }
@@ -1119,6 +1334,16 @@ class MultiplayerManager {
 
   leaveRoom() {
     this.stopPingLoop();
+    if (this.raceFinishTimeout) {
+      clearTimeout(this.raceFinishTimeout);
+      this.raceFinishTimeout = null;
+    }
+    if (this.joinVerificationTimeout) {
+      clearTimeout(this.joinVerificationTimeout);
+      this.joinVerificationTimeout = null;
+    }
+    this.isVerifyingRoom = false;
+    this.restoreJoinBtnUI();
     const pingBadge = document.getElementById('lobby-ping-badge');
     if (pingBadge) {
       pingBadge.textContent = '📶 --ms';
@@ -1137,6 +1362,10 @@ class MultiplayerManager {
     this.client = null;
     this.players = {};
     this.isInRace = false;
+
+    if (window.state) {
+      window.state.isMultiplayer = false;
+    }
 
     if (window.closeAppModal) {
       window.closeAppModal(document.getElementById('multiplayer-lobby-modal'));

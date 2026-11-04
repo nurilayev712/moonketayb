@@ -316,6 +316,50 @@ body.focus-mode footer {
   transition: all 0.2s ease;
 }
 
+/* Jonli Mini-HUD (Monkeytype Live Stats HUD: WPM, Aniqlik va Burst) */
+.live-mini-hud {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2.2rem;
+  margin-top: 1.1rem;
+  font-family: inherit;
+  user-select: none;
+  opacity: 0.65;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.live-mini-hud:hover {
+  opacity: 1;
+}
+
+.live-mini-hud.hidden {
+  display: none !important;
+}
+
+.hud-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+}
+
+.hud-label {
+  font-size: 0.76rem;
+  text-transform: lowercase;
+  color: var(--sub-color);
+  letter-spacing: 0.6px;
+  font-weight: 500;
+}
+
+.hud-val {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--main-color);
+  min-width: 30px;
+  font-family: inherit;
+  transition: color 0.15s ease;
+}
+
 /* Caret (Kursor) */
 .caret {
   position: absolute;
@@ -1604,6 +1648,7 @@ footer {
   height: 100%;
   pointer-events: none;
   z-index: 10;
+  overflow: hidden;
 }
 
 .tribe-caret {

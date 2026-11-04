@@ -35,6 +35,9 @@ const state = {
   caretAnim: 'smooth',
   blindMode: false,
   dynamicTabTitle: true,
+  miniHudEnabled: true,
+  wordStartTime: null,
+  lastBurstWpm: 0,
   baseTitle: 'moonketayb | typex712',
   paceCaretTimer: null,
   testStartTime: 0,
@@ -223,6 +226,21 @@ function loadStoredSettings() {
   state.paceCaretMode = localStorage.getItem('mkt_pace_caret') || 'off';
   const paceSel = document.getElementById('pace-caret-select');
   if (paceSel) paceSel.value = state.paceCaretMode;
+
+  // Jonli Mini-HUD
+  const savedHud = localStorage.getItem('mk_mini_hud');
+  state.miniHudEnabled = (savedHud !== 'off');
+  const hudSel = document.getElementById('mini-hud-select');
+  if (hudSel) hudSel.value = state.miniHudEnabled ? 'on' : 'off';
+  updateMiniHud();
+
+  // Ovoz balandligi
+  const volSlider = document.getElementById('sound-volume-slider');
+  const volDisp = document.getElementById('sound-volume-display');
+  if (volSlider && window.soundManager) {
+    volSlider.value = Math.round(soundManager.volume * 100);
+    if (volDisp) volDisp.textContent = `${volSlider.value}%`;
+  }
 }
 
 // ----------------------------------------------------
@@ -510,6 +528,10 @@ function updateCaretPosition() {
 
   elements.caret.style.left = `${targetX}px`;
   elements.caret.style.top = `${targetY}px`;
+
+  if (state.isMultiplayer && window.multiplayerManager && window.multiplayerManager.isInRace) {
+    window.multiplayerManager.renderTribeCarets();
+  }
 }
 
 // ----------------------------------------------------
@@ -600,6 +622,9 @@ function resetTest() {
   clearInterval(state.timer);
   stopPaceCaret();
   resetTabTitle();
+  if (!window.multiplayerManager || !window.multiplayerManager.isInRace) {
+    state.isMultiplayer = false;
+  }
   state.isRunning = false;
   state.isFinished = false;
   state.timeElapsed = 0;
@@ -651,6 +676,10 @@ function resetTest() {
 
   elements.typingInput.value = '';
   elements.typingInput.focus();
+
+  state.wordStartTime = null;
+  state.lastBurstWpm = 0;
+  updateMiniHud();
 }
 
 // ----------------------------------------------------
@@ -701,6 +730,7 @@ function startTest() {
 
     // Dinamik tab sarlavhasi (Live Tab Title)
     updateLiveTabTitle();
+    updateMiniHud();
 
     if (state.isMultiplayer && window.checkMultiplayerProgress) {
       window.checkMultiplayerProgress();
@@ -772,6 +802,28 @@ function setFinishedTabTitle(wpm, acc) {
 }
 
 // ----------------------------------------------------
+// Jonli Mini-HUD (Monkeytype Live Stats HUD)
+// ----------------------------------------------------
+function updateMiniHud() {
+  const hud = document.getElementById('live-mini-hud');
+  if (!hud) return;
+  if (!state.miniHudEnabled) {
+    hud.classList.add('hidden');
+    return;
+  }
+  hud.classList.remove('hidden');
+
+  const live = calculateLiveStats();
+  const hudWpm = document.getElementById('hud-wpm');
+  const hudAcc = document.getElementById('hud-acc');
+  const hudBurst = document.getElementById('hud-burst');
+
+  if (hudWpm) hudWpm.textContent = live.netWpm || 0;
+  if (hudAcc) hudAcc.textContent = `${live.acc ?? 100}%`;
+  if (hudBurst) hudBurst.textContent = state.lastBurstWpm || 0;
+}
+
+// ----------------------------------------------------
 // Klaviaturadan harflarni qabul qilish (Input handler)
 // ----------------------------------------------------
 function handleKeyDown(e) {
@@ -811,6 +863,9 @@ function handleKeyDown(e) {
   // Tab orqali testni qayta boshlash
   if (e.key === 'Tab') {
     e.preventDefault();
+    if (state.isMultiplayer && window.multiplayerManager && window.multiplayerManager.isInRace) {
+      return; // Do'stlar poygasi paytida adashib Tab bosilganda o'yin buzilib ketmasligi uchun
+    }
     resetTest();
     return;
   }
@@ -818,6 +873,9 @@ function handleKeyDown(e) {
   // Esc orqali MonkeyType Command Palette ochish
   if (e.key === 'Escape') {
     e.preventDefault();
+    if (state.isMultiplayer && window.multiplayerManager && window.multiplayerManager.isInRace) {
+      return; // Do'stlar poygasi paytida Command Palette poygani to'xtatib qo'ymasligi uchun
+    }
     if (window.openCommandPalette) {
       window.openCommandPalette();
     } else {
@@ -884,6 +942,15 @@ function handleKeyDown(e) {
       }
     }
 
+    // Burst WPM hisoblash (Monkeytype Live Burst)
+    if (state.wordStartTime) {
+      const wordSecs = Math.max((Date.now() - state.wordStartTime) / 1000, 0.08);
+      const charsInWord = targetWord.length + 1;
+      const burst = Math.round((charsInWord / 5) / (wordSecs / 60));
+      state.lastBurstWpm = Math.min(burst, 350);
+    }
+    state.wordStartTime = Date.now();
+
     // Time yoki Zen rejimida so'zlar tugab qolmasligi uchun yangi so'zlar qo'shish
     if (state.currentWordIndex >= state.words.length - 10) {
       appendMoreWords(30);
@@ -895,6 +962,7 @@ function handleKeyDown(e) {
     }
 
     updateCaretPosition();
+    updateMiniHud();
     if (state.isMultiplayer && window.checkMultiplayerProgress) {
       window.checkMultiplayerProgress();
     }
@@ -929,6 +997,7 @@ function handleKeyDown(e) {
 
       soundManager.playKey(false, false);
       updateCaretPosition();
+      updateMiniHud();
     } else if (state.currentWordIndex > 0) {
       // Oldingi so'zga qaytish (agar xatoliklar bo'lsa)
       const prevWordEl = elements.wordsContainer.children[state.currentWordIndex - 1];
@@ -940,6 +1009,7 @@ function handleKeyDown(e) {
         state.currentLetterIndex = prevWordEl.querySelectorAll('.letter').length;
         soundManager.playKey(false, false);
         updateCaretPosition();
+        updateMiniHud();
       }
     }
     if (state.isMultiplayer && window.checkMultiplayerProgress) {
@@ -951,6 +1021,9 @@ function handleKeyDown(e) {
   // ODDIY HARF BOSILGANDA (Faqat 1 ta belgi)
   if (e.key.length === 1) {
     e.preventDefault();
+    if (!state.wordStartTime) {
+      state.wordStartTime = Date.now();
+    }
     const typedChar = e.key;
     if (window.triggerVKeyGlow) window.triggerVKeyGlow(typedChar);
 
@@ -971,6 +1044,7 @@ function handleKeyDown(e) {
         // Master Mode (Sudden Death): Birinchi xato bilanoq to'xtatish!
         if (state.masterMode) {
           updateCaretPosition();
+          updateMiniHud();
           finishTest();
           return;
         }
@@ -1005,6 +1079,7 @@ function handleKeyDown(e) {
     }
 
     updateCaretPosition();
+    updateMiniHud();
     if (state.isMultiplayer && window.checkMultiplayerProgress) {
       window.checkMultiplayerProgress();
     }
@@ -2131,6 +2206,30 @@ function setupEventListeners() {
     });
   }
 
+  // Ovoz balandligi slider
+  const soundVolSlider = document.getElementById('sound-volume-slider');
+  const soundVolDisplay = document.getElementById('sound-volume-display');
+  if (soundVolSlider && window.soundManager) {
+    soundVolSlider.value = Math.round(soundManager.volume * 100);
+    if (soundVolDisplay) soundVolDisplay.textContent = `${soundVolSlider.value}%`;
+    soundVolSlider.addEventListener('input', (e) => {
+      const val = parseInt(e.target.value, 10);
+      soundManager.setVolume(val / 100);
+      if (soundVolDisplay) soundVolDisplay.textContent = `${val}%`;
+    });
+  }
+
+  // Jonli Mini-HUD Select
+  const miniHudSelect = document.getElementById('mini-hud-select');
+  if (miniHudSelect) {
+    miniHudSelect.value = state.miniHudEnabled ? 'on' : 'off';
+    miniHudSelect.addEventListener('change', (e) => {
+      state.miniHudEnabled = (e.target.value === 'on');
+      localStorage.setItem('mk_mini_hud', e.target.value);
+      updateMiniHud();
+    });
+  }
+
   // Caret Style Select (Monkeytype signature)
   const caretSelect = document.getElementById('caret-style-select');
   if (caretSelect) {
@@ -2216,9 +2315,18 @@ function setupEventListeners() {
     { label: "language: russian", action: () => { state.language = 'russian'; resetTest(); } },
     { label: "sound: thock", action: () => soundManager.setSoundPack('thock') },
     { label: "sound: clicky", action: () => soundManager.setSoundPack('click') },
-    { label: "sound: bubble pop", action: () => soundManager.setSoundPack('pop') },
+    { label: "sound: nk creams", action: () => soundManager.setSoundPack('cream') },
     { label: "sound: typewriter", action: () => soundManager.setSoundPack('typewriter') },
+    { label: "sound: bubble pop", action: () => soundManager.setSoundPack('pop') },
+    { label: "sound: retro beep", action: () => soundManager.setSoundPack('beep') },
     { label: "sound: off", action: () => soundManager.setSoundPack('off') },
+    { label: "hud: toggle live mini-hud (wpm, acc, burst)", action: () => {
+      state.miniHudEnabled = !state.miniHudEnabled;
+      localStorage.setItem('mk_mini_hud', state.miniHudEnabled ? 'on' : 'off');
+      const hudSel = document.getElementById('mini-hud-select');
+      if (hudSel) hudSel.value = state.miniHudEnabled ? 'on' : 'off';
+      updateMiniHud();
+    }},
     { label: "virtual keyboard: on/off", action: () => {
       state.virtualKeyboardEnabled = !state.virtualKeyboardEnabled;
       localStorage.setItem('mkt_virtual_keyboard', state.virtualKeyboardEnabled ? 'on' : 'off');
@@ -2387,8 +2495,6 @@ function setupEventListeners() {
   const joinPublicBtn = document.getElementById('join-public-room-btn');
   if (joinPublicBtn) {
     joinPublicBtn.addEventListener('click', () => {
-      window.closeAppModal(multiModal);
-      window.openAppModal(lobbyModal);
       window.multiplayerManager.joinRoom('arena_public');
     });
   }
@@ -2405,12 +2511,19 @@ function setupEventListeners() {
     joinRoomBtn.addEventListener('click', () => {
       const code = joinRoomInput.value.trim();
       if (!code) {
-        alert("Iltimos, xona kodini kiriting!");
+        alert("⚠️ Iltimos, xona kodini kiriting!");
         return;
       }
-      window.closeAppModal(multiModal);
-      window.openAppModal(lobbyModal);
       window.multiplayerManager.joinRoom(code);
+    });
+  }
+
+  if (joinRoomInput) {
+    joinRoomInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (joinRoomBtn) joinRoomBtn.click();
+      }
     });
   }
 
@@ -2546,7 +2659,6 @@ function setupEventListeners() {
   const roomParam = urlParams.get('room');
   if (roomParam) {
     setTimeout(() => {
-      window.openAppModal(lobbyModal);
       window.multiplayerManager.joinRoom(roomParam);
     }, 400);
   }
@@ -2634,20 +2746,30 @@ window.startMultiplayerGame = function(words, mode = 'time', limit = 30) {
 // Har safar harf yozilganda progressni do'stlarga yuborish
 window.checkMultiplayerProgress = function() {
   if (state.isMultiplayer && window.multiplayerManager && window.multiplayerManager.isInRace) {
-    let targetLetters = 0;
-    if (state.mode === 'time') {
-      // Vaqt rejimida ham progress FAQAT to'g'ri kiritilgan harflar bilan yuradi (vaqt o'zi surib ketmaydi!)
-      targetLetters = Math.max(Math.round(state.timeLimit * 4.5), 30);
+    let progress = 0;
+    if (state.mode === 'words') {
+      const targetWords = state.wordsLimit || (state.words ? state.words.length : 25);
+      const currentWord = (state.words && state.words[state.currentWordIndex]) || '';
+      const currentWordLen = Math.max(currentWord.length, 1);
+      const wordProgress = state.currentWordIndex + Math.min(state.currentLetterIndex / currentWordLen, 1);
+      progress = Math.min(100, Math.max(0, Math.round((wordProgress / targetWords) * 100)));
+    } else if (state.mode === 'time') {
+      const limit = state.timeLimit || 30;
+      const elapsed = Math.min(state.timeElapsed, limit);
+      progress = Math.min(100, Math.max(0, Math.round((elapsed / limit) * 100)));
     } else {
-      const targetWords = state.mode === 'words' ? state.wordsLimit : state.words.length;
-      targetLetters = Math.max(state.words.slice(0, targetWords).join('').length, 1);
+      const targetWords = (state.words ? state.words.length : 25);
+      progress = Math.min(100, Math.max(0, Math.round((state.currentWordIndex / targetWords) * 100)));
     }
 
-    // Progress FAQAT to'g'ri yozilgan harflar (correctChars) hisobiga oldinga siljiydi!
-    const progress = Math.min(100, Math.round((state.correctChars / targetLetters) * 100));
     const liveWpm = calculateLiveWpm();
 
-    window.multiplayerManager.sendProgress(progress, liveWpm);
+    window.multiplayerManager.sendProgress(
+      progress,
+      liveWpm,
+      state.currentWordIndex,
+      state.currentLetterIndex
+    );
     window.multiplayerManager.updateTribeDelta(liveWpm);
   }
 };
@@ -2664,9 +2786,7 @@ finishTest = function() {
     elements.resultSection.classList.remove('active');
     elements.testSection.style.display = 'flex';
 
-    const isWordBased = (state.mode === 'words' || state.mode === 'code' || state.mode === 'quote' || state.mode === 'custom');
-    const finalProg = isWordBased ? 100 : Math.min(100, Math.round((state.correctChars / Math.max(Math.round(state.timeLimit * 4.5), 30)) * 100));
-    window.multiplayerManager.sendProgress(finalProg, netWpm);
+    window.multiplayerManager.sendProgress(100, netWpm, state.currentWordIndex, state.currentLetterIndex);
     window.multiplayerManager.sendFinish(netWpm, accuracy);
     document.getElementById('main-config-bar').style.display = 'flex';
   }

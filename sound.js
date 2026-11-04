@@ -2,8 +2,9 @@
 class SoundManager {
   constructor() {
     this.audioCtx = null;
-    this.soundPack = localStorage.getItem('mkt_sound_pack') || 'thock'; // 'thock', 'click', 'pop', 'off'
-    this.volume = 0.25;
+    this.soundPack = localStorage.getItem('mkt_sound_pack') || 'thock'; // 'thock', 'click', 'pop', 'cream', 'beep', 'typewriter', 'off'
+    const savedVol = parseFloat(localStorage.getItem('mkt_sound_vol'));
+    this.volume = (!isNaN(savedVol) && savedVol >= 0 && savedVol <= 1) ? savedVol : 0.3;
   }
 
   init() {
@@ -21,6 +22,15 @@ class SoundManager {
   setSoundPack(pack) {
     this.soundPack = pack;
     localStorage.setItem('mkt_sound_pack', pack);
+    if (pack !== 'off') {
+      this.playKey(false, false); // O'zgarganda bir marta tovushini eshitib ko'rish
+    }
+  }
+
+  setVolume(vol) {
+    this.volume = Math.max(0, Math.min(1, vol));
+    localStorage.setItem('mkt_sound_vol', this.volume);
+    this.playKey(false, false);
   }
 
   playKey(isError = false, isSpace = false) {
@@ -97,6 +107,53 @@ class SoundManager {
       gain.connect(this.audioCtx.destination);
       osc.start(t);
       osc.stop(t + 0.03);
+
+    } else if (this.soundPack === 'cream') {
+      // NK Creams (Yumshoq, mayin linear mexanik switch)
+      const osc = this.audioCtx.createOscillator();
+      const gain = this.audioCtx.createGain();
+      const baseFreq = isSpace ? 210 : 260 + Math.random() * 45;
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(baseFreq, t);
+      osc.frequency.exponentialRampToValueAtTime(70, t + 0.045);
+
+      gain.gain.setValueAtTime(this.volume * (isSpace ? 0.38 : 0.28), t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.045);
+
+      osc.connect(gain);
+      gain.connect(this.audioCtx.destination);
+      osc.start(t);
+      osc.stop(t + 0.045);
+
+      // Cream dampening undertone
+      const sub = this.audioCtx.createOscillator();
+      const subGain = this.audioCtx.createGain();
+      sub.type = 'sine';
+      sub.frequency.setValueAtTime(140, t);
+      sub.frequency.exponentialRampToValueAtTime(50, t + 0.03);
+      subGain.gain.setValueAtTime(this.volume * 0.15, t);
+      subGain.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
+      sub.connect(subGain);
+      subGain.connect(this.audioCtx.destination);
+      sub.start(t);
+      sub.stop(t + 0.03);
+
+    } else if (this.soundPack === 'beep') {
+      // Retro Terminal Beep (Klassik 80s kompyuter klaviaturasi)
+      const osc = this.audioCtx.createOscillator();
+      const gain = this.audioCtx.createGain();
+      osc.type = 'square';
+      const freq = isSpace ? 660 : (isError ? 150 : 880 + Math.random() * 120);
+      osc.frequency.setValueAtTime(freq, t);
+
+      gain.gain.setValueAtTime(this.volume * 0.14, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.022);
+
+      osc.connect(gain);
+      gain.connect(this.audioCtx.destination);
+      osc.start(t);
+      osc.stop(t + 0.022);
 
     } else if (this.soundPack === 'typewriter') {
       if (isSpace) {

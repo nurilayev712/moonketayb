@@ -389,6 +389,13 @@
         </div>
       </div>
 
+      <!-- Jonli Mini-HUD (Monkeytype Live Stats: WPM, Aniqlik va Burst Tezlik) -->
+      <div class="live-mini-hud" id="live-mini-hud">
+        <div class="hud-item"><span class="hud-label">wpm</span> <span class="hud-val" id="hud-wpm">0</span></div>
+        <div class="hud-item"><span class="hud-label">acc</span> <span class="hud-val" id="hud-acc">100%</span></div>
+        <div class="hud-item"><span class="hud-label">burst</span> <span class="hud-val" id="hud-burst">0</span></div>
+      </div>
+
       <!-- Zen rejimida yakunlash belgisi -->
       <div class="zen-hint" id="zen-hint" style="display: none;">
         <kbd>shift</kbd> + <kbd>enter</kbd> — yakunlash
@@ -1018,15 +1025,41 @@
         <!-- Klaviatura tovushlari to'plami -->
         <div class="setting-row">
           <div class="setting-info">
-            <span class="setting-name">Klaviatura ovozi</span>
-            <span class="setting-desc">Mexanik tugma bosilish tovushi</span>
+            <span class="setting-name">Klaviatura ovozi (Sound Pack)</span>
+            <span class="setting-desc">Mexanik tugmalar bosilish tovush to'plami</span>
           </div>
           <select id="sound-pack-select" style="background: var(--sub-alt-color); color: var(--text-color); border: 1px solid var(--sub-color); padding: 6px 12px; border-radius: 6px; font-family: inherit;">
             <option value="thock">Thock (To'q mexanik switch)</option>
             <option value="click">Clicky (Cherry MX Blue)</option>
-            <option value="pop">Bubble Pop (Pufakcha)</option>
-            <option value="typewriter">Typewriter (Yozuv mashinkasi)</option>
+            <option value="cream">NK Creams (Yumshoq linear switch)</option>
+            <option value="typewriter">Typewriter (Vintage mashinka & qo'ng'iroq)</option>
+            <option value="pop">Bubble Pop (Pufakcha tovushi)</option>
+            <option value="beep">Retro Beep (Terminal signali)</option>
             <option value="off">O'chiq (Tovushsiz)</option>
+          </select>
+        </div>
+
+        <!-- Ovoz balandligi -->
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-name">Ovoz balandligi</span>
+            <span class="setting-desc">Tugmalar ovozi balandligini sozlash</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <input type="range" id="sound-volume-slider" min="5" max="100" value="30" style="accent-color: var(--main-color); cursor: pointer; width: 130px;">
+            <span id="sound-volume-display" style="font-size: 0.85rem; color: var(--main-color); font-weight: 700; min-width: 40px; text-align: right;">30%</span>
+          </div>
+        </div>
+
+        <!-- Jonli Mini-HUD (wpm, acc, burst) -->
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-name">Jonli Mini-HUD (Live Stats)</span>
+            <span class="setting-desc">Yozish paytida matn ostida real vaqtda tezlik, aniqlik va har bir so'z tezligi (Burst)</span>
+          </div>
+          <select id="mini-hud-select" style="background: var(--sub-alt-color); color: var(--text-color); border: 1px solid var(--sub-color); padding: 6px 12px; border-radius: 6px; font-family: inherit;">
+            <option value="on">Yoqilgan (Tavsiya etiladi)</option>
+            <option value="off">O'chiq</option>
           </select>
         </div>
 
