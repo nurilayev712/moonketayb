@@ -2746,21 +2746,14 @@ window.startMultiplayerGame = function(words, mode = 'time', limit = 30) {
 // Har safar harf yozilganda progressni do'stlarga yuborish
 window.checkMultiplayerProgress = function() {
   if (state.isMultiplayer && window.multiplayerManager && window.multiplayerManager.isInRace) {
-    let progress = 0;
-    if (state.mode === 'words') {
-      const targetWords = state.wordsLimit || (state.words ? state.words.length : 25);
-      const currentWord = (state.words && state.words[state.currentWordIndex]) || '';
-      const currentWordLen = Math.max(currentWord.length, 1);
-      const wordProgress = state.currentWordIndex + Math.min(state.currentLetterIndex / currentWordLen, 1);
-      progress = Math.min(100, Math.max(0, Math.round((wordProgress / targetWords) * 100)));
-    } else if (state.mode === 'time') {
-      const limit = state.timeLimit || 30;
-      const elapsed = Math.min(state.timeElapsed, limit);
-      progress = Math.min(100, Math.max(0, Math.round((elapsed / limit) * 100)));
-    } else {
-      const targetWords = (state.words ? state.words.length : 25);
-      progress = Math.min(100, Math.max(0, Math.round((state.currentWordIndex / targetWords) * 100)));
-    }
+    const targetWords = (state.mode === 'words')
+      ? (state.wordsLimit || (state.words ? state.words.length : 25))
+      : Math.max(Math.round((state.timeLimit || 30) * 1.3), 20);
+
+    const currentWord = (state.words && state.words[state.currentWordIndex]) || '';
+    const currentWordLen = Math.max(currentWord.length, 1);
+    const wordProgress = state.currentWordIndex + Math.min(state.currentLetterIndex / currentWordLen, 1);
+    const progress = Math.min(100, Math.max(0, Math.round((wordProgress / targetWords) * 100)));
 
     const liveWpm = calculateLiveWpm();
 
