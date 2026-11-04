@@ -25,6 +25,8 @@ class MultiplayerManager {
     this.raceFinishTimeout = null;
     this.isVerifyingRoom = false;
     this.joinVerificationTimeout = null;
+    this.joinRetryTimer = null;
+    this.joinWatchdogTimeout = null;
 
     window.addEventListener('resize', () => {
       if (this.isInRace) this.renderTribeCarets();
@@ -35,6 +37,18 @@ class MultiplayerManager {
         wc.addEventListener('scroll', () => {
           if (this.isInRace) this.renderTribeCarets();
         });
+      }
+    });
+
+    window.addEventListener('beforeunload', () => {
+      if (this.isHost && this.roomId && this.client && this.client.isConnected()) {
+        try {
+          this.sendMessage({
+            type: 'ROOM_ANNOUNCE',
+            roomId: this.roomId,
+            active: false
+          }, true);
+        } catch (e) {}
       }
     });
   }
@@ -148,6 +162,22 @@ class MultiplayerManager {
     return this.roomId;
   }
 
+  // Barcha xona ulanish taymerlarini tozalash
+  clearJoinTimers() {
+    if (this.joinVerificationTimeout) {
+      clearTimeout(this.joinVerificationTimeout);
+      this.joinVerificationTimeout = null;
+    }
+    if (this.joinRetryTimer) {
+      clearTimeout(this.joinRetryTimer);
+      this.joinRetryTimer = null;
+    }
+    if (this.joinWatchdogTimeout) {
+      clearTimeout(this.joinWatchdogTimeout);
+      this.joinWatchdogTimeout = null;
+    }
+  }
+
   // 2. Mavjud xonaga qo'shilish (Client)
   joinRoom(code) {
     code = (code || '').trim();
@@ -166,13 +196,13 @@ class MultiplayerManager {
     const joinBtn = document.getElementById('join-room-btn');
     if (joinBtn) {
       joinBtn.disabled = true;
-      joinBtn.innerHTML = '⏳ Xona tekshirilmoqda...';
+      joinBtn.innerHTML = '⏳ Xonaga ulanilmoqda...';
     }
 
     this.roomId = code;
     this.isHost = false;
     this.isReady = false;
-    this.isVerifyingRoom = true;
+    this.isVerifyingRoom = !isPublic;
     this.players = {};
 
     const user = (window.authManager && window.authManager.currentUser) || {
@@ -192,32 +222,23 @@ class MultiplayerManager {
       accuracy: 100
     };
 
-    // 2.8 soniyada xona egasi javob bermasa xatolik berish
-    if (this.joinVerificationTimeout) {
-      clearTimeout(this.joinVerificationTimeout);
-    }
+    this.clearJoinTimers();
 
-    this.joinVerificationTimeout = setTimeout(() => {
-      this.joinVerificationTimeout = null;
+    // 14 soniyalik umumiy tarmoq xavfsizlik taymeri
+    this.joinWatchdogTimeout = setTimeout(() => {
+      this.joinWatchdogTimeout = null;
       if (this.isVerifyingRoom) {
-        if (isPublic) {
-          // Umumiy arenada hech kim bo'lmasa kirgan odam avtomatik host bo'ladi
-          this.isHost = true;
-          this.isReady = true;
-          this.players[this.myId].isHost = true;
-          this.players[this.myId].isReady = true;
-          this.isVerifyingRoom = false;
-          this.onRoomJoinSuccess();
-        } else {
-          this.onRoomNotFound();
-        }
+        this.cleanupFailedJoin();
+        alert("⚠️ Tarmoq xatosi: Xona bilan aloqa o'rnatib bo'lmadi.\n\nIltimos, internet aloqangizni tekshirib qaytadan urinib ko'ring.");
       }
-    }, 2800);
+    }, 14000);
 
     this.connectToBroker();
   }
 
   onRoomJoinSuccess() {
+    this.clearJoinTimers();
+    this.isVerifyingRoom = false;
     this.restoreJoinBtnUI();
 
     const multiModal = document.getElementById('multiplayer-modal');
@@ -249,10 +270,7 @@ class MultiplayerManager {
 
   cleanupFailedJoin() {
     this.isVerifyingRoom = false;
-    if (this.joinVerificationTimeout) {
-      clearTimeout(this.joinVerificationTimeout);
-      this.joinVerificationTimeout = null;
-    }
+    this.clearJoinTimers();
     if (this.client) {
       try {
         this.client.disconnect();
@@ -289,6 +307,16 @@ class MultiplayerManager {
       roomLimit: this.roomLimit,
       roomLang: this.roomLang
     });
+
+    this.sendMessage({
+      type: 'ROOM_ANNOUNCE',
+      roomId: this.roomId,
+      hostId: this.myId,
+      roomMode: this.roomMode,
+      roomLimit: this.roomLimit,
+      roomLang: this.roomLang,
+      active: true
+    }, true);
   }
 
   // Host: Lug'at tilini o'zgartirish
@@ -306,6 +334,16 @@ class MultiplayerManager {
       roomLimit: this.roomLimit,
       roomLang: this.roomLang
     });
+
+    this.sendMessage({
+      type: 'ROOM_ANNOUNCE',
+      roomId: this.roomId,
+      hostId: this.myId,
+      roomMode: this.roomMode,
+      roomLimit: this.roomLimit,
+      roomLang: this.roomLang,
+      active: true
+    }, true);
   }
 
   // Guest: Tayyorlik holatini almashtirish (Ready toggle)
@@ -356,7 +394,7 @@ class MultiplayerManager {
 
       const connectOptions = {
         useSSL: true,
-        timeout: 5,
+        timeout: 6,
         keepAliveInterval: 30,
         cleanSession: true,
         onSuccess: () => {
@@ -369,13 +407,52 @@ class MultiplayerManager {
 
           if (this.isHost) {
             this.updateStatusText("Xona tayyor! Do'stlaringiz qo'shilishini kuting.");
-          } else {
-            this.updateStatusText("Xonaga ulandingiz! Tayyor bo'lgach 'Tayyorman' tugmasini bosing.");
-            // Host va boshqalarga qo'shilganimiz haqida xabar yuboramiz
+            // Host xona mavjudligini brokerda e'lon qiladi (Retained MQTT message)
             this.sendMessage({
-              type: 'PLAYER_JOIN',
-              player: myPlayer
-            });
+              type: 'ROOM_ANNOUNCE',
+              roomId: this.roomId,
+              hostId: this.myId,
+              roomMode: this.roomMode,
+              roomLimit: this.roomLimit,
+              roomLang: this.roomLang,
+              active: true
+            }, true);
+          } else {
+            const isPublic = (this.roomId === 'arena_public');
+            if (isPublic) {
+              this.onRoomJoinSuccess();
+              this.sendMessage({
+                type: 'PLAYER_JOIN',
+                player: myPlayer
+              });
+            } else {
+              const joinBtn = document.getElementById('join-room-btn');
+              if (joinBtn) joinBtn.innerHTML = '⏳ Xona tekshirilmoqda...';
+
+              // Hostga qo'shilganimiz haqida xabar yuboramiz
+              this.sendMessage({
+                type: 'PLAYER_JOIN',
+                player: myPlayer
+              });
+
+              // Paket yo'qolishiga qarshi 1.6 soniyadan keyin takroriy so'rov
+              this.joinRetryTimer = setTimeout(() => {
+                if (this.isVerifyingRoom) {
+                  this.sendMessage({
+                    type: 'PLAYER_JOIN',
+                    player: myPlayer
+                  });
+                }
+              }, 1600);
+
+              // 6 soniyada xona egasidan javob kelmasa (brokerga ulangan holda)
+              this.joinVerificationTimeout = setTimeout(() => {
+                this.joinVerificationTimeout = null;
+                if (this.isVerifyingRoom) {
+                  this.onRoomNotFound();
+                }
+              }, 6000);
+            }
           }
         },
         onFailure: (err) => {
@@ -408,21 +485,63 @@ class MultiplayerManager {
 
       this.client.connect({
         useSSL: true,
-        timeout: 5,
+        timeout: 6,
         onSuccess: () => {
           const topic = `mkt/race/${this.roomId}`;
           this.client.subscribe(topic);
           this.startPingLoop();
           const myPlayer = this.players[this.myId];
-          if (!this.isHost) {
+          if (this.isHost) {
+            this.updateStatusText("Xona tayyor! Do'stlaringiz qo'shilishini kuting.");
             this.sendMessage({
-              type: 'PLAYER_JOIN',
-              player: myPlayer
-            });
+              type: 'ROOM_ANNOUNCE',
+              roomId: this.roomId,
+              hostId: this.myId,
+              roomMode: this.roomMode,
+              roomLimit: this.roomLimit,
+              roomLang: this.roomLang,
+              active: true
+            }, true);
+          } else {
+            const isPublic = (this.roomId === 'arena_public');
+            if (isPublic) {
+              this.onRoomJoinSuccess();
+              this.sendMessage({
+                type: 'PLAYER_JOIN',
+                player: myPlayer
+              });
+            } else {
+              const joinBtn = document.getElementById('join-room-btn');
+              if (joinBtn) joinBtn.innerHTML = '⏳ Xona tekshirilmoqda...';
+
+              this.sendMessage({
+                type: 'PLAYER_JOIN',
+                player: myPlayer
+              });
+              this.joinRetryTimer = setTimeout(() => {
+                if (this.isVerifyingRoom) {
+                  this.sendMessage({
+                    type: 'PLAYER_JOIN',
+                    player: myPlayer
+                  });
+                }
+              }, 1600);
+              this.joinVerificationTimeout = setTimeout(() => {
+                this.joinVerificationTimeout = null;
+                if (this.isVerifyingRoom) {
+                  this.onRoomNotFound();
+                }
+              }, 6000);
+            }
           }
         },
         onFailure: () => {
-          this.updateStatusText("Tarmoq xatosi. Iltimos internet aloqasini tekshiring.");
+          if (this.isVerifyingRoom) {
+            this.cleanupFailedJoin();
+            alert("⚠️ Tarmoq xatosi: Serverga ulanib bo'lmadi.\n\nIltimos, internet aloqangizni tekshirib qaytadan urinib ko'ring.");
+          } else {
+            this.updateStatusText("Tarmoq xatosi. Iltimos internet aloqasini tekshiring.");
+          }
         }
       });
     } catch (err) {
@@ -431,13 +550,16 @@ class MultiplayerManager {
   }
 
   // Xabar yuborish
-  sendMessage(dataObj) {
+  sendMessage(dataObj, retained = false) {
     if (!this.client || !this.client.isConnected()) return;
     try {
       const topic = `mkt/race/${this.roomId}`;
       const msgStr = JSON.stringify(dataObj);
       const message = new Paho.MQTT.Message(msgStr);
       message.destinationName = topic;
+      if (retained) {
+        message.retained = true;
+      }
       this.client.send(message);
     } catch (e) {
       console.error("Xabar yuborishda xatolik:", e);
@@ -453,8 +575,43 @@ class MultiplayerManager {
       return;
     }
 
+    // 0. Xona e'loni (ROOM_ANNOUNCE) kelganda
+    if (data.type === 'ROOM_ANNOUNCE') {
+      if (data.roomId === this.roomId) {
+        if (data.active === false) {
+          if (this.isVerifyingRoom) {
+            this.cleanupFailedJoin();
+            alert("❌ Bu xona yopilgan yoki xona egasi xonani tark etgan.");
+          }
+          return;
+        }
+
+        if (this.isVerifyingRoom) {
+          this.isVerifyingRoom = false;
+          this.clearJoinTimers();
+          this.onRoomJoinSuccess();
+        }
+
+        if (data.roomMode) this.roomMode = data.roomMode;
+        if (data.roomLimit) this.roomLimit = data.roomLimit;
+        if (data.roomLang) {
+          this.roomLang = data.roomLang;
+          if (window.state) window.state.language = data.roomLang;
+        }
+        this.updateLobbyUI();
+
+        if (!this.isHost && this.players[this.myId]) {
+          this.sendMessage({
+            type: 'PLAYER_JOIN',
+            player: this.players[this.myId]
+          });
+        }
+      }
+      return;
+    }
+
     // 0. PING kelganda
-    if (data.type === 'PING') {
+    else if (data.type === 'PING') {
       if (data.senderId === this.myId) {
         const latency = Math.max(1, Date.now() - data.sentAt);
         this.updatePingUI(latency);
@@ -497,10 +654,7 @@ class MultiplayerManager {
     else if (data.type === 'SYNC_LOBBY') {
       if (this.isVerifyingRoom) {
         this.isVerifyingRoom = false;
-        if (this.joinVerificationTimeout) {
-          clearTimeout(this.joinVerificationTimeout);
-          this.joinVerificationTimeout = null;
-        }
+        this.clearJoinTimers();
         this.onRoomJoinSuccess();
       }
 
@@ -1334,13 +1488,10 @@ class MultiplayerManager {
 
   leaveRoom() {
     this.stopPingLoop();
+    this.clearJoinTimers();
     if (this.raceFinishTimeout) {
       clearTimeout(this.raceFinishTimeout);
       this.raceFinishTimeout = null;
-    }
-    if (this.joinVerificationTimeout) {
-      clearTimeout(this.joinVerificationTimeout);
-      this.joinVerificationTimeout = null;
     }
     this.isVerifyingRoom = false;
     this.restoreJoinBtnUI();
@@ -1352,6 +1503,13 @@ class MultiplayerManager {
 
     if (this.client) {
       try {
+        if (this.isHost && this.roomId) {
+          this.sendMessage({
+            type: 'ROOM_ANNOUNCE',
+            roomId: this.roomId,
+            active: false
+          }, true);
+        }
         this.sendMessage({
           type: 'PLAYER_LEAVE',
           id: this.myId
@@ -1360,6 +1518,7 @@ class MultiplayerManager {
       } catch (e) {}
     }
     this.client = null;
+    this.roomId = null;
     this.players = {};
     this.isInRace = false;
 
