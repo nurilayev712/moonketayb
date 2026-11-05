@@ -917,7 +917,7 @@ footer {
     height: 120px;
   }
 
-  .caret {
+  .caret, .tribe-caret {
     height: 26px;
   }
 
@@ -2709,6 +2709,209 @@ header, .config-bar, footer, .restart-btn-wrapper, #virtual-keyboard-wrapper {
 .custom-textarea:focus {
   border-color: var(--main-color);
   box-shadow: 0 0 10px rgba(226, 183, 20, 0.2);
+}
+
+/* =================================================== */
+/* 6. Barmoqlar Yo'riqnomasi (Finger Guides / 10-finger) */
+/* =================================================== */
+:root {
+  --finger-lp: #f43f5e; /* Chap jimjiloq - Coral */
+  --finger-lr: #f97316; /* Chap nomsiz - Orange */
+  --finger-lm: #eab308; /* Chap o'rta - Yellow */
+  --finger-li: #10b981; /* Chap ko'rsatkich - Emerald */
+  --finger-th: #06b6d4; /* Bosh barmoqlar - Cyan */
+  --finger-ri: #6366f1; /* O'ng ko'rsatkich - Indigo */
+  --finger-rm: #a855f7; /* O'ng o'rta - Purple */
+  --finger-rr: #d946ef; /* O'ng nomsiz - Fuchsia */
+  --finger-rp: #ec4899; /* O'ng jimjiloq - Rose */
+}
+
+.virtual-keyboard-wrapper.finger-guides-enabled .vkey[data-finger="lp"] { border-bottom: 3px solid var(--finger-lp); }
+.virtual-keyboard-wrapper.finger-guides-enabled .vkey[data-finger="lr"] { border-bottom: 3px solid var(--finger-lr); }
+.virtual-keyboard-wrapper.finger-guides-enabled .vkey[data-finger="lm"] { border-bottom: 3px solid var(--finger-lm); }
+.virtual-keyboard-wrapper.finger-guides-enabled .vkey[data-finger="li"] { border-bottom: 3px solid var(--finger-li); }
+.virtual-keyboard-wrapper.finger-guides-enabled .vkey[data-finger="th"] { border-bottom: 3px solid var(--finger-th); }
+.virtual-keyboard-wrapper.finger-guides-enabled .vkey[data-finger="ri"] { border-bottom: 3px solid var(--finger-ri); }
+.virtual-keyboard-wrapper.finger-guides-enabled .vkey[data-finger="rm"] { border-bottom: 3px solid var(--finger-rm); }
+.virtual-keyboard-wrapper.finger-guides-enabled .vkey[data-finger="rr"] { border-bottom: 3px solid var(--finger-rr); }
+.virtual-keyboard-wrapper.finger-guides-enabled .vkey[data-finger="rp"] { border-bottom: 3px solid var(--finger-rp); }
+
+/* Keyingi bosilishi kerak bo'lgan harf (Next Target Key) */
+.virtual-keyboard-wrapper.finger-guides-enabled .vkey.next-target {
+  animation: nextKeyPulse 0.9s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+  color: var(--text-color) !important;
+  font-weight: 700;
+  z-index: 4;
+}
+
+@keyframes nextKeyPulse {
+  0% {
+    transform: translateY(0) scale(1);
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.2);
+  }
+  100% {
+    transform: translateY(-2px) scale(1.08);
+    box-shadow: 0 0 16px currentColor, 0 4px 10px rgba(0, 0, 0, 0.4);
+  }
+}
+
+.finger-guide-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+  font-size: 0.82rem;
+  color: var(--sub-color);
+  font-family: inherit;
+  background: var(--sub-alt-color);
+  padding: 4px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.finger-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--main-color);
+  box-shadow: 0 0 8px currentColor;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* =================================================== */
+/* 7. Replay (Yozish jarayoni takrori) Modali          */
+/* =================================================== */
+.replay-badge {
+  background: var(--sub-alt-color);
+  color: var(--main-color);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--main-color);
+}
+
+.replay-stats-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--sub-alt-color);
+  padding: 0.65rem 1.25rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.replay-stat-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.replay-stat-item .r-label {
+  font-size: 0.75rem;
+  color: var(--sub-color);
+  text-transform: lowercase;
+}
+
+.replay-stat-item .r-val {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--main-color);
+  font-family: inherit;
+}
+
+.replay-words-wrapper {
+  position: relative;
+  width: 100%;
+  background: var(--bg-color);
+  border: 1px solid var(--sub-alt-color);
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  overflow: hidden;
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.replay-words-container {
+  width: 100%;
+  height: 120px;
+  overflow: hidden;
+  position: relative;
+  font-size: 1.5rem;
+  line-height: 40px;
+  color: var(--sub-color);
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+}
+
+.replay-controls-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  background: var(--sub-alt-color);
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+
+.replay-btn-icon {
+  background: transparent;
+  border: 1px solid var(--sub-color);
+  color: var(--text-color);
+  border-radius: 6px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.replay-btn-icon:hover {
+  background: var(--main-color);
+  color: var(--bg-color);
+  border-color: var(--main-color);
+}
+
+.replay-progress-track {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-width: 140px;
+}
+
+.replay-speed-btns {
+  display: flex;
+  gap: 4px;
+}
+
+.replay-speed-btn {
+  background: transparent;
+  color: var(--sub-color);
+  border: 1px solid transparent;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+
+.replay-speed-btn:hover {
+  color: var(--text-color);
+}
+
+.replay-speed-btn.active {
+  background: var(--main-color);
+  color: var(--bg-color);
+  font-weight: 700;
 }
 
 

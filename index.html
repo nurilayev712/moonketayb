@@ -404,46 +404,50 @@
       <!-- Virtual Jonli Klaviatura (Monkeytype Interactive On-Screen Keyboard) -->
       <div class="virtual-keyboard-wrapper" id="virtual-keyboard-wrapper">
         <div class="keyboard-row">
-          <div class="vkey" data-key="q">q</div>
-          <div class="vkey" data-key="w">w</div>
-          <div class="vkey" data-key="e">e</div>
-          <div class="vkey" data-key="r">r</div>
-          <div class="vkey" data-key="t">t</div>
-          <div class="vkey" data-key="y">y</div>
-          <div class="vkey" data-key="u">u</div>
-          <div class="vkey" data-key="i">i</div>
-          <div class="vkey" data-key="o">o</div>
-          <div class="vkey" data-key="p">p</div>
-          <div class="vkey" data-key="[">[</div>
-          <div class="vkey" data-key="]">]</div>
+          <div class="vkey" data-key="q" data-finger="lp">q</div>
+          <div class="vkey" data-key="w" data-finger="lr">w</div>
+          <div class="vkey" data-key="e" data-finger="lm">e</div>
+          <div class="vkey" data-key="r" data-finger="li">r</div>
+          <div class="vkey" data-key="t" data-finger="li">t</div>
+          <div class="vkey" data-key="y" data-finger="ri">y</div>
+          <div class="vkey" data-key="u" data-finger="ri">u</div>
+          <div class="vkey" data-key="i" data-finger="rm">i</div>
+          <div class="vkey" data-key="o" data-finger="rr">o</div>
+          <div class="vkey" data-key="p" data-finger="rp">p</div>
+          <div class="vkey" data-key="[" data-finger="rp">[</div>
+          <div class="vkey" data-key="]" data-finger="rp">]</div>
         </div>
         <div class="keyboard-row">
-          <div class="vkey" data-key="a">a</div>
-          <div class="vkey" data-key="s">s</div>
-          <div class="vkey" data-key="d">d</div>
-          <div class="vkey" data-key="f">f</div>
-          <div class="vkey" data-key="g">g</div>
-          <div class="vkey" data-key="h">h</div>
-          <div class="vkey" data-key="j">j</div>
-          <div class="vkey" data-key="k">k</div>
-          <div class="vkey" data-key="l">l</div>
-          <div class="vkey" data-key=";">;</div>
-          <div class="vkey" data-key="'">'</div>
+          <div class="vkey" data-key="a" data-finger="lp">a</div>
+          <div class="vkey" data-key="s" data-finger="lr">s</div>
+          <div class="vkey" data-key="d" data-finger="lm">d</div>
+          <div class="vkey" data-key="f" data-finger="li">f</div>
+          <div class="vkey" data-key="g" data-finger="li">g</div>
+          <div class="vkey" data-key="h" data-finger="ri">h</div>
+          <div class="vkey" data-key="j" data-finger="ri">j</div>
+          <div class="vkey" data-key="k" data-finger="rm">k</div>
+          <div class="vkey" data-key="l" data-finger="rr">l</div>
+          <div class="vkey" data-key=";" data-finger="rp">;</div>
+          <div class="vkey" data-key="'" data-finger="rp">'</div>
         </div>
         <div class="keyboard-row">
-          <div class="vkey" data-key="z">z</div>
-          <div class="vkey" data-key="x">x</div>
-          <div class="vkey" data-key="c">c</div>
-          <div class="vkey" data-key="v">v</div>
-          <div class="vkey" data-key="b">b</div>
-          <div class="vkey" data-key="n">n</div>
-          <div class="vkey" data-key="m">m</div>
-          <div class="vkey" data-key=",">,</div>
-          <div class="vkey" data-key=".">.</div>
-          <div class="vkey" data-key="/">/</div>
+          <div class="vkey" data-key="z" data-finger="lp">z</div>
+          <div class="vkey" data-key="x" data-finger="lr">x</div>
+          <div class="vkey" data-key="c" data-finger="lm">c</div>
+          <div class="vkey" data-key="v" data-finger="li">v</div>
+          <div class="vkey" data-key="b" data-finger="li">b</div>
+          <div class="vkey" data-key="n" data-finger="ri">n</div>
+          <div class="vkey" data-key="m" data-finger="ri">m</div>
+          <div class="vkey" data-key="," data-finger="rm">,</div>
+          <div class="vkey" data-key="." data-finger="rr">.</div>
+          <div class="vkey" data-key="/" data-finger="rp">/</div>
         </div>
         <div class="keyboard-row">
-          <div class="vkey space-key" data-key=" ">space</div>
+          <div class="vkey space-key" data-key=" " data-finger="th">space</div>
+        </div>
+        <div class="finger-guide-hint" id="finger-guide-hint" style="display: none;">
+          <span class="finger-dot" id="finger-hint-dot"></span>
+          <span id="finger-hint-text">Keyingi harf: <b>—</b></span>
         </div>
       </div>
 
@@ -509,6 +513,14 @@
         <button class="action-btn" id="next-test-btn">
           <svg viewBox="0 0 24 24"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
           keyingi test
+        </button>
+        <button class="action-btn" id="replay-btn" title="Yozish jarayonini qayta ko'rish">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+          qayta ko'rish
+        </button>
+        <button class="action-btn" id="share-card-btn" title="Natijani rasm qilib saqlash">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 12v7H5v-7H3v7c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zm-6 .67l2.59-2.58L17 11.5l-5 5-5-5 1.41-1.41L11 12.67V3h2v9.67z"/></svg>
+          rasm saqlash
         </button>
       </div>
     </section>
@@ -1158,6 +1170,18 @@
           </select>
         </div>
 
+        <!-- Barmoqlar yo'riqnomasi (Finger Guides) -->
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-name">Barmoqlar yo'riqnomasi (Finger Guides)</span>
+            <span class="setting-desc">10 barmoq zonalarini ranglar va keyingi harf ko'rsatgichi bilan o'rganish</span>
+          </div>
+          <select id="finger-guides-select" style="background: var(--sub-alt-color); color: var(--text-color); border: 1px solid var(--sub-color); padding: 6px 12px; border-radius: 6px; font-family: inherit;">
+            <option value="off">O'chiq</option>
+            <option value="on">Yoqilgan (Rangli zonalar & Yo'riqnoma)</option>
+          </select>
+        </div>
+
         <!-- Master Mode (Sudden Death) -->
         <div class="setting-row">
           <div class="setting-info">
@@ -1275,6 +1299,79 @@
         <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.25rem;">
           <button class="action-btn" id="custom-time-cancel-btn">Bekor qilish</button>
           <button class="action-btn primary" id="custom-time-save-btn">O'rnatish</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NATIJANI RASM QILIB SAQLASH (SHARE CARD) MODALI -->
+  <div class="modal-overlay" id="share-card-modal">
+    <div class="modal" style="max-width: 720px; width: 94%;">
+      <div class="modal-header">
+        <div class="modal-title">📸 Natija kartochkasi</div>
+        <button class="modal-close" id="close-share-card-btn">&times;</button>
+      </div>
+      <div class="modal-body" style="text-align: center; padding: 1.25rem 1rem;">
+        <div class="share-card-canvas-container" style="background: rgba(0,0,0,0.35); border-radius: 12px; padding: 8px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+          <canvas id="share-card-canvas" width="860" height="480" style="width: 100%; height: auto; display: block; border-radius: 8px;"></canvas>
+        </div>
+        <div style="display: flex; gap: 0.75rem; justify-content: center; margin-top: 1.25rem; flex-wrap: wrap;">
+          <button class="action-btn primary" id="download-share-card-btn">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+            Yuklab olish (.png)
+          </button>
+          <button class="action-btn" id="copy-share-card-btn">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+            Nusxalash
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- YOZISH JARAYONINI QAYTA KO'RISH (REPLAY) MODALI -->
+  <div class="modal-overlay" id="replay-modal">
+    <div class="modal" style="max-width: 860px; width: 95%;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <div class="modal-title">🎬 Yozish takrori (Replay)</div>
+          <span class="replay-badge" id="replay-info-badge">30s • 0 wpm</span>
+        </div>
+        <button class="modal-close" id="close-replay-btn">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 1.25rem;">
+        <div class="replay-stats-bar">
+          <div class="replay-stat-item"><span class="r-label">vaqt</span> <span class="r-val" id="replay-time">00:00</span></div>
+          <div class="replay-stat-item"><span class="r-label">wpm</span> <span class="r-val" id="replay-wpm">0</span></div>
+          <div class="replay-stat-item"><span class="r-label">aniqlik</span> <span class="r-val" id="replay-acc">100%</span></div>
+          <div class="replay-stat-item"><span class="r-label">belgilar</span> <span class="r-val" id="replay-chars">0</span></div>
+        </div>
+
+        <div class="replay-words-wrapper" id="replay-words-wrapper">
+          <div class="caret blink" id="replay-caret"></div>
+          <div class="words-container replay-words-container" id="replay-words-container">
+            <!-- Dinamik so'zlar takrori -->
+          </div>
+        </div>
+
+        <div class="replay-controls-bar">
+          <button class="replay-btn-icon" id="replay-play-btn" title="Ijro / To'xtatish">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" id="replay-play-icon"><path d="M8 5v14l11-7z"/></svg>
+          </button>
+          <button class="replay-btn-icon" id="replay-restart-btn" title="Boshiga qaytarish">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+          </button>
+          
+          <div class="replay-progress-track">
+            <input type="range" id="replay-scrubber" min="0" max="1000" value="0" style="width: 100%; accent-color: var(--main-color); cursor: pointer;">
+          </div>
+
+          <div class="replay-speed-btns">
+            <button class="replay-speed-btn" data-speed="0.5">0.5x</button>
+            <button class="replay-speed-btn active" data-speed="1">1x</button>
+            <button class="replay-speed-btn" data-speed="1.5">1.5x</button>
+            <button class="replay-speed-btn" data-speed="2">2x</button>
+          </div>
         </div>
       </div>
     </div>

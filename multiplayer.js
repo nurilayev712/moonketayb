@@ -1282,17 +1282,18 @@ class MultiplayerManager {
         let targetX = 0;
         let targetY = 0;
 
+        const caretH = caretEl.offsetHeight || 26;
         if (letterIdx < letters.length) {
           const targetLetter = letters[letterIdx];
           const letterRect = targetLetter.getBoundingClientRect();
           targetX = letterRect.left - containerRect.left;
-          targetY = letterRect.top - containerRect.top + (letterRect.height - 28) / 2;
+          targetY = letterRect.top - containerRect.top + (letterRect.height - caretH) / 2;
         } else if (letters.length > 0) {
           // So'zning oxirgi harfidan keyingi pozitsiya
           const lastLetter = letters[letters.length - 1];
           const letterRect = lastLetter.getBoundingClientRect();
           targetX = letterRect.right - containerRect.left;
-          targetY = letterRect.top - containerRect.top + (letterRect.height - 28) / 2;
+          targetY = letterRect.top - containerRect.top + (letterRect.height - caretH) / 2;
         } else {
           const wordRect = targetWordEl.getBoundingClientRect();
           targetX = wordRect.left - containerRect.left;

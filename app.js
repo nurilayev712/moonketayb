@@ -29,6 +29,9 @@ const state = {
   noBackspace: false,
   focusModeEnabled: true,
   virtualKeyboardEnabled: false,
+  fingerGuidesEnabled: false,
+  replayKeystrokes: [],
+  lastCompletedTestReplay: null,
   quoteLength: 'all',
   paceCaretMode: 'off',
   fontFamily: "'Roboto Mono', monospace",
@@ -241,6 +244,12 @@ function loadStoredSettings() {
     volSlider.value = Math.round(soundManager.volume * 100);
     if (volDisp) volDisp.textContent = `${volSlider.value}%`;
   }
+
+  // Barmoqlar yo'riqnomasi (Finger Guides)
+  state.fingerGuidesEnabled = (localStorage.getItem('mkt_finger_guides') === 'on');
+  const fgSel = document.getElementById('finger-guides-select');
+  if (fgSel) fgSel.value = state.fingerGuidesEnabled ? 'on' : 'off';
+  updateFingerGuide();
 }
 
 // ----------------------------------------------------
@@ -532,6 +541,10 @@ function updateCaretPosition() {
   if (state.isMultiplayer && window.multiplayerManager && window.multiplayerManager.isInRace) {
     window.multiplayerManager.renderTribeCarets();
   }
+
+  if (state.virtualKeyboardEnabled && state.fingerGuidesEnabled) {
+    updateFingerGuide();
+  }
 }
 
 // ----------------------------------------------------
@@ -679,7 +692,9 @@ function resetTest() {
 
   state.wordStartTime = null;
   state.lastBurstWpm = 0;
+  state.replayKeystrokes = [];
   updateMiniHud();
+  updateFingerGuide();
 }
 
 // ----------------------------------------------------
@@ -689,6 +704,7 @@ function startTest() {
   if (state.isRunning) return;
   state.isRunning = true;
   state.testStartTime = Date.now();
+  state.replayKeystrokes = [];
   startPaceCaret();
   
   if (state.focusModeEnabled) {
@@ -821,6 +837,112 @@ function updateMiniHud() {
   if (hudWpm) hudWpm.textContent = live.netWpm || 0;
   if (hudAcc) hudAcc.textContent = `${live.acc ?? 100}%`;
   if (hudBurst) hudBurst.textContent = state.lastBurstWpm || 0;
+}
+
+// ----------------------------------------------------
+// 10 Barmoq bilan Yozish Yo'riqnomasi (Finger Guides)
+// ----------------------------------------------------
+const FINGER_NAMES = {
+  lp: "chap jimjiloq",
+  lr: "chap nomsiz",
+  lm: "chap o'rta",
+  li: "chap ko'rsatkich",
+  th: "bosh barmoq (space)",
+  ri: "o'ng ko'rsatkich",
+  rm: "o'ng o'rta",
+  rr: "o'ng nomsiz",
+  rp: "o'ng jimjiloq"
+};
+
+const FINGER_COLORS = {
+  lp: "#f43f5e",
+  lr: "#f97316",
+  lm: "#eab308",
+  li: "#10b981",
+  th: "#06b6d4",
+  ri: "#6366f1",
+  rm: "#a855f7",
+  rr: "#d946ef",
+  rp: "#ec4899"
+};
+
+function updateFingerGuide() {
+  const vk = elements.virtualKeyboard;
+  if (!vk) return;
+  const hintEl = document.getElementById('finger-guide-hint');
+  const dotEl = document.getElementById('finger-hint-dot');
+  const textEl = document.getElementById('finger-hint-text');
+
+  if (!state.fingerGuidesEnabled || !state.virtualKeyboardEnabled) {
+    vk.classList.remove('finger-guides-enabled');
+    if (hintEl) hintEl.style.display = 'none';
+    vk.querySelectorAll('.vkey.next-target').forEach(k => {
+      k.classList.remove('next-target');
+      k.style.color = '';
+      k.style.borderColor = '';
+    });
+    return;
+  }
+
+  vk.classList.add('finger-guides-enabled');
+  if (hintEl) hintEl.style.display = 'flex';
+
+  let targetChar = '';
+  if (state.words && state.currentWordIndex < state.words.length) {
+    const word = state.words[state.currentWordIndex];
+    if (state.currentLetterIndex < word.length) {
+      targetChar = word[state.currentLetterIndex].toLowerCase();
+    } else {
+      targetChar = ' ';
+    }
+  }
+
+  vk.querySelectorAll('.vkey.next-target').forEach(k => {
+    k.classList.remove('next-target');
+    k.style.color = '';
+    k.style.borderColor = '';
+  });
+
+  if (!targetChar) return;
+
+  const targetKeyEl = vk.querySelector(`.vkey[data-key="${targetChar}"]`);
+  if (targetKeyEl) {
+    targetKeyEl.classList.add('next-target');
+    const fingerCode = targetKeyEl.dataset.finger || 'li';
+    const fingerColor = FINGER_COLORS[fingerCode] || 'var(--main-color)';
+    const fingerName = FINGER_NAMES[fingerCode] || "ko'rsatkich barmoq";
+
+    targetKeyEl.style.color = fingerColor;
+    targetKeyEl.style.borderColor = fingerColor;
+
+    if (dotEl) {
+      dotEl.style.background = fingerColor;
+      dotEl.style.boxShadow = `0 0 10px ${fingerColor}`;
+    }
+    if (textEl) {
+      const displayKey = targetChar === ' ' ? 'space' : targetChar;
+      textEl.innerHTML = `Keyingi tugma: <b style="color: ${fingerColor}; text-transform: uppercase;">[${displayKey}]</b> — ${fingerName}`;
+    }
+  }
+}
+
+// ----------------------------------------------------
+// Replay uchun har bir tugma bosilishini yozib borish
+// ----------------------------------------------------
+function logReplayKeystroke(key, isBs = false, isSp = false) {
+  if (!state.testStartTime) return;
+  state.replayKeystrokes.push({
+    t: Date.now() - state.testStartTime,
+    key: key,
+    isBs: isBs,
+    isSp: isSp,
+    wIdx: state.currentWordIndex,
+    lIdx: state.currentLetterIndex,
+    correct: state.correctChars,
+    incorrect: state.incorrectChars,
+    extra: state.extraChars,
+    wpm: calculateLiveStats().netWpm
+  });
 }
 
 // ----------------------------------------------------
@@ -961,11 +1083,14 @@ function handleKeyDown(e) {
       nextWordEl.classList.add('active');
     }
 
+    logReplayKeystroke(' ', false, true);
+    logReplayKeystroke(typedChar, false, false);
     updateCaretPosition();
     updateMiniHud();
     if (state.isMultiplayer && window.checkMultiplayerProgress) {
       window.checkMultiplayerProgress();
     }
+    logReplayKeystroke('Backspace', true, false);
     return;
   }
 
@@ -1015,6 +1140,7 @@ function handleKeyDown(e) {
     if (state.isMultiplayer && window.checkMultiplayerProgress) {
       window.checkMultiplayerProgress();
     }
+    logReplayKeystroke('Backspace', true, false);
     return;
   }
 
@@ -1078,6 +1204,7 @@ function handleKeyDown(e) {
       return;
     }
 
+    logReplayKeystroke(typedChar, false, false);
     updateCaretPosition();
     updateMiniHud();
     if (state.isMultiplayer && window.checkMultiplayerProgress) {
@@ -1155,6 +1282,25 @@ function finishTest() {
 
   // Dinamik tab sarlavhasi (Yakuniy natija bilan)
   setFinishedTabTitle(netWpm, accuracy);
+
+  // Replay va Share Card uchun oxirgi testni to'liq saqlash
+  state.lastCompletedTestReplay = {
+    words: [...state.words],
+    events: [...state.replayKeystrokes],
+    netWpm: netWpm,
+    rawWpm: rawWpm,
+    acc: accuracy,
+    consistency: consistency,
+    correctChars: state.correctChars,
+    incorrectChars: state.incorrectChars,
+    extraChars: state.extraChars,
+    missedChars: state.missedChars,
+    time: testDuration,
+    mode: state.mode,
+    modeValue: state.mode === 'time' ? `${state.timeLimit}s` : `${state.wordsLimit} so'z`,
+    lang: state.language,
+    chartData: [...state.historyChartData]
+  };
 
   // Natijani saqlash
   const todayDateStr = getLocalDateString();
@@ -2654,6 +2800,84 @@ function setupEventListeners() {
     });
   }
 
+  // 📸 Natija kartochkasi (Share Card)
+  const shareCardBtn = document.getElementById('share-card-btn');
+  const shareCardModal = document.getElementById('share-card-modal');
+  const closeShareCardBtn = document.getElementById('close-share-card-btn');
+  const downloadShareCardBtn = document.getElementById('download-share-card-btn');
+  const copyShareCardBtn = document.getElementById('copy-share-card-btn');
+
+  if (shareCardBtn) {
+    shareCardBtn.addEventListener('click', openShareCardModal);
+  }
+  if (closeShareCardBtn && shareCardModal) {
+    closeShareCardBtn.addEventListener('click', () => {
+      window.closeAppModal(shareCardModal);
+    });
+  }
+  if (downloadShareCardBtn) {
+    downloadShareCardBtn.addEventListener('click', downloadShareCard);
+  }
+  if (copyShareCardBtn) {
+    copyShareCardBtn.addEventListener('click', copyShareCard);
+  }
+
+  // 🎬 Yozish takrori (Replay)
+  const replayBtn = document.getElementById('replay-btn');
+  const replayModal = document.getElementById('replay-modal');
+  const closeReplayBtn = document.getElementById('close-replay-btn');
+  const replayPlayBtn = document.getElementById('replay-play-btn');
+  const replayRestartBtn = document.getElementById('replay-restart-btn');
+  const replayScrubber = document.getElementById('replay-scrubber');
+
+  if (replayBtn) {
+    replayBtn.addEventListener('click', openReplayModal);
+  }
+  if (closeReplayBtn && replayModal) {
+    closeReplayBtn.addEventListener('click', () => {
+      if (replayState.timer) {
+        clearInterval(replayState.timer);
+        replayState.timer = null;
+      }
+      replayState.isPlaying = false;
+      window.closeAppModal(replayModal);
+    });
+  }
+  if (replayPlayBtn) {
+    replayPlayBtn.addEventListener('click', () => toggleReplayPlay());
+  }
+  if (replayRestartBtn) {
+    replayRestartBtn.addEventListener('click', () => {
+      replayState.currentMs = 0;
+      renderReplayAt(0);
+      toggleReplayPlay(true);
+    });
+  }
+  if (replayScrubber) {
+    replayScrubber.addEventListener('input', (e) => {
+      const val = parseFloat(e.target.value) || 0;
+      const ms = (val / 1000) * replayState.totalMs;
+      replayState.currentMs = ms;
+      renderReplayAt(ms);
+    });
+  }
+  document.querySelectorAll('.replay-speed-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      replayState.speed = parseFloat(btn.dataset.speed) || 1;
+      updateReplaySpeedUI();
+    });
+  });
+
+  // ⌨️ Barmoqlar yo'riqnomasi (Finger Guides)
+  const fingerGuidesSelect = document.getElementById('finger-guides-select');
+  if (fingerGuidesSelect) {
+    fingerGuidesSelect.addEventListener('change', (e) => {
+      state.fingerGuidesEnabled = (e.target.value === 'on');
+      localStorage.setItem('mkt_finger_guides', e.target.value);
+      updateFingerGuide();
+    });
+  }
+
   // URL da ?room=XXXXXX bormi tekshirish (Bir zumda avtomatik ulanish)
   const urlParams = new URLSearchParams(window.location.search);
   const roomParam = urlParams.get('room');
@@ -2665,6 +2889,460 @@ function setupEventListeners() {
 
   // Oyna o'lchami o'zgarganda kursor joyini to'g'rilash
   window.addEventListener('resize', updateCaretPosition);
+}
+
+// ===================================================
+// 📸 MONKEYTYPE NATIJA KARTOCHKASI (SHARE CARD GENERATOR)
+// ===================================================
+function openShareCardModal() {
+  const modal = document.getElementById('share-card-modal');
+  drawShareCard();
+  if (window.openAppModal) {
+    window.openAppModal(modal);
+  } else if (modal) {
+    modal.classList.add('active');
+  }
+}
+
+function drawShareCard() {
+  const canvas = document.getElementById('share-card-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const d = state.lastCompletedTestReplay || {
+    netWpm: 0,
+    acc: 100,
+    consistency: 100,
+    rawWpm: 0,
+    time: 30,
+    correctChars: 0,
+    incorrectChars: 0,
+    extraChars: 0,
+    missedChars: 0,
+    modeValue: '30s',
+    lang: 'uzbek',
+    chartData: state.historyChartData
+  };
+
+  const compStyle = getComputedStyle(document.body);
+  const bgColor = compStyle.getPropertyValue('--bg-color').trim() || '#323437';
+  const mainColor = compStyle.getPropertyValue('--main-color').trim() || '#e2b714';
+  const subColor = compStyle.getPropertyValue('--sub-color').trim() || '#646669';
+  const textColor = compStyle.getPropertyValue('--text-color').trim() || '#d1d0c5';
+  const subAltColor = compStyle.getPropertyValue('--sub-alt-color').trim() || '#2c2e31';
+
+  // 1. Fon chizish
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Gradient kartochka ramkasi
+  ctx.strokeStyle = subAltColor;
+  ctx.lineWidth = 4;
+  ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
+
+  // Nozik ichki ramka
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+
+  // 2. Sarlavha: Logo va foydalanuvchi
+  ctx.fillStyle = mainColor;
+  ctx.font = 'bold 30px "Roboto Mono", monospace';
+  ctx.fillText('moonketayb', 45, 65);
+
+  ctx.fillStyle = subColor;
+  ctx.font = '18px "Roboto Mono", monospace';
+  ctx.fillText('| typex712', 230, 65);
+
+  // O'ng tomonda foydalanuvchi ma'lumotlari
+  const username = (window.authManager && window.authManager.currentUser && window.authManager.currentUser.username) || 'Mehmon';
+  const userAvatar = (window.authManager && window.authManager.currentUser && window.authManager.currentUser.avatar) || '⌨️';
+  const todayStr = new Date().toLocaleDateString('uz-UZ', { day: '2-digit', month: 'short', year: 'numeric' });
+  ctx.textAlign = 'right';
+  ctx.fillStyle = textColor;
+  ctx.font = '16px "Roboto Mono", monospace';
+  ctx.fillText(`${userAvatar} ${username}`, canvas.width - 45, 58);
+  ctx.fillStyle = subColor;
+  ctx.font = '13px "Roboto Mono", monospace';
+  ctx.fillText(todayStr, canvas.width - 45, 80);
+  ctx.textAlign = 'left';
+
+  // 3. Rejim tabletkasi (Badge)
+  const modeText = `⚡ ${d.modeValue} • ${d.lang}`;
+  ctx.font = 'bold 14px "Roboto Mono", monospace';
+  const modeMetrics = ctx.measureText(modeText);
+  const badgeWidth = modeMetrics.width + 24;
+  const badgeHeight = 30;
+  const badgeX = 45;
+  const badgeY = 95;
+
+  ctx.fillStyle = subAltColor;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(badgeX, badgeY, badgeWidth, badgeHeight, 6);
+  else ctx.rect(badgeX, badgeY, badgeWidth, badgeHeight);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+  ctx.stroke();
+
+  ctx.fillStyle = mainColor;
+  ctx.fillText(modeText, badgeX + 12, badgeY + 20);
+
+  // 4. Asosiy statistika (WPM, Aniqlik, Barqarorlik)
+  // WPM
+  ctx.fillStyle = subColor;
+  ctx.font = '15px "Roboto Mono", monospace';
+  ctx.fillText('wpm', 45, 175);
+
+  ctx.fillStyle = mainColor;
+  ctx.font = 'bold 78px "Roboto Mono", monospace';
+  ctx.fillText(String(d.netWpm), 45, 245);
+
+  // Aniqlik (acc)
+  const accX = 260;
+  ctx.fillStyle = subColor;
+  ctx.font = '15px "Roboto Mono", monospace';
+  ctx.fillText('aniqlik', accX, 175);
+
+  ctx.fillStyle = textColor;
+  ctx.font = 'bold 54px "Roboto Mono", monospace';
+  ctx.fillText(`${d.acc}%`, accX, 235);
+
+  // Barqarorlik (consistency)
+  const conX = 450;
+  ctx.fillStyle = subColor;
+  ctx.font = '15px "Roboto Mono", monospace';
+  ctx.fillText('barqarorlik', conX, 175);
+
+  ctx.fillStyle = textColor;
+  ctx.font = 'bold 54px "Roboto Mono", monospace';
+  ctx.fillText(`${d.consistency || 100}%`, conX, 235);
+
+  // 5. Kichik detallar qatori
+  ctx.fillStyle = subColor;
+  ctx.font = '14px "Roboto Mono", monospace';
+  const detailsY = 285;
+  ctx.fillText(`sof wpm: `, 45, detailsY);
+  ctx.fillStyle = textColor;
+  ctx.fillText(`${d.rawWpm}`, 120, detailsY);
+
+  ctx.fillStyle = subColor;
+  ctx.fillText(`vaqt: `, 180, detailsY);
+  ctx.fillStyle = textColor;
+  ctx.fillText(`${d.time}s`, 230, detailsY);
+
+  ctx.fillStyle = subColor;
+  ctx.fillText(`belgilar: `, 290, detailsY);
+  ctx.fillStyle = textColor;
+  ctx.fillText(`${d.correctChars}/${d.incorrectChars}/${d.extraChars}/${d.missedChars}`, 375, detailsY);
+
+  // 6. Mini WPM Chiziqli Grafiki (Pastki sohada)
+  const chartData = (d.chartData && d.chartData.length > 0) ? d.chartData : [{ second: 1, wpm: d.netWpm, errors: 0 }];
+  const cX = 45;
+  const cY = 320;
+  const cW = canvas.width - 90;
+  const cH = 100;
+
+  // Grafik foni
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(cX, cY, cW, cH, 8);
+  else ctx.rect(cX, cY, cW, cH);
+  ctx.fill();
+
+  const maxWpm = Math.max(...chartData.map(c => c.wpm || 0), d.netWpm, 20);
+  const minWpm = 0;
+  const points = chartData.map((pt, idx) => {
+    const x = cX + (idx / Math.max(chartData.length - 1, 1)) * cW;
+    const y = cY + cH - ((pt.wpm - minWpm) / (maxWpm - minWpm || 1)) * (cH - 16) - 8;
+    return { x, y, errors: pt.errors };
+  });
+
+  if (points.length > 0) {
+    const grad = ctx.createLinearGradient(0, cY, 0, cY + cH);
+    grad.addColorStop(0, mainColor + '40');
+    grad.addColorStop(1, 'transparent');
+
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+    points.forEach(p => ctx.lineTo(p.x, p.y));
+    ctx.lineTo(points[points.length - 1].x, cY + cH);
+    ctx.lineTo(points[0].x, cY + cH);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+    points.forEach(p => ctx.lineTo(p.x, p.y));
+    ctx.strokeStyle = mainColor;
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+
+    points.forEach(p => {
+      if (p.errors > 0) {
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    });
+  }
+
+  // 7. Watermark
+  ctx.fillStyle = subColor;
+  ctx.font = '12px "Roboto Mono", monospace';
+  ctx.fillText('nurilayev712.github.io/moonketayb', 45, canvas.height - 28);
+}
+
+function downloadShareCard() {
+  const canvas = document.getElementById('share-card-canvas');
+  if (!canvas) return;
+  const link = document.createElement('a');
+  const wpm = state.lastCompletedTestReplay ? state.lastCompletedTestReplay.netWpm : 0;
+  link.download = `moonketayb_${wpm}wpm_${Date.now()}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+function copyShareCard() {
+  const canvas = document.getElementById('share-card-canvas');
+  const btn = document.getElementById('copy-share-card-btn');
+  if (!canvas) return;
+  try {
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      if (navigator.clipboard && window.ClipboardItem) {
+        const item = new ClipboardItem({ 'image/png': blob });
+        navigator.clipboard.write([item]).then(() => {
+          if (btn) {
+            const orig = btn.innerHTML;
+            btn.innerHTML = '✅ Nusxalandi!';
+            setTimeout(() => { btn.innerHTML = orig; }, 2000);
+          }
+        }).catch(err => {
+          console.warn('Clipboard write error:', err);
+        });
+      }
+    });
+  } catch (e) {
+    console.warn(e);
+  }
+}
+
+// ===================================================
+// 🎬 YOZISH JARAYONINI QAYTA KO'RISH (REPLAY PLAYER)
+// ===================================================
+let replayState = {
+  isPlaying: false,
+  timer: null,
+  currentMs: 0,
+  totalMs: 0,
+  speed: 1,
+  data: null
+};
+
+function openReplayModal() {
+  if (!state.lastCompletedTestReplay || !state.lastCompletedTestReplay.words) {
+    alert("Hozircha qayta ko'rish uchun test natijasi mavjud emas. Avval bitta testni yakunlang.");
+    return;
+  }
+  const modal = document.getElementById('replay-modal');
+  if (window.openAppModal) {
+    window.openAppModal(modal);
+  } else if (modal) {
+    modal.classList.add('active');
+  }
+
+  setupReplayPlayer(state.lastCompletedTestReplay);
+}
+
+function setupReplayPlayer(d) {
+  replayState.data = d;
+  replayState.speed = 1;
+  replayState.isPlaying = false;
+  if (replayState.timer) {
+    clearInterval(replayState.timer);
+    replayState.timer = null;
+  }
+
+  const events = d.events || [];
+  replayState.totalMs = events.length > 0 ? events[events.length - 1].t : (d.time * 1000);
+  replayState.currentMs = 0;
+
+  const badge = document.getElementById('replay-info-badge');
+  if (badge) badge.textContent = `${d.modeValue} (${d.lang}) • ${d.netWpm} WPM`;
+
+  const container = document.getElementById('replay-words-container');
+  if (container) {
+    container.innerHTML = '';
+    d.words.forEach((w, wIdx) => {
+      const wordEl = document.createElement('div');
+      wordEl.className = 'word' + (wIdx === 0 ? ' active' : '');
+      wordEl.dataset.wordIndex = wIdx;
+      for (let i = 0; i < w.length; i++) {
+        const letterEl = document.createElement('span');
+        letterEl.className = 'letter';
+        letterEl.textContent = w[i];
+        wordEl.appendChild(letterEl);
+      }
+      container.appendChild(wordEl);
+    });
+  }
+
+  updateReplaySpeedUI();
+  renderReplayAt(0);
+  toggleReplayPlay(true);
+}
+
+function renderReplayAt(ms) {
+  if (!replayState.data) return;
+  const d = replayState.data;
+  const events = d.events || [];
+  const container = document.getElementById('replay-words-container');
+  const caret = document.getElementById('replay-caret');
+  const scrubber = document.getElementById('replay-scrubber');
+  const timeEl = document.getElementById('replay-time');
+  const wpmEl = document.getElementById('replay-wpm');
+  const accEl = document.getElementById('replay-acc');
+  const charsEl = document.getElementById('replay-chars');
+
+  if (scrubber) {
+    scrubber.value = replayState.totalMs > 0 ? Math.round((ms / replayState.totalMs) * 1000) : 0;
+  }
+
+  const secs = Math.floor(ms / 1000);
+  const mins = Math.floor(secs / 60);
+  const remSecs = secs % 60;
+  if (timeEl) {
+    timeEl.textContent = `${String(mins).padStart(2, '0')}:${String(remSecs).padStart(2, '0')}`;
+  }
+
+  let activeEvent = null;
+  let eventIdx = 0;
+  while (eventIdx < events.length && events[eventIdx].t <= ms) {
+    activeEvent = events[eventIdx];
+    eventIdx++;
+  }
+
+  if (activeEvent) {
+    if (wpmEl) wpmEl.textContent = activeEvent.wpm || 0;
+    const totalChars = (activeEvent.correct || 0) + (activeEvent.incorrect || 0) + (activeEvent.extra || 0);
+    const acc = totalChars > 0 ? Math.round(((activeEvent.correct || 0) / totalChars) * 100) : 100;
+    if (accEl) accEl.textContent = `${acc}%`;
+    if (charsEl) charsEl.textContent = totalChars;
+  } else {
+    if (wpmEl) wpmEl.textContent = 0;
+    if (accEl) accEl.textContent = '100%';
+    if (charsEl) charsEl.textContent = 0;
+  }
+
+  if (!container || container.children.length === 0) return;
+
+  const currentWordIdx = activeEvent ? activeEvent.wIdx : 0;
+  const currentLetterIdx = activeEvent ? activeEvent.lIdx : 0;
+
+  for (let w = 0; w < container.children.length; w++) {
+    const wordEl = container.children[w];
+    wordEl.className = 'word' + (w === currentWordIdx ? ' active' : '');
+    const letters = wordEl.querySelectorAll('.letter');
+
+    if (w < currentWordIdx) {
+      letters.forEach(l => {
+        l.className = 'letter correct';
+      });
+    } else if (w === currentWordIdx) {
+      letters.forEach((l, lIdx) => {
+        if (lIdx < currentLetterIdx) {
+          l.className = 'letter correct';
+        } else {
+          l.className = 'letter';
+        }
+      });
+    } else {
+      letters.forEach(l => {
+        l.className = 'letter';
+      });
+    }
+  }
+
+  const curWordEl = container.children[currentWordIdx];
+  if (curWordEl) {
+    const wordTop = curWordEl.offsetTop;
+    if (wordTop > 40) {
+      container.scrollTop = wordTop - 40;
+    } else {
+      container.scrollTop = 0;
+    }
+
+    if (caret) {
+      const letters = curWordEl.querySelectorAll('.letter');
+      const containerRect = container.getBoundingClientRect();
+      let targetX = 0;
+      let targetY = 0;
+
+      if (currentLetterIdx < letters.length) {
+        const lRect = letters[currentLetterIdx].getBoundingClientRect();
+        targetX = lRect.left - containerRect.left;
+        targetY = lRect.top - containerRect.top + (lRect.height - 28) / 2;
+      } else if (letters.length > 0) {
+        const lRect = letters[letters.length - 1].getBoundingClientRect();
+        targetX = lRect.right - containerRect.left;
+        targetY = lRect.top - containerRect.top + (lRect.height - 28) / 2;
+      } else {
+        const wRect = curWordEl.getBoundingClientRect();
+        targetX = wRect.left - containerRect.left;
+        targetY = wRect.top - containerRect.top;
+      }
+
+      caret.style.left = `${targetX}px`;
+      caret.style.top = `${targetY}px`;
+      caret.style.display = 'block';
+    }
+  }
+}
+
+function toggleReplayPlay(forcePlay) {
+  const shouldPlay = (typeof forcePlay === 'boolean') ? forcePlay : !replayState.isPlaying;
+  replayState.isPlaying = shouldPlay;
+
+  const playIcon = document.getElementById('replay-play-icon');
+  if (replayState.timer) {
+    clearInterval(replayState.timer);
+    replayState.timer = null;
+  }
+
+  if (shouldPlay) {
+    if (playIcon) {
+      playIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+    }
+    if (replayState.currentMs >= replayState.totalMs) {
+      replayState.currentMs = 0;
+    }
+
+    const intervalStep = 25;
+    replayState.timer = setInterval(() => {
+      replayState.currentMs += intervalStep * replayState.speed;
+      if (replayState.currentMs >= replayState.totalMs) {
+        replayState.currentMs = replayState.totalMs;
+        renderReplayAt(replayState.currentMs);
+        toggleReplayPlay(false);
+      } else {
+        renderReplayAt(replayState.currentMs);
+      }
+    }, intervalStep);
+  } else {
+    if (playIcon) {
+      playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+    }
+  }
+}
+
+function updateReplaySpeedUI() {
+  document.querySelectorAll('.replay-speed-btn').forEach(btn => {
+    const sp = parseFloat(btn.dataset.speed) || 1;
+    btn.classList.toggle('active', sp === replayState.speed);
+  });
 }
 
 // ===================================================
