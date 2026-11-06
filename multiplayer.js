@@ -920,8 +920,18 @@ class MultiplayerManager {
     
     // Agar time bo'lsa yetarlicha (180 - 500 ta) so'z olamiz, agar words bo'lsa limit qadar
     const count = this.roomMode === 'time' ? Math.max(180, Math.round((this.roomLimit || 30) * 4)) : (this.roomLimit || 25);
+    let prev = '';
     for (let i = 0; i < count; i++) {
-      words.push(source[Math.floor(Math.random() * source.length)]);
+      let w = source[Math.floor(Math.random() * source.length)];
+      if (source.length > 1) {
+        let attempts = 0;
+        while (w === prev && attempts < 10) {
+          w = source[Math.floor(Math.random() * source.length)];
+          attempts++;
+        }
+      }
+      prev = w;
+      words.push(w);
     }
 
     this.raceWords = words;

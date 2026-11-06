@@ -432,12 +432,20 @@ function generateWords() {
   const source = (WORDS && WORDS[state.language]) || (WORDS && WORDS.uzbek) || [];
   const count = state.mode === 'words' ? state.wordsLimit : Math.max(80, state.timeLimit * 3);
   const result = [];
-
   const punctuationList = [',', '.', '!', '?', ';', ':'];
+  let lastWord = '';
 
   for (let i = 0; i < count; i++) {
-    // Tasodifiy so'z
+    // Tasodifiy so'z (Monkeytype uslubida ketma-ket bir xil so'z takrorlanishidan himoya)
     let word = source[Math.floor(Math.random() * source.length)];
+    if (source.length > 1) {
+      let attempts = 0;
+      while (word === lastWord && attempts < 10) {
+        word = source[Math.floor(Math.random() * source.length)];
+        attempts++;
+      }
+    }
+    lastWord = word;
 
     // Raqamlar qo'shish
     if (state.numbers && Math.random() < 0.15) {
@@ -1254,8 +1262,17 @@ function handleKeyDown(e) {
 // Qo'shimcha so'zlar ulash (Time rejimi uchun)
 function appendMoreWords(count) {
   const source = WORDS[state.language] || WORDS.uzbek;
+  let lastWord = state.words[state.words.length - 1] || '';
   for (let i = 0; i < count; i++) {
     let word = source[Math.floor(Math.random() * source.length)];
+    if (source.length > 1) {
+      let attempts = 0;
+      while (word === lastWord && attempts < 10) {
+        word = source[Math.floor(Math.random() * source.length)];
+        attempts++;
+      }
+    }
+    lastWord = word;
     if (state.numbers && Math.random() < 0.15) {
       word = String(Math.floor(Math.random() * 9000) + 10);
     }
