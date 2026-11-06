@@ -971,17 +971,13 @@ function logReplayKeystroke(key, isBs = false, isSp = false) {
   });
 }
 
-// Harflarni solishtirish (Apostrophe va tutuq belgilari ' ` ’ ‘ ʻ ʼ, va tinish belgilari o'chiq bo'lganda mobil/caps qulayligi)
+// Harflarni solishtirish (Monkeytype 1:1 - harflar katta-kichikligiga (case-sensitive) qat'iy rioya qilinadi)
+// Katta harf bilan yozilganda yoki Caps Lock yoniq bo'lsa xato deb hisoblanadi
 function areCharsEqual(typed, expected) {
   if (typed === expected) return true;
   // Barcha turdagi apostrof va tutuq belgilari bir-biriga 100% ekvivalent
   const APOS = ["'", "`", "’", "‘", "ʻ", "ʼ", "´", "ʹ", "\u02bb", "\u02bc", "\u2019", "\u2018"];
   if (APOS.includes(typed) && APOS.includes(expected)) return true;
-  // Tinish belgilari rejimi o'chiq bo'lsa (standart Monkeytype) va code rejimida bo'lmasa,
-  // mobil klaviatura birinchi harfni katta qilganda yoki CapsLockda ham to'g'ri qabul qilish
-  if (!state.punctuation && state.mode !== 'code') {
-    if (typed.toLowerCase() === expected.toLowerCase()) return true;
-  }
   return false;
 }
 
