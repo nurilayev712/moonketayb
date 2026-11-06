@@ -1073,8 +1073,8 @@ function handleKeyDown(e) {
     }
     state.wordStartTime = Date.now();
 
-    // Time yoki Zen rejimida so'zlar tugab qolmasligi uchun yangi so'zlar qo'shish
-    if (state.currentWordIndex >= state.words.length - 10) {
+    // Time yoki Zen rejimida so'zlar tugab qolmasligi uchun yangi so'zlar qo'shish (Multiplayerda so'zlar oldindan sinxron bo'ladi)
+    if (!state.isMultiplayer && state.currentWordIndex >= state.words.length - 10) {
       appendMoreWords(30);
     }
 

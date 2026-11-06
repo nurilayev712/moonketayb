@@ -871,8 +871,8 @@ class MultiplayerManager {
     const source = (window.WORDS && window.WORDS[lang]) || (window.WORDS && window.WORDS.uzbek) || [];
     const words = [];
     
-    // Agar time bo'lsa yetarlicha 120 ta so'z olamiz, agar words bo'lsa limit qadar
-    const count = this.roomMode === 'time' ? 120 : (this.roomLimit || 25);
+    // Agar time bo'lsa yetarlicha (180 - 500 ta) so'z olamiz, agar words bo'lsa limit qadar
+    const count = this.roomMode === 'time' ? Math.max(180, Math.round((this.roomLimit || 30) * 4)) : (this.roomLimit || 25);
     for (let i = 0; i < count; i++) {
       words.push(source[Math.floor(Math.random() * source.length)]);
     }
