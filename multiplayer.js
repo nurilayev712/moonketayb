@@ -385,6 +385,16 @@ class MultiplayerManager {
       this.client.onConnectionLost = (responseObject) => {
         if (responseObject.errorCode !== 0) {
           console.warn("Ulanish uzildi:", responseObject.errorMessage);
+          this.updatePingUI(999);
+          // Agar biz hali ham xonada bo'lsak, darhol avtomatik qayta ulanish
+          if (this.roomId) {
+            setTimeout(() => {
+              if (this.roomId && (!this.client || !this.client.isConnected())) {
+                console.log("MQTT xonaga avtomatik qayta ulanmoqda...");
+                this.connectToBroker();
+              }
+            }, 1500);
+          }
         }
       };
 
@@ -415,6 +425,7 @@ class MultiplayerManager {
               roomMode: this.roomMode,
               roomLimit: this.roomLimit,
               roomLang: this.roomLang,
+              sentAt: Date.now(),
               active: true
             }, true);
           } else {
@@ -435,23 +446,31 @@ class MultiplayerManager {
                 player: myPlayer
               });
 
-              // Paket yo'qolishiga qarshi 1.6 soniyadan keyin takroriy so'rov
+              // Paket yo'qolishiga qarshi 1.6s va 3.4s da takroriy so'rov
               this.joinRetryTimer = setTimeout(() => {
                 if (this.isVerifyingRoom) {
                   this.sendMessage({
                     type: 'PLAYER_JOIN',
                     player: myPlayer
                   });
+                  this.joinRetryTimer = setTimeout(() => {
+                    if (this.isVerifyingRoom) {
+                      this.sendMessage({
+                        type: 'PLAYER_JOIN',
+                        player: myPlayer
+                      });
+                    }
+                  }, 1800);
                 }
               }, 1600);
 
-              // 6 soniyada xona egasidan javob kelmasa (brokerga ulangan holda)
+              // 8.5 soniyada xona egasidan javob kelmasa (brokerga ulangan holda)
               this.joinVerificationTimeout = setTimeout(() => {
                 this.joinVerificationTimeout = null;
                 if (this.isVerifyingRoom) {
                   this.onRoomNotFound();
                 }
-              }, 6000);
+              }, 8500);
             }
           }
         },
@@ -479,13 +498,29 @@ class MultiplayerManager {
 
       this.client = new Paho.MQTT.Client(brokerHost, brokerPort, "/mqtt", clientId);
 
+      this.client.onConnectionLost = (responseObject) => {
+        if (responseObject.errorCode !== 0) {
+          console.warn("Zaxira broker ulanish uzildi:", responseObject.errorMessage);
+          this.updatePingUI(999);
+          if (this.roomId) {
+            setTimeout(() => {
+              if (this.roomId && (!this.client || !this.client.isConnected())) {
+                this.connectToFallbackBroker();
+              }
+            }, 1500);
+          }
+        }
+      };
+
       this.client.onMessageArrived = (message) => {
         this.handleIncomingMessage(message.payloadString);
       };
 
       this.client.connect({
         useSSL: true,
-        timeout: 6,
+        timeout: 7,
+        keepAliveInterval: 30,
+        cleanSession: true,
         onSuccess: () => {
           const topic = `mkt/race/${this.roomId}`;
           this.client.subscribe(topic);
@@ -500,6 +535,7 @@ class MultiplayerManager {
               roomMode: this.roomMode,
               roomLimit: this.roomLimit,
               roomLang: this.roomLang,
+              sentAt: Date.now(),
               active: true
             }, true);
           } else {
@@ -524,6 +560,14 @@ class MultiplayerManager {
                     type: 'PLAYER_JOIN',
                     player: myPlayer
                   });
+                  this.joinRetryTimer = setTimeout(() => {
+                    if (this.isVerifyingRoom) {
+                      this.sendMessage({
+                        type: 'PLAYER_JOIN',
+                        player: myPlayer
+                      });
+                    }
+                  }, 1800);
                 }
               }, 1600);
               this.joinVerificationTimeout = setTimeout(() => {
@@ -531,7 +575,7 @@ class MultiplayerManager {
                 if (this.isVerifyingRoom) {
                   this.onRoomNotFound();
                 }
-              }, 6000);
+              }, 8500);
             }
           }
         },
@@ -579,9 +623,12 @@ class MultiplayerManager {
     if (data.type === 'ROOM_ANNOUNCE') {
       if (data.roomId === this.roomId) {
         if (data.active === false) {
-          if (this.isVerifyingRoom) {
-            this.cleanupFailedJoin();
-            alert("❌ Bu xona yopilgan yoki xona egasi xonani tark etgan.");
+          // Faqat so'nggi 25 soniya ichida yuborilgan yangi yopilish xabari hisobga olinadi (eski xabarlardan himoya)
+          if (!data.sentAt || Math.abs(Date.now() - data.sentAt) < 25000) {
+            if (this.isVerifyingRoom) {
+              this.cleanupFailedJoin();
+              alert("❌ Bu xona yopilgan yoki xona egasi xonani tark etgan.");
+            }
           }
           return;
         }
@@ -1508,6 +1555,7 @@ class MultiplayerManager {
           this.sendMessage({
             type: 'ROOM_ANNOUNCE',
             roomId: this.roomId,
+            sentAt: Date.now(),
             active: false
           }, true);
         }

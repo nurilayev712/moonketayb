@@ -1048,17 +1048,38 @@ function handleKeyDown(e) {
   const targetWord = state.words[state.currentWordIndex];
   const letters = currentWordEl.querySelectorAll('.letter');
 
-  // SPACE BOSILGANDA (Keyingi so'zga o'tish)
-  if (e.key === ' ') {
+  // SPACE BOSILGANDA (Keyingi so'zga o'tish yoki so'zni o'tkazib yuborish)
+  const isSpaceKey = (
+    e.key === ' ' || 
+    e.key === 'Spacebar' || 
+    e.key === 'Space' || 
+    e.code === 'Space' || 
+    e.keyCode === 32 || 
+    e.which === 32
+  );
+
+  if (isSpaceKey) {
     e.preventDefault();
     if (window.triggerVKeyGlow) window.triggerVKeyGlow(' ');
 
-    // Agar so'zda hech narsa yozilmagan bo'lsa, o'tmaydi
-    if (state.currentLetterIndex === 0) return;
+    if (!state.isRunning) {
+      startTest();
+      return;
+    }
+
+    // Debounce: agar foydalanuvchi so'z boshida (harf kiritmasdan) bo'lsa va 
+    // oxirgi probeldan beri 220ms o'tmagan bo'lsa (tasodifiy tez ikkilanish), e'tiborsiz qoldirish
+    const now = Date.now();
+    if (state.currentLetterIndex === 0) {
+      if (state.lastSpaceTime && (now - state.lastSpaceTime < 220)) {
+        return; // Tasodifiy dubl probeldan himoya
+      }
+    }
+    state.lastSpaceTime = now;
 
     soundManager.playKey(false, true);
 
-    // Kiritilmagan qolgan harflarni "missed" deb hisoblash
+    // Kiritilmagan qolgan harflarni "missed" deb hisoblash (Monkeytype skip)
     for (let i = state.currentLetterIndex; i < targetWord.length; i++) {
       letters[i].classList.add('incorrect');
       state.missedChars++;
@@ -2018,6 +2039,29 @@ function setupEventListeners() {
       if (vkey) vkey.classList.remove('active');
     }
   });
+
+  // Ekrandagi jonli klaviaturani sichqoncha yoki sensorli ekranda bosganda harflar va bo'shliqni (space) yozish
+  if (elements.virtualKeyboard) {
+    elements.virtualKeyboard.addEventListener('pointerdown', (e) => {
+      const vkey = e.target.closest('.vkey');
+      if (!vkey) return;
+      e.preventDefault(); // Input fokusini yo'qotmaslik uchun!
+
+      const keyChar = vkey.dataset.key;
+      if (keyChar !== undefined) {
+        triggerVKeyGlow(keyChar);
+        if (keyChar === ' ') {
+          handleKeyDown({ key: ' ', code: 'Space', keyCode: 32, preventDefault: () => {} });
+        } else {
+          handleKeyDown({ key: keyChar, code: 'Key' + keyChar.toUpperCase(), keyCode: keyChar.charCodeAt(0), preventDefault: () => {} });
+        }
+      }
+      if (elements.typingInput) {
+        elements.typingInput.disabled = false;
+        elements.typingInput.focus();
+      }
+    });
+  }
 
   // Fokus rejimi: Sichqoncha qimirlaganda interfeysni vaqtincha ko'rsatish
   let focusMouseMoveTimer = null;
