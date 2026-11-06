@@ -285,6 +285,32 @@ body.focus-mode footer {
   visibility: hidden;
 }
 
+.current-language-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: transparent;
+  border: none;
+  color: var(--sub-color);
+  font-family: inherit;
+  font-size: 0.8rem;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.current-language-pill:hover {
+  color: var(--text-color);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+body.focus-mode .current-language-pill {
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* Yashirin input (klaviaturadan xabardor bo'lish va mobil uchun) */
 #typing-input {
   position: absolute;

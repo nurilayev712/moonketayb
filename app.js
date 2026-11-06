@@ -367,6 +367,10 @@ function updateConfigUI() {
   if (elements.languageSelect) {
     elements.languageSelect.value = state.language;
   }
+  const langLabel = document.getElementById('current-language-label');
+  if (langLabel) {
+    langLabel.textContent = state.language || 'english';
+  }
 
   // Ovoz holati
   if (elements.soundToggle) {
@@ -2207,6 +2211,21 @@ function setupEventListeners() {
     elements.languageSelect.addEventListener('change', (e) => {
       state.language = e.target.value;
       localStorage.setItem('mk_lang', state.language);
+      updateConfigUI();
+      resetTest();
+    });
+  }
+
+  // Jonli til ko'rsatkichini bosganda tillarni o'zgartirish (Monkeytype 1:1)
+  const langPill = document.getElementById('current-language-pill');
+  if (langPill) {
+    langPill.addEventListener('click', () => {
+      const languages = ['english', 'uzbek', 'russian'];
+      const curIdx = languages.indexOf(state.language);
+      const nextLang = languages[(curIdx + 1) % languages.length];
+      state.language = nextLang;
+      localStorage.setItem('mk_lang', state.language);
+      updateConfigUI();
       resetTest();
     });
   }
