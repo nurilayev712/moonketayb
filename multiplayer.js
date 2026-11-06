@@ -918,8 +918,8 @@ class MultiplayerManager {
     const source = (window.WORDS && window.WORDS[lang]) || (window.WORDS && window.WORDS.uzbek) || [];
     const words = [];
     
-    // Agar time bo'lsa yetarlicha (180 - 500 ta) so'z olamiz, agar words bo'lsa limit qadar
-    const count = this.roomMode === 'time' ? Math.max(180, Math.round((this.roomLimit || 30) * 4)) : (this.roomLimit || 25);
+    // Monkeytype 1:1 - Time rejimida so'zlar yetib ortishi uchun (kamida 300 - 800 ta so'z), words rejimida limit miqdoricha
+    const count = this.roomMode === 'time' ? Math.max(300, Math.round((this.roomLimit || 30) * 8)) : (this.roomLimit || 25);
     let prev = '';
     for (let i = 0; i < count; i++) {
       let w = source[Math.floor(Math.random() * source.length)];

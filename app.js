@@ -1084,13 +1084,10 @@ function handleKeyDown(e) {
       return;
     }
 
-    // Debounce: agar foydalanuvchi so'z boshida (harf kiritmasdan) bo'lsa va 
-    // oxirgi probeldan beri 220ms o'tmagan bo'lsa (tasodifiy tez ikkilanish), e'tiborsiz qoldirish
+    // Probel bosilganda (Monkeytype 1:1 - darhol keyingi so'zga o'tish)
     const now = Date.now();
-    if (state.currentLetterIndex === 0) {
-      if (state.lastSpaceTime && (now - state.lastSpaceTime < 220)) {
-        return; // Tasodifiy dubl probeldan himoya
-      }
+    if (state.lastSpaceTime && (now - state.lastSpaceTime < 40)) {
+      return; // Faqat juda tez apparat tebranishidan (hardware chatter) himoya
     }
     state.lastSpaceTime = now;
 
