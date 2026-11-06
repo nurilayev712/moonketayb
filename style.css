@@ -307,12 +307,14 @@ body.focus-mode footer {
   height: 144px; /* taxminan 3 ta qator (har biri ~48px) */
   overflow: hidden;
   position: relative;
-  font-size: 1.75rem;
+  font-size: 1.65rem;
   line-height: 48px;
   color: var(--sub-color);
   display: flex;
   flex-wrap: wrap;
   align-content: flex-start;
+  user-select: none;
+  font-family: var(--font-family);
   transition: all 0.2s ease;
 }
 
@@ -473,22 +475,22 @@ body.blind-mode .letter.active {
   100% { transform: scale(1.02); opacity: 1; box-shadow: 0 0 20px rgba(202, 71, 84, 0.4); }
 }
 
-/* So'z va harflar dizayni */
+/* So'z va harflar dizayni — Monkeytype 1:1 */
 .word {
   display: inline-flex;
-  margin: 0 10px 0 0;
+  margin: 0.25rem 0.35rem;
   position: relative;
-  transition: border-bottom-color 0.2s;
 }
 
 .word.active {
-  /* Hozirgi so'z ostiga chiziq orqali ajratish */
-  border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+  /* Monkeytype toza ko'rinish */
+  border-bottom: none;
 }
 
 .letter {
   position: relative;
-  transition: color 0.1s;
+  transition: color 0.08s ease;
+  font-variant-ligatures: none;
 }
 
 .letter.correct {

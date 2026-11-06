@@ -504,10 +504,11 @@ function updateCaretPosition() {
   const currentWordEl = elements.wordsContainer.children[state.currentWordIndex];
   if (!currentWordEl) return;
 
-  // Avval so'zlar konteynerini silliq avtomatik scroll qilish
+  // Avval so'zlar konteynerini silliq avtomatik scroll qilish (Monkeytype 3 qator tizimi)
   const wordTop = currentWordEl.offsetTop;
-  if (wordTop > 48) {
-    elements.wordsContainer.scrollTop = wordTop - 48;
+  const lineH = currentWordEl.offsetHeight || 44;
+  if (wordTop > lineH * 1.5) {
+    elements.wordsContainer.scrollTop = wordTop - lineH;
   } else {
     elements.wordsContainer.scrollTop = 0;
   }
@@ -517,18 +518,19 @@ function updateCaretPosition() {
 
   let targetX = 0;
   let targetY = 0;
+  const caretH = (elements.caret && elements.caret.offsetHeight) || 30;
 
   if (state.currentLetterIndex < letters.length) {
     const targetLetter = letters[state.currentLetterIndex];
     const letterRect = targetLetter.getBoundingClientRect();
     targetX = letterRect.left - containerRect.left;
-    targetY = letterRect.top - containerRect.top + (letterRect.height - 30) / 2;
+    targetY = letterRect.top - containerRect.top + (letterRect.height - caretH) / 2;
   } else if (letters.length > 0) {
     // So'zning oxirgi harfidan keyingi pozitsiya
     const lastLetter = letters[letters.length - 1];
     const letterRect = lastLetter.getBoundingClientRect();
     targetX = letterRect.right - containerRect.left;
-    targetY = letterRect.top - containerRect.top + (letterRect.height - 30) / 2;
+    targetY = letterRect.top - containerRect.top + (letterRect.height - caretH) / 2;
   } else {
     const wordRect = currentWordEl.getBoundingClientRect();
     targetX = wordRect.left - containerRect.left;
@@ -892,6 +894,9 @@ function updateFingerGuide() {
     const word = state.words[state.currentWordIndex];
     if (state.currentLetterIndex < word.length) {
       targetChar = word[state.currentLetterIndex].toLowerCase();
+      if (["'", "`", "’", "‘", "ʻ", "ʼ"].includes(targetChar)) {
+        targetChar = "'";
+      }
     } else {
       targetChar = ' ';
     }
@@ -945,6 +950,20 @@ function logReplayKeystroke(key, isBs = false, isSp = false) {
   });
 }
 
+// Harflarni solishtirish (Apostrophe va tutuq belgilari ' ` ’ ‘ ʻ ʼ, va tinish belgilari o'chiq bo'lganda mobil/caps qulayligi)
+function areCharsEqual(typed, expected) {
+  if (typed === expected) return true;
+  // Barcha turdagi apostrof va tutuq belgilari bir-biriga 100% ekvivalent
+  const APOS = ["'", "`", "’", "‘", "ʻ", "ʼ", "´", "ʹ", "\u02bb", "\u02bc", "\u2019", "\u2018"];
+  if (APOS.includes(typed) && APOS.includes(expected)) return true;
+  // Tinish belgilari rejimi o'chiq bo'lsa (standart Monkeytype) va code rejimida bo'lmasa,
+  // mobil klaviatura birinchi harfni katta qilganda yoki CapsLockda ham to'g'ri qabul qilish
+  if (!state.punctuation && state.mode !== 'code') {
+    if (typed.toLowerCase() === expected.toLowerCase()) return true;
+  }
+  return false;
+}
+
 // ----------------------------------------------------
 // Klaviaturadan harflarni qabul qilish (Input handler)
 // ----------------------------------------------------
@@ -969,9 +988,9 @@ function handleKeyDown(e) {
     }
   }
 
-  // 3. Agar test inputi o'chirilgan (disabled) bo'lsa
+  // 3. Agar test inputi adashib o'chirilgan bo'lsa, darhol faollashtirish
   if (elements.typingInput && elements.typingInput.disabled) {
-    return;
+    elements.typingInput.disabled = false;
   }
 
   if (state.isFinished) {
@@ -1158,7 +1177,7 @@ function handleKeyDown(e) {
       const expectedChar = targetWord[state.currentLetterIndex];
       const letterEl = letters[state.currentLetterIndex];
 
-      if (typedChar === expectedChar) {
+      if (areCharsEqual(typedChar, expectedChar)) {
         letterEl.classList.add('correct');
         state.correctChars++;
         soundManager.playKey(false, false);
@@ -1814,8 +1833,7 @@ function setupEventListeners() {
   // Mobil virtual klaviatura (input hodisasi)
   elements.typingInput.addEventListener('input', (e) => {
     if (elements.typingInput.disabled) {
-      elements.typingInput.value = '';
-      return;
+      elements.typingInput.disabled = false;
     }
     const isModalOpen = document.querySelector('.modal-overlay.active') || 
                         (document.getElementById('command-palette-overlay') && document.getElementById('command-palette-overlay').style.display === 'flex');
@@ -1824,15 +1842,28 @@ function setupEventListeners() {
       return;
     }
 
-    if (e.inputType === 'deleteContentBackward') {
+    if (e.inputType && e.inputType.startsWith('delete')) {
       handleKeyDown({ key: 'Backspace', preventDefault: () => {} });
-    } else if (e.data) {
-      for (const char of e.data) {
-        handleKeyDown({ key: char, preventDefault: () => {} });
+    } else {
+      const textToProcess = (typeof e.data === 'string' && e.data.length > 0) ? e.data : elements.typingInput.value;
+      if (textToProcess) {
+        for (const char of textToProcess) {
+          handleKeyDown({ key: char, preventDefault: () => {} });
+        }
       }
     }
     elements.typingInput.value = '';
   });
+
+  function ensureInputFocus() {
+    const isModalOpen = document.querySelector('.modal-overlay.active') || 
+                        (document.getElementById('command-palette-overlay') && document.getElementById('command-palette-overlay').style.display === 'flex');
+    if (!isModalOpen && elements.typingInput) {
+      elements.typingInput.disabled = false;
+      elements.typingInput.focus();
+    }
+  }
+  window.ensureInputFocus = ensureInputFocus;
 
   // Barcha modal inputlarida klaviatura hodisalarini testga o'tishidan 100% himoya qilish
   document.querySelectorAll('input, select, textarea').forEach(inp => {
@@ -1840,11 +1871,8 @@ function setupEventListeners() {
       inp.addEventListener('keydown', (e) => {
         e.stopPropagation();
       });
-      inp.addEventListener('focus', () => {
-        if (elements.typingInput) {
-          elements.typingInput.disabled = true;
-          elements.typingInput.blur();
-        }
+      inp.addEventListener('blur', () => {
+        setTimeout(ensureInputFocus, 60);
       });
     }
   });
