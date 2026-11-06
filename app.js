@@ -17,7 +17,7 @@ const state = {
   timeLimit: 30, // 15, 30, 60, 120
   wordsLimit: 25, // 10, 25, 50, 100
   codeLanguage: 'javascript', // 'javascript', 'python', 'html', 'cpp'
-  language: 'uzbek', // 'uzbek', 'english', 'russian'
+  language: 'english', // 'english', 'uzbek', 'russian'
   punctuation: false,
   numbers: false,
   theme: 'serika_dark',
