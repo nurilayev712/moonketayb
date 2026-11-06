@@ -264,25 +264,41 @@ body.focus-mode footer {
   min-height: 260px;
 }
 
+/* Monkeytype 1:1 Test Tepa Paneli (Til ko'rsatkichi markazda, taymer chapda) */
+.test-top-bar {
+  position: relative;
+  width: 100%;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Markazlashtirish (Monkeytype 1:1) */
+  margin-bottom: 0.65rem;
+}
+
+.live-stats-wrapper {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 .live-stats {
   font-size: 1.85rem;
   font-weight: 700;
   color: var(--main-color);
-  margin-bottom: 0.75rem;
-  height: 38px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  width: 100%;
-  padding-left: 2px;
-  transition: opacity 0.2s;
+  opacity: 0; /* Test boshlanmaguncha ko'rinmaydi (Monkeytype 1:1) */
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
   letter-spacing: 1px;
   user-select: none;
 }
 
-.live-stats.hidden {
-  opacity: 0;
-  visibility: hidden;
+body.test-running .live-stats {
+  opacity: 1;
+  visibility: visible;
 }
 
 .current-language-pill {
@@ -294,16 +310,22 @@ body.focus-mode footer {
   color: var(--sub-color);
   font-family: inherit;
   font-size: 0.8rem;
-  padding: 4px 10px;
+  padding: 4px 12px;
   border-radius: 6px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s ease;
   user-select: none;
+  opacity: 0.85;
 }
 
 .current-language-pill:hover {
   color: var(--text-color);
-  background: rgba(255, 255, 255, 0.06);
+  opacity: 1;
+}
+
+body.test-running .current-language-pill {
+  opacity: 0;
+  pointer-events: none;
 }
 
 body.focus-mode .current-language-pill {
@@ -320,7 +342,7 @@ body.focus-mode .current-language-pill {
   top: -9999px;
 }
 
-/* So'zlar idishi */
+/* So'zlar idishi — Monkeytype 1:1 (3 ta toza qator) */
 .words-wrapper {
   position: relative;
   width: 100%;
@@ -330,11 +352,11 @@ body.focus-mode .current-language-pill {
 
 .words-container {
   width: 100%;
-  height: 144px; /* taxminan 3 ta qator (har biri ~48px) */
+  height: 135px; /* Aniq 3 ta qator (har biri ~45px) */
   overflow: hidden;
   position: relative;
-  font-size: 1.65rem;
-  line-height: 48px;
+  font-size: 1.5rem; /* Monkeytype standart o'lchami */
+  line-height: 45px;
   color: var(--sub-color);
   display: flex;
   flex-wrap: wrap;
@@ -344,10 +366,24 @@ body.focus-mode .current-language-pill {
   transition: all 0.2s ease;
 }
 
-/* Jonli Mini-HUD (Monkeytype Live Stats HUD: WPM, Aniqlik va Burst) */
+/* Jonli Mini-HUD (Faqat yozish paytida ko'rinadi) */
 .live-mini-hud {
   display: flex;
   align-items: center;
+  justify-content: center;
+  gap: 2.2rem;
+  margin-top: 1.1rem;
+  font-family: inherit;
+  user-select: none;
+  opacity: 0; /* Bo'sh turganda yashirin (Monkeytype 1:1) */
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+body.test-running .live-mini-hud {
+  opacity: 0.7;
+  pointer-events: auto;
+}
   justify-content: center;
   gap: 2.2rem;
   margin-top: 1.1rem;
@@ -974,72 +1010,65 @@ footer {
 
 /* Header foydalanuvchi va poyga tugmalari (LED Glow & Neon) */
 .header-badge-btn {
-  background: linear-gradient(135deg, var(--sub-alt-color), rgba(0, 255, 136, 0.08));
-  color: var(--text-color);
-  border: 1px solid rgba(0, 255, 136, 0.35);
-  box-shadow: 0 0 10px rgba(0, 255, 136, 0.12);
-  padding: 0.4rem 0.85rem;
-  border-radius: 9px;
+  background: var(--sub-alt-color);
+  color: var(--sub-color);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
   font-family: inherit;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.8rem;
+  font-weight: 500;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 0.55rem;
-  transition: all 0.25s ease;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
 }
 
 .header-badge-btn:hover {
-  border-color: #00ff88;
-  color: #00ff88;
-  box-shadow: 0 0 16px rgba(0, 255, 136, 0.35);
-  transform: translateY(-1px);
+  color: var(--text-color);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 /* LED Chiroq indikatori */
 .led-indicator {
-  width: 9px;
-  height: 9px;
-  background-color: #00ff88;
+  width: 7px;
+  height: 7px;
+  background-color: var(--main-color);
   border-radius: 50%;
   display: inline-block;
-  box-shadow: 0 0 6px #00ff88, 0 0 12px #00ff88;
-  animation: ledPulse 1.8s infinite ease-in-out;
+  box-shadow: 0 0 5px var(--main-color);
   flex-shrink: 0;
 }
 
 .led-indicator.large {
-  width: 13px;
-  height: 13px;
+  width: 11px;
+  height: 11px;
 }
 
 @keyframes ledPulse {
   0% {
-    background-color: #00ff88;
-    box-shadow: 0 0 4px #00ff88, 0 0 8px #00ff88;
+    background-color: var(--main-color);
+    box-shadow: 0 0 3px var(--main-color);
   }
   50% {
-    background-color: #70ffbe;
-    box-shadow: 0 0 12px #00ff88, 0 0 22px #00ff88, 0 0 32px rgba(0, 255, 136, 0.8);
+    background-color: #ffd84d;
+    box-shadow: 0 0 8px var(--main-color);
   }
   100% {
-    background-color: #00ff88;
-    box-shadow: 0 0 4px #00ff88, 0 0 8px #00ff88;
+    background-color: var(--main-color);
+    box-shadow: 0 0 3px var(--main-color);
   }
 }
 
 .led-nickname {
-  font-weight: 700;
-  color: #fff;
+  font-weight: 600;
+  color: var(--text-color);
   letter-spacing: 0.5px;
-  text-shadow: 0 0 8px rgba(0, 255, 136, 0.5);
-  transition: text-shadow 0.25s, color 0.25s;
 }
 
 .header-badge-btn:hover .led-nickname {
-  color: #00ff88;
-  text-shadow: 0 0 14px #00ff88;
+  color: var(--main-color);
 }
 
 .header-badge-btn.multiplayer-btn {

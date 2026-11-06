@@ -17,7 +17,7 @@ const state = {
   timeLimit: 30, // 15, 30, 60, 120
   wordsLimit: 25, // 10, 25, 50, 100
   codeLanguage: 'javascript', // 'javascript', 'python', 'html', 'cpp'
-  language: 'english', // 'english', 'uzbek', 'russian'
+  language: 'uzbek', // 'uzbek', 'english', 'russian'
   punctuation: false,
   numbers: false,
   theme: 'serika_dark',
@@ -171,8 +171,15 @@ function loadStoredSettings() {
   const savedWords = localStorage.getItem('mk_words');
   if (savedWords) state.wordsLimit = parseInt(savedWords, 10);
 
-  const savedLang = localStorage.getItem('mk_lang');
-  if (savedLang) state.language = savedLang;
+  // Foydalanuvchi talabiga ko'ra birlamchi til qilib o'zbek tili (uzbek) o'rnatiladi
+  if (localStorage.getItem('mkt_uzbek_default_v3') !== 'applied') {
+    state.language = 'uzbek';
+    localStorage.setItem('mk_lang', 'uzbek');
+    localStorage.setItem('mkt_uzbek_default_v3', 'applied');
+  } else {
+    const savedLang = localStorage.getItem('mk_lang');
+    if (savedLang) state.language = savedLang;
+  }
 
   const savedPunct = localStorage.getItem('mk_punct');
   if (savedPunct !== null) state.punctuation = savedPunct === 'true';
@@ -662,8 +669,9 @@ function resetTest() {
   state.missedChars = 0;
   state.historyChartData = [];
 
-  // Fokus rejimidan chiqish
+  // Fokus rejimidan chiqish va test holatini tozalash
   document.body.classList.remove('focus-mode');
+  document.body.classList.remove('test-running');
   elements.caret.classList.add('blink');
 
   // UI elementlarni tiklash
@@ -717,6 +725,7 @@ function resetTest() {
 function startTest() {
   if (state.isRunning) return;
   state.isRunning = true;
+  document.body.classList.add('test-running');
   state.testStartTime = Date.now();
   state.replayKeystrokes = [];
   startPaceCaret();
@@ -1306,6 +1315,7 @@ function finishTest() {
   state.isRunning = false;
   state.isFinished = true;
   document.body.classList.remove('focus-mode');
+  document.body.classList.remove('test-running');
 
   // Test vaqti
   const testDuration = state.mode === 'time' ? state.timeLimit : Math.max(state.timeElapsed, 1);
