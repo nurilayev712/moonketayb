@@ -1103,13 +1103,11 @@ function handleKeyDown(e) {
     }
 
     logReplayKeystroke(' ', false, true);
-    logReplayKeystroke(typedChar, false, false);
     updateCaretPosition();
     updateMiniHud();
     if (state.isMultiplayer && window.checkMultiplayerProgress) {
       window.checkMultiplayerProgress();
     }
-    logReplayKeystroke('Backspace', true, false);
     return;
   }
 
