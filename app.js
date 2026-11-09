@@ -17,7 +17,7 @@ const state = {
   timeLimit: 30, // 15, 30, 60, 120
   wordsLimit: 25, // 10, 25, 50, 100
   codeLanguage: 'javascript', // 'javascript', 'python', 'html', 'cpp'
-  language: 'uzbek', // 'uzbek', 'english', 'russian'
+  language: localStorage.getItem('mk_lang') || 'english', // 'english' (200 default), 'english_1k', 'english_5k', 'english_10k', 'uzbek', 'russian'
   punctuation: false,
   numbers: false,
   theme: 'serika_dark',
@@ -376,8 +376,30 @@ function updateConfigUI() {
   }
   const langLabel = document.getElementById('current-language-label');
   if (langLabel) {
-    langLabel.textContent = state.language || 'english';
+    const displayNames = {
+      english: 'english',
+      english_1k: 'english 1k',
+      english_5k: 'english 5k',
+      english_10k: 'english 10k',
+      uzbek: 'uzbek',
+      russian: 'russian'
+    };
+    langLabel.textContent = displayNames[state.language] || state.language || 'english';
   }
+
+  // Wordlist pills ni yangilash
+  const wordlistPillsContainer = document.getElementById('wordlist-pills');
+  if (wordlistPillsContainer) {
+    wordlistPillsContainer.style.display = (state.language && state.language.startsWith('english')) ? 'inline-flex' : 'none';
+  }
+  document.querySelectorAll('.wordlist-pill').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.wordlist === state.language);
+  });
+
+  // Language modal active holatini sinxronlash
+  document.querySelectorAll('.lang-opt-item').forEach(item => {
+    item.classList.toggle('active', item.dataset.lang === state.language);
+  });
 
   // Ovoz holati
   if (elements.soundToggle) {
@@ -785,10 +807,10 @@ function calculateLiveStats() {
     elapsedSeconds = Math.max(0.5, (Date.now() - state.testStartTime) / 1000);
   }
   const minutes = Math.max(elapsedSeconds / 60, 0.008);
-  const totalTyped = state.correctChars + state.incorrectChars + state.extraChars;
+  const totalAttempted = state.correctChars + state.incorrectChars + state.extraChars + (state.missedChars || 0);
   const netWpm = Math.max(0, Math.round((state.correctChars / 5) / minutes));
-  const rawWpm = Math.max(0, Math.round((totalTyped / 5) / minutes));
-  const acc = totalTyped > 0 ? Math.round((state.correctChars / totalTyped) * 100) : 100;
+  const rawWpm = Math.max(0, Math.round(((state.correctChars + state.incorrectChars + state.extraChars) / 5) / minutes));
+  const acc = totalAttempted > 0 ? Math.round((state.correctChars / totalAttempted) * 100) : 100;
   return { netWpm, rawWpm, acc };
 }
 
@@ -1314,11 +1336,11 @@ function finishTest() {
   const testDuration = state.mode === 'time' ? state.timeLimit : Math.max(state.timeElapsed, 1);
   const minutes = testDuration / 60;
 
-  // WPM va Aniqlik hisoblash
-  const totalTypedChars = state.correctChars + state.incorrectChars + state.extraChars;
+  // WPM va Aniqlik hisoblash (Monkeytype 1:1)
+  const totalAttemptedChars = state.correctChars + state.incorrectChars + state.extraChars + (state.missedChars || 0);
   const netWpm = Math.max(0, Math.round((state.correctChars / 5) / minutes));
-  const rawWpm = Math.max(0, Math.round((totalTypedChars / 5) / minutes));
-  const accuracy = totalTypedChars > 0 ? Math.round((state.correctChars / totalTypedChars) * 100) : 0;
+  const rawWpm = Math.max(0, Math.round(((state.correctChars + state.incorrectChars + state.extraChars) / 5) / minutes));
+  const accuracy = totalAttemptedChars > 0 ? Math.round((state.correctChars / totalAttemptedChars) * 100) : 0;
 
   // Agar test juda tez tugasa, grafik uchun kamida 1 ta nuqta qo'shish
   if (state.historyChartData.length === 0) {
@@ -2219,17 +2241,100 @@ function setupEventListeners() {
     });
   }
 
-  // Jonli til ko'rsatkichini bosganda tillarni o'zgartirish (Monkeytype 1:1)
+  // Jonli til ko'rsatkichi va Lug'at modali (Monkeytype 1:1)
   const langPill = document.getElementById('current-language-pill');
-  if (langPill) {
+  const langModal = document.getElementById('language-modal');
+  const closeLangModalBtn = document.getElementById('close-language-modal-btn');
+  const langSearchInput = document.getElementById('language-search-input');
+
+  if (langPill && langModal) {
     langPill.addEventListener('click', () => {
-      const languages = ['english', 'uzbek', 'russian'];
-      const curIdx = languages.indexOf(state.language);
-      const nextLang = languages[(curIdx + 1) % languages.length];
-      state.language = nextLang;
-      localStorage.setItem('mk_lang', state.language);
-      updateConfigUI();
-      resetTest();
+      if (window.openAppModal) {
+        window.openAppModal(langModal);
+      } else {
+        langModal.classList.add('active');
+      }
+      if (langSearchInput) {
+        langSearchInput.value = '';
+        setTimeout(() => langSearchInput.focus(), 80);
+      }
+      document.querySelectorAll('.lang-opt-item').forEach(item => {
+        item.style.display = 'flex';
+        item.classList.toggle('active', item.dataset.lang === state.language);
+      });
+    });
+  }
+
+  if (closeLangModalBtn && langModal) {
+    closeLangModalBtn.addEventListener('click', () => {
+      if (window.closeAppModal) {
+        window.closeAppModal(langModal);
+      } else {
+        langModal.classList.remove('active');
+      }
+    });
+  }
+
+  // Lug'at ro'yxatidagi elementni tanlash
+  document.querySelectorAll('.lang-opt-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const selected = item.dataset.lang;
+      if (selected) {
+        state.language = selected;
+        localStorage.setItem('mk_lang', state.language);
+        updateConfigUI();
+        resetTest();
+        if (window.closeAppModal) {
+          window.closeAppModal(langModal);
+        } else {
+          langModal.classList.remove('active');
+        }
+      }
+    });
+  });
+
+  // Lug'at qidiruv maydoni
+  if (langSearchInput) {
+    langSearchInput.addEventListener('input', (e) => {
+      const query = (e.target.value || '').trim().toLowerCase();
+      document.querySelectorAll('.lang-opt-item').forEach(item => {
+        const title = (item.querySelector('.lang-opt-title')?.textContent || '').toLowerCase();
+        const desc = (item.querySelector('.lang-opt-desc')?.textContent || '').toLowerCase();
+        const badge = (item.querySelector('.lang-opt-badge')?.textContent || '').toLowerCase();
+        const match = title.includes(query) || desc.includes(query) || badge.includes(query) || (item.dataset.lang && item.dataset.lang.includes(query));
+        item.style.display = match ? 'flex' : 'none';
+      });
+    });
+  }
+
+  // Tezkor so'zlar miqdori tugmalari ("200 words", "1000 words", "5000 words", "10000 words")
+  document.querySelectorAll('.wordlist-pill').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const targetList = btn.dataset.wordlist;
+      if (targetList && targetList !== state.language) {
+        state.language = targetList;
+        localStorage.setItem('mk_lang', state.language);
+        updateConfigUI();
+        resetTest();
+      }
+    });
+  });
+
+  // Klaviatura navigatsiya tugmasi (Test maydoniga qaytish)
+  const navTestBtn = document.getElementById('nav-test-btn');
+  if (navTestBtn) {
+    navTestBtn.addEventListener('click', () => {
+      document.querySelectorAll('.modal-overlay.active').forEach(modal => {
+        if (window.closeAppModal) {
+          window.closeAppModal(modal);
+        } else {
+          modal.classList.remove('active');
+        }
+      });
+      if (elements.resultSection) elements.resultSection.classList.remove('active');
+      if (elements.testSection) elements.testSection.style.display = 'flex';
+      focusInput();
     });
   }
 
@@ -2565,9 +2670,12 @@ function setupEventListeners() {
     { label: "mode: time 60", action: () => { state.mode = 'time'; state.timeLimit = 60; updateConfigUI(); resetTest(); } },
     { label: "mode: words 25", action: () => { state.mode = 'words'; state.wordsLimit = 25; updateConfigUI(); resetTest(); } },
     { label: "mode: words 50", action: () => { state.mode = 'words'; state.wordsLimit = 50; updateConfigUI(); resetTest(); } },
-    { label: "language: uzbek", action: () => { state.language = 'uzbek'; resetTest(); } },
-    { label: "language: english", action: () => { state.language = 'english'; resetTest(); } },
-    { label: "language: russian", action: () => { state.language = 'russian'; resetTest(); } },
+    { label: "language: english (200 words)", action: () => { state.language = 'english'; localStorage.setItem('mk_lang', 'english'); updateConfigUI(); resetTest(); } },
+    { label: "language: english 1k (1,000 words)", action: () => { state.language = 'english_1k'; localStorage.setItem('mk_lang', 'english_1k'); updateConfigUI(); resetTest(); } },
+    { label: "language: english 5k (5,000 words)", action: () => { state.language = 'english_5k'; localStorage.setItem('mk_lang', 'english_5k'); updateConfigUI(); resetTest(); } },
+    { label: "language: english 10k (10,000 words)", action: () => { state.language = 'english_10k'; localStorage.setItem('mk_lang', 'english_10k'); updateConfigUI(); resetTest(); } },
+    { label: "language: uzbek", action: () => { state.language = 'uzbek'; localStorage.setItem('mk_lang', 'uzbek'); updateConfigUI(); resetTest(); } },
+    { label: "language: russian", action: () => { state.language = 'russian'; localStorage.setItem('mk_lang', 'russian'); updateConfigUI(); resetTest(); } },
     { label: "sound: thock", action: () => soundManager.setSoundPack('thock') },
     { label: "sound: clicky", action: () => soundManager.setSoundPack('click') },
     { label: "sound: nk creams", action: () => soundManager.setSoundPack('cream') },
@@ -3561,7 +3669,7 @@ finishTest = function() {
   if (state.isMultiplayer && window.multiplayerManager) {
     const minutes = Math.max(state.timeElapsed, 1) / 60;
     const netWpm = Math.max(0, Math.round((state.correctChars / 5) / minutes));
-    const totalTyped = state.correctChars + state.incorrectChars + state.extraChars;
+    const totalTyped = state.correctChars + state.incorrectChars + state.extraChars + (state.missedChars || 0);
     const accuracy = totalTyped > 0 ? Math.round((state.correctChars / totalTyped) * 100) : 0;
     elements.resultSection.classList.remove('active');
     elements.testSection.style.display = 'flex';

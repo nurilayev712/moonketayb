@@ -301,6 +301,13 @@ body.test-running .live-stats {
   visibility: visible;
 }
 
+.lang-wordlist-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: opacity 0.2s ease;
+}
+
 .current-language-pill {
   display: inline-flex;
   align-items: center;
@@ -310,7 +317,7 @@ body.test-running .live-stats {
   color: var(--sub-color);
   font-family: inherit;
   font-size: 0.8rem;
-  padding: 4px 12px;
+  padding: 4px 10px;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -323,11 +330,42 @@ body.test-running .live-stats {
   opacity: 1;
 }
 
-body.test-running .current-language-pill {
-  opacity: 0;
-  pointer-events: none;
+.wordlist-pills {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(0, 0, 0, 0.15);
+  padding: 2px 4px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
 }
 
+.wordlist-pill {
+  background: transparent;
+  border: none;
+  color: var(--sub-color);
+  font-family: inherit;
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  user-select: none;
+}
+
+.wordlist-pill:hover {
+  color: var(--text-color);
+}
+
+.wordlist-pill.active {
+  color: var(--main-color);
+  font-weight: 700;
+  background: rgba(226, 183, 20, 0.12);
+}
+
+body.test-running .lang-wordlist-wrapper,
+body.test-running .current-language-pill,
+body.focus-mode .lang-wordlist-wrapper,
 body.focus-mode .current-language-pill {
   opacity: 0;
   pointer-events: none;
@@ -963,44 +1001,146 @@ footer {
   color: var(--text-color);
 }
 
+/* Language modal options list */
+.language-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.lang-opt-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.lang-opt-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.lang-opt-item.active {
+  background: rgba(226, 183, 20, 0.12);
+  border-color: var(--main-color);
+}
+
+.lang-opt-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lang-opt-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.lang-opt-item.active .lang-opt-title {
+  color: var(--main-color);
+}
+
+.lang-opt-desc {
+  font-size: 0.75rem;
+  color: var(--sub-color);
+}
+
+.lang-opt-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--main-color);
+  background: rgba(226, 183, 20, 0.12);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
 /* Responsive moslashuv */
 @media (max-width: 768px) {
   .container {
-    padding: 1rem;
+    padding: 0.75rem;
   }
 
   .config-bar {
-    gap: 0.75rem;
-    font-size: 0.75rem;
-    padding: 0.35rem 0.6rem;
+    gap: 0.5rem;
+    font-size: 0.72rem;
+    padding: 0.35rem 0.5rem;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    white-space: nowrap;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+  }
+
+  .config-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .lang-wordlist-wrapper {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .wordlist-pills {
+    flex-wrap: wrap;
+    justify-content: center;
   }
 
   .words-container {
-    font-size: 1.35rem;
-    line-height: 40px;
-    height: 120px;
+    font-size: 1.25rem;
+    line-height: 38px;
+    height: 114px;
   }
 
   .caret, .tribe-caret {
-    height: 26px;
+    height: 24px;
   }
 
   .result-main {
     grid-template-columns: 1fr;
-    gap: 1.5rem;
+    gap: 1.25rem;
   }
 
   .stat-value {
-    font-size: 2.75rem;
+    font-size: 2.25rem;
   }
 
   .chart-wrapper {
-    height: 200px;
+    height: 180px;
   }
 
   .footer-links {
     flex-wrap: wrap;
+    gap: 0.65rem;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  header {
+    flex-direction: column;
     gap: 0.75rem;
+    padding: 0.5rem 0;
+  }
+
+  .header-actions {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .modal {
+    width: 95% !important;
+    max-width: 95% !important;
+    padding: 1rem !important;
   }
 }
 

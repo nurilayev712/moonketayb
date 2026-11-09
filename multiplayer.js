@@ -131,7 +131,7 @@ class MultiplayerManager {
     this.isReady = true;
     this.roomMode = initialMode || 'time';
     this.roomLimit = initialLimit || (this.roomMode === 'time' ? 30 : 25);
-    this.roomLang = initialLang || (window.state && window.state.language) || 'uzbek';
+    this.roomLang = initialLang || (window.state && window.state.language) || 'english';
     this.players = {};
 
     const user = (window.authManager && window.authManager.currentUser) || {
@@ -914,8 +914,8 @@ class MultiplayerManager {
   startRace() {
     if (!this.isHost) return;
 
-    const lang = this.roomLang || (window.state && window.state.language) || 'uzbek';
-    const source = (window.WORDS && window.WORDS[lang]) || (window.WORDS && window.WORDS.uzbek) || [];
+    const lang = this.roomLang || (window.state && window.state.language) || 'english';
+    const source = (window.WORDS && window.WORDS[lang]) || (window.WORDS && window.WORDS.english) || (window.WORDS && window.WORDS.uzbek) || [];
     const words = [];
     
     // Monkeytype 1:1 - Time rejimida so'zlar yetib ortishi uchun (kamida 300 - 800 ta so'z), words rejimida limit miqdoricha
@@ -1021,6 +1021,11 @@ class MultiplayerManager {
       wpm: wpm,
       accuracy: accuracy
     });
+
+    // Agar o'zi host bo'lsa darhol marrani tekshirish
+    if (this.isHost) {
+      this.checkRaceFinish();
+    }
   }
 
   // Host marrani tekshirib shohsupa e'lon qilishi
@@ -1040,6 +1045,8 @@ class MultiplayerManager {
         type: 'LEADERBOARD',
         leaderboard: sorted
       });
+      // Host uchun natijani darhol ko'rsatish
+      this.showRaceResults(sorted);
     } else if (!this.raceFinishTimeout) {
       // Birinchi o'yinchi marraga yetganda boshqalarga yakunlash uchun 8 soniya muhlat berish
       this.raceFinishTimeout = setTimeout(() => {
@@ -1432,9 +1439,16 @@ class MultiplayerManager {
 
     // Til badge
     if (langBadge) {
-      const curLang = this.roomLang || (window.state && window.state.language) || 'uzbek';
-      const langNames = { uzbek: "🌐 O'zbekcha", english: "🌐 English", russian: "🌐 Русский" };
-      langBadge.textContent = langNames[curLang] || "🌐 O'zbekcha";
+      const curLang = this.roomLang || (window.state && window.state.language) || 'english';
+      const langNames = {
+        english: "🌐 English (200)",
+        english_1k: "🌐 English 1k",
+        english_5k: "🌐 English 5k",
+        english_10k: "🌐 English 10k",
+        uzbek: "🌐 O'zbekcha",
+        russian: "🌐 Русский"
+      };
+      langBadge.textContent = langNames[curLang] || `🌐 ${curLang}`;
     }
 
     // O'yinchilar soni badge
@@ -1458,7 +1472,7 @@ class MultiplayerManager {
         });
 
         document.querySelectorAll('.lobby-lang-btn').forEach(btn => {
-          if (btn.dataset.lobbyLang === (this.roomLang || 'uzbek')) {
+          if (btn.dataset.lobbyLang === (this.roomLang || 'english')) {
             btn.classList.add('active');
           } else {
             btn.classList.remove('active');
