@@ -79,6 +79,32 @@ class MultiplayerManager {
     }
   }
 
+  // Xona egasi uchun do'stlar qo'shilishini kafolatlovchi yurak urishi (Host Heartbeat)
+  startHostAnnounceLoop() {
+    this.stopHostAnnounceLoop();
+    this.hostAnnounceInterval = setInterval(() => {
+      if (this.isHost && this.roomId && !this.isInRace && this.client && this.client.isConnected && this.client.isConnected()) {
+        this.sendMessage({
+          type: 'ROOM_ANNOUNCE',
+          roomId: this.roomId,
+          hostId: this.myId,
+          roomMode: this.roomMode,
+          roomLimit: this.roomLimit,
+          roomLang: this.roomLang,
+          sentAt: Date.now(),
+          active: true
+        });
+      }
+    }, 2500);
+  }
+
+  stopHostAnnounceLoop() {
+    if (this.hostAnnounceInterval) {
+      clearInterval(this.hostAnnounceInterval);
+      this.hostAnnounceInterval = null;
+    }
+  }
+
   updatePingUI(ms) {
     const badge = document.getElementById('lobby-ping-badge');
     if (!badge) return;
@@ -159,6 +185,7 @@ class MultiplayerManager {
     this.updateStatusText("Xona tayyor! Do'stingizga xona kodini bering.");
 
     this.connectToBroker();
+    this.startHostAnnounceLoop();
     return this.roomId;
   }
 
@@ -182,13 +209,17 @@ class MultiplayerManager {
   joinRoom(code) {
     code = (code || '').trim();
     if (!code) {
-      alert("⚠️ Iltimos, xona kodini kiriting!");
+      if (window.showToast) {
+        window.showToast("⚠️ Iltimos, xona kodini kiriting!", "warning");
+      }
       return;
     }
 
     const isPublic = (code === 'arena_public');
     if (!isPublic && !/^\d{6}$/.test(code)) {
-      alert("⚠️ Noto'g'ri xona kodi!\n\nXona kodi 6 xonali raqamdan iborat bo'lishi kerak (masalan: 123456).");
+      if (window.showToast) {
+        window.showToast("⚠️ Xona kodi 6 xonali raqam bo'lishi kerak (masalan: 123456)", "warning");
+      }
       return;
     }
 
@@ -229,7 +260,9 @@ class MultiplayerManager {
       this.joinWatchdogTimeout = null;
       if (this.isVerifyingRoom) {
         this.cleanupFailedJoin();
-        alert("⚠️ Tarmoq xatosi: Xona bilan aloqa o'rnatib bo'lmadi.\n\nIltimos, internet aloqangizni tekshirib qaytadan urinib ko'ring.");
+        if (window.showToast) {
+          window.showToast("⚠️ Tarmoq xatosi: Xona bilan aloqa o'rnatib bo'lmadi. Qaytadan urinib ko'ring.", "error");
+        }
       }
     }, 14000);
 
@@ -240,6 +273,11 @@ class MultiplayerManager {
     this.clearJoinTimers();
     this.isVerifyingRoom = false;
     this.restoreJoinBtnUI();
+
+    // URL toza bo'lishini ta'minlash
+    if (window.history && window.history.replaceState) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
 
     const multiModal = document.getElementById('multiplayer-modal');
     const lobbyModal = document.getElementById('multiplayer-lobby-modal');
@@ -261,16 +299,29 @@ class MultiplayerManager {
 
     this.updateLobbyUI();
     this.updateStatusText("Xonaga muvaffaqiyatli ulandingiz! Tayyor bo'lgach 'Tayyorman' tugmasini bosing.");
+    if (window.showToast) {
+      window.showToast("✅ Do'stlar xonasiga muvaffaqiyatli ulandingiz!", "success");
+    }
   }
 
   onRoomNotFound() {
     this.cleanupFailedJoin();
-    alert("❌ Bunday xona topilmadi!\n\nXona kodi noto'g'ri kiritilgan yoki xona egasi xonani tark etgan. Iltimos, xona kodini tekshirib qaytadan urinib ko'ring.");
+    // URL dan xona parametrini tozalaymiz
+    if (window.history && window.history.replaceState) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    // Bloklovchi alert o'rniga zamonaviy xushmuomala toast bildirishnoma
+    if (window.showToast) {
+      window.showToast("❌ Bunday xona topilmadi yoki xona egasi xonani tark etgan.", "error", 4500);
+    }
   }
 
   cleanupFailedJoin() {
     this.isVerifyingRoom = false;
     this.clearJoinTimers();
+    if (window.history && window.history.replaceState) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
     if (this.client) {
       try {
         this.client.disconnect();
@@ -582,7 +633,9 @@ class MultiplayerManager {
         onFailure: () => {
           if (this.isVerifyingRoom) {
             this.cleanupFailedJoin();
-            alert("⚠️ Tarmoq xatosi: Serverga ulanib bo'lmadi.\n\nIltimos, internet aloqangizni tekshirib qaytadan urinib ko'ring.");
+            if (window.showToast) {
+              window.showToast("⚠️ Tarmoq xatosi: Serverga ulanib bo'lmadi. Qaytadan urinib ko'ring.", "error");
+            }
           } else {
             this.updateStatusText("Tarmoq xatosi. Iltimos internet aloqasini tekshiring.");
           }
@@ -627,7 +680,9 @@ class MultiplayerManager {
           if (!data.sentAt || Math.abs(Date.now() - data.sentAt) < 25000) {
             if (this.isVerifyingRoom) {
               this.cleanupFailedJoin();
-              alert("❌ Bu xona yopilgan yoki xona egasi xonani tark etgan.");
+              if (window.showToast) {
+                window.showToast("❌ Bu xona yopilgan yoki xona egasi xonani tark etgan.", "error");
+              }
             }
           }
           return;
@@ -719,7 +774,9 @@ class MultiplayerManager {
     else if (data.type === 'ROOM_BUSY') {
       if (data.targetId === this.myId) {
         this.cleanupFailedJoin();
-        alert("⚠️ Bu xonada ayni paytda poyga ketmoqda!\n\nIltimos, poyga tugashini kuting yoki o'zingiz yangi xona oching.");
+        if (window.showToast) {
+          window.showToast("⚠️ Bu xonada ayni paytda poyga ketmoqda. Iltimos poyga tugashini kuting yoki yangi xona oching.", "warning");
+        }
       }
     }
 
@@ -801,7 +858,9 @@ class MultiplayerManager {
     // 12. O'yinchini chetlatish (KICK_PLAYER)
     else if (data.type === 'KICK_PLAYER') {
       if (data.targetId === this.myId) {
-        alert("⚠️ Siz xona egasi tomonidan xonadan chetlatildingiz.");
+        if (window.showToast) {
+          window.showToast("⚠️ Siz xona egasi tomonidan xonadan chetlatildingiz.", "warning");
+        }
         this.leaveRoom();
         return;
       }
@@ -913,6 +972,7 @@ class MultiplayerManager {
   // Host o'yinni boshlashi
   startRace() {
     if (!this.isHost) return;
+    this.stopHostAnnounceLoop();
 
     const lang = this.roomLang || (window.state && window.state.language) || 'english';
     const source = (window.WORDS && window.WORDS[lang]) || (window.WORDS && window.WORDS.english) || (window.WORDS && window.WORDS.uzbek) || [];
@@ -1559,8 +1619,12 @@ class MultiplayerManager {
   }
 
   leaveRoom() {
+    this.stopHostAnnounceLoop();
     this.stopPingLoop();
     this.clearJoinTimers();
+    if (window.history && window.history.replaceState) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
     if (this.raceFinishTimeout) {
       clearTimeout(this.raceFinishTimeout);
       this.raceFinishTimeout = null;

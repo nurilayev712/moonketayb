@@ -11,6 +11,26 @@ function getLocalDateString(d = new Date()) {
 }
 window.getLocalDateString = getLocalDateString;
 
+// Monkeytype uslubidagi qulay Toast bildirishnomasi
+window.showToast = function(message, type = 'info', duration = 3500) {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.textContent = message;
+
+  container.appendChild(toast);
+  requestAnimationFrame(() => {
+    toast.classList.add('toast-show');
+  });
+
+  setTimeout(() => {
+    toast.classList.remove('toast-show');
+    setTimeout(() => toast.remove(), 260);
+  }, duration);
+};
+
 // Holat va Sozlamalar
 const state = {
   mode: 'time', // 'time', 'words', 'code', 'quote', 'custom', 'zen'
@@ -1997,7 +2017,9 @@ function setupEventListeners() {
     elements.customTextStartBtn.addEventListener('click', () => {
       const text = elements.customTextInput ? elements.customTextInput.value.trim() : '';
       if (!text) {
-        alert("Iltimos, matn kiriting!");
+        if (window.showToast) {
+          window.showToast("Iltimos, matn kiriting!", "warning");
+        }
         return;
       }
       state.customWords = text.split(/\s+/).filter(Boolean);
@@ -2151,7 +2173,9 @@ function setupEventListeners() {
     elements.customTimeSaveBtn.addEventListener('click', () => {
       const val = parseInt(elements.customTimeInput ? elements.customTimeInput.value : '', 10);
       if (isNaN(val) || val < 5 || val > 3600) {
-        alert("Iltimos, 5 dan 3600 gacha bo'lgan soniya kiriting!");
+        if (window.showToast) {
+          window.showToast("Iltimos, 5 dan 3600 gacha bo'lgan soniya kiriting!", "warning");
+        }
         return;
       }
       state.timeLimit = val;
@@ -2527,9 +2551,9 @@ function setupEventListeners() {
       const res = window.authManager.login(u, p);
       if (res.success) {
         window.closeAppModal(authModal);
-        alert("Xush kelibsiz, " + res.user.username + "!");
+        if (window.showToast) window.showToast("Xush kelibsiz, " + res.user.username + "!", "success");
       } else {
-        alert(res.message);
+        if (window.showToast) window.showToast(res.message, "error");
       }
     });
   }
@@ -2543,9 +2567,9 @@ function setupEventListeners() {
       const res = window.authManager.register(u, p, selectedAvatar);
       if (res.success) {
         window.closeAppModal(authModal);
-        alert("Tabriklaymiz, " + res.user.username + "! Profilingiz yaratildi.");
+        if (window.showToast) window.showToast("Tabriklaymiz, " + res.user.username + "! Profil yaratildi.", "success");
       } else {
-        alert(res.message);
+        if (window.showToast) window.showToast(res.message, "error");
       }
     });
   }
@@ -2874,7 +2898,9 @@ function setupEventListeners() {
     joinRoomBtn.addEventListener('click', () => {
       const code = joinRoomInput.value.trim();
       if (!code) {
-        alert("⚠️ Iltimos, xona kodini kiriting!");
+        if (window.showToast) {
+          window.showToast("⚠️ Iltimos, xona kodini kiriting!", "warning");
+        }
         return;
       }
       window.multiplayerManager.joinRoom(code);
@@ -2897,6 +2923,9 @@ function setupEventListeners() {
       const url = window.location.origin + window.location.pathname + '?room=' + room;
       navigator.clipboard.writeText(url).then(() => {
         copyLinkBtn.textContent = "✅ Nusxalandi!";
+        if (window.showToast) {
+          window.showToast("📋 Do'stlar uchun havola nusxalandi!", "success");
+        }
         setTimeout(() => { copyLinkBtn.textContent = "📋 Nusxalash"; }, 2000);
       });
     });
@@ -3095,13 +3124,22 @@ function setupEventListeners() {
     });
   }
 
-  // URL da ?room=XXXXXX bormi tekshirish (Bir zumda avtomatik ulanish)
+  // URL da ?room=XXXXXX bormi tekshirish (Do'stlar yuborgan havola orqali ulanish)
   const urlParams = new URLSearchParams(window.location.search);
   const roomParam = urlParams.get('room');
   if (roomParam) {
-    setTimeout(() => {
-      window.multiplayerManager.joinRoom(roomParam);
-    }, 400);
+    // Brauzer manzil satridan xona parametrini darhol tozalaymiz (keyingi kirishlarda xato chiqmasligi uchun)
+    if (window.history && window.history.replaceState) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    if (window.showToast) {
+      window.showToast(`⏳ Do'stlar xonasiga ulanilmoqda (#${roomParam})...`, 'info', 3000);
+    }
+    if (window.multiplayerManager) {
+      setTimeout(() => {
+        window.multiplayerManager.joinRoom(roomParam);
+      }, 350);
+    }
   }
 
   // Oyna o'lchami o'zgarganda kursor joyini to'g'rilash
@@ -3361,7 +3399,9 @@ let replayState = {
 
 function openReplayModal() {
   if (!state.lastCompletedTestReplay || !state.lastCompletedTestReplay.words) {
-    alert("Hozircha qayta ko'rish uchun test natijasi mavjud emas. Avval bitta testni yakunlang.");
+    if (window.showToast) {
+      window.showToast("Hozircha qayta ko'rish uchun test natijasi yo'q. Avval bitta testni yakunlang.", "info");
+    }
     return;
   }
   const modal = document.getElementById('replay-modal');
