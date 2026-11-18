@@ -302,6 +302,10 @@
           <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8 0-1.85.63-3.55 1.69-4.9L16.9 18.31C15.55 19.37 13.85 20 12 20zm6.31-3.1L7.1 5.69C8.45 4.63 10.15 4 12 4c4.41 0 8 3.59 8 8 0 1.85-.63 3.55-1.69 4.9z"/></svg>
           zen
         </button>
+        <button class="config-btn" data-mode="space" title="Kosmik Raketa rejimi (toshlarni otib yo'q qilish!)">
+          <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; fill: currentColor;"><path d="M12 2.5s4 3.5 4 8.5c0 2.2-.8 4.2-2 5.5l1.5 3.5-3.5-1.5-3.5 1.5 1.5-3.5c-1.2-1.3-2-3.3-2-5.5 0-5 4-8.5 4-8.5zm0 6c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/></svg>
+          raketa
+        </button>
       </div>
 
       <div class="config-group divider"></div>
@@ -340,6 +344,14 @@
         <button class="config-btn" data-quote-len="short">qisqa</button>
         <button class="config-btn" data-quote-len="medium">o'rta</button>
         <button class="config-btn" data-quote-len="long">uzun</button>
+      </div>
+
+      <!-- Kosmik Raketa qiyinlik darajasi -->
+      <div class="config-group" id="space-config-group" style="display: none;">
+        <button class="config-btn active" data-space-diff="easy" title="Oson tezlik">oson</button>
+        <button class="config-btn" data-space-diff="normal" title="O'rtacha tezlik">o'rtacha</button>
+        <button class="config-btn" data-space-diff="hard" title="Tezkor toshlar">qiyin</button>
+        <button class="config-btn" data-space-diff="endless" title="Cheksiz omon qolish">cheksiz</button>
       </div>
     </div>
 
@@ -482,6 +494,101 @@
         <div class="keyboard-hint" style="margin-top: 4px;"><kbd>esc</kbd> &nbsp;—&nbsp; buyruqlar paneli</div>
       </div>
     </main>
+
+    <!-- KOSMIK RAKETA (ASTEROID DEFENSE) MAYDONI -->
+    <section class="space-game-section" id="space-game-section" style="display: none;">
+      <!-- Game Top HUD -->
+      <div class="space-hud-bar">
+        <div class="space-hud-group">
+          <span class="space-hud-label">qalqon:</span>
+          <div class="space-shields-display" id="space-shields-display">
+            <span class="space-shield-icon active" id="shield-1">🛡️</span>
+            <span class="space-shield-icon active" id="shield-2">🛡️</span>
+            <span class="space-shield-icon active" id="shield-3">🛡️</span>
+          </div>
+        </div>
+        <div class="space-hud-group">
+          <span class="space-hud-label">ball:</span>
+          <span class="space-hud-val" id="space-score-val">0</span>
+        </div>
+        <div class="space-hud-group">
+          <span class="space-hud-label">yo'q qilindi:</span>
+          <span class="space-hud-val" id="space-kills-val">0</span>
+        </div>
+        <div class="space-hud-group">
+          <span class="space-hud-label">wpm:</span>
+          <span class="space-hud-val" id="space-wpm-val">0</span>
+        </div>
+        <div class="space-hud-group">
+          <span class="space-hud-label">combo:</span>
+          <span class="space-hud-val space-combo-val" id="space-combo-val">x1</span>
+        </div>
+      </div>
+
+      <!-- Canvas container -->
+      <div class="space-canvas-wrapper" id="space-canvas-wrapper">
+        <canvas id="space-game-canvas"></canvas>
+
+        <!-- Start Overlay -->
+        <div class="space-overlay" id="space-start-overlay">
+          <div class="space-overlay-box">
+            <div class="space-overlay-icon">🚀</div>
+            <h2 class="space-overlay-title">KOSMIK RAKETA POYGASI</h2>
+            <p class="space-overlay-desc">
+              Fazodan uchib kelayotgan toshlardagi so'zlarni klaviaturada yozing.<br>
+              Raketa lazer bilan toshlarni urib, qalqonga yetmasdan yo'q qiladi!
+            </p>
+            <div class="space-overlay-actions">
+              <button class="action-btn primary large" id="space-start-btn">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                O'yinni Boshlash (Enter / Boshlash)
+              </button>
+            </div>
+            <div class="space-overlay-hint">
+              <kbd>Tab</kbd> + <kbd>Enter</kbd> — qayta boshlash &bull; <kbd>Esc</kbd> — asosiy rejimga qaytish
+            </div>
+          </div>
+        </div>
+
+        <!-- Game Over Overlay -->
+        <div class="space-overlay" id="space-gameover-overlay" style="display: none;">
+          <div class="space-overlay-box">
+            <div class="space-overlay-icon">💥</div>
+            <h2 class="space-overlay-title" style="color: var(--error-color, #ca4754);">QALQON TUGADI!</h2>
+            <p class="space-overlay-desc">Toshlar raketa qalqonini yorib o'tdi.</p>
+            <div class="space-results-grid">
+              <div class="space-stat-card">
+                <span class="space-stat-label">Yakuniy Ball</span>
+                <span class="space-stat-val" id="space-final-score">0</span>
+              </div>
+              <div class="space-stat-card">
+                <span class="space-stat-label">Yo'q Qilingan Toshlar</span>
+                <span class="space-stat-val" id="space-final-kills">0</span>
+              </div>
+              <div class="space-stat-card">
+                <span class="space-stat-label">Tezlik (WPM)</span>
+                <span class="space-stat-val" id="space-final-wpm">0</span>
+              </div>
+              <div class="space-stat-card">
+                <span class="space-stat-label">Aniqlik</span>
+                <span class="space-stat-val" id="space-final-acc">100%</span>
+              </div>
+              <div class="space-stat-card">
+                <span class="space-stat-label">Maks Combo</span>
+                <span class="space-stat-val" id="space-final-combo">x1</span>
+              </div>
+            </div>
+            <div class="space-overlay-actions">
+              <button class="action-btn primary large" id="space-retry-btn">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+                Qayta O'ynash (Enter)
+              </button>
+              <button class="action-btn" id="space-exit-btn">Chiqish (Esc)</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- NATIJA EKRANI (TEST TUGAGACH KO'RINADI) -->
     <section class="result-section" id="result-section">
@@ -1468,11 +1575,12 @@
     </div>
   </div>
 
-  <!-- Skriptlar (v10.2 TYPEX712 & Monkeytype 1-to-1 Official Words & Multiplayer Fix) -->
-  <script src="words.js?v=10.2"></script>
-  <script src="sound.js?v=10.2"></script>
-  <script src="auth.js?v=10.2"></script>
-  <script src="multiplayer.js?v=10.2"></script>
-  <script src="app.js?v=10.2"></script>
+  <!-- Skriptlar (v10.3 TYPEX712 & Space Rocket Arcade Mode) -->
+  <script src="words.js?v=10.3"></script>
+  <script src="sound.js?v=10.3"></script>
+  <script src="auth.js?v=10.3"></script>
+  <script src="multiplayer.js?v=10.3"></script>
+  <script src="space-game.js?v=10.3"></script>
+  <script src="app.js?v=10.3"></script>
 </body>
 </html>

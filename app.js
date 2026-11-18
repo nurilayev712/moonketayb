@@ -328,27 +328,44 @@ function updateConfigUI() {
     elements.wordsGroup.style.display = 'none';
     if (elements.codeGroup) elements.codeGroup.style.display = 'none';
     if (elements.quoteGroup) elements.quoteGroup.style.display = 'none';
+    const spaceCfg = document.getElementById('space-config-group');
+    if (spaceCfg) spaceCfg.style.display = 'none';
   } else if (state.mode === 'words') {
     elements.timeGroup.style.display = 'none';
     elements.wordsGroup.style.display = 'flex';
     if (elements.codeGroup) elements.codeGroup.style.display = 'none';
     if (elements.quoteGroup) elements.quoteGroup.style.display = 'none';
+    const spaceCfg = document.getElementById('space-config-group');
+    if (spaceCfg) spaceCfg.style.display = 'none';
   } else if (state.mode === 'code') {
     elements.timeGroup.style.display = 'none';
     elements.wordsGroup.style.display = 'none';
     if (elements.codeGroup) elements.codeGroup.style.display = 'flex';
     if (elements.quoteGroup) elements.quoteGroup.style.display = 'none';
+    const spaceCfg = document.getElementById('space-config-group');
+    if (spaceCfg) spaceCfg.style.display = 'none';
   } else if (state.mode === 'quote') {
     elements.timeGroup.style.display = 'none';
     elements.wordsGroup.style.display = 'none';
     if (elements.codeGroup) elements.codeGroup.style.display = 'none';
     if (elements.quoteGroup) elements.quoteGroup.style.display = 'flex';
+    const spaceCfg = document.getElementById('space-config-group');
+    if (spaceCfg) spaceCfg.style.display = 'none';
+  } else if (state.mode === 'space') {
+    elements.timeGroup.style.display = 'none';
+    elements.wordsGroup.style.display = 'none';
+    if (elements.codeGroup) elements.codeGroup.style.display = 'none';
+    if (elements.quoteGroup) elements.quoteGroup.style.display = 'none';
+    const spaceCfg = document.getElementById('space-config-group');
+    if (spaceCfg) spaceCfg.style.display = 'flex';
   } else {
     // custom, zen
     elements.timeGroup.style.display = 'none';
     elements.wordsGroup.style.display = 'none';
     if (elements.codeGroup) elements.codeGroup.style.display = 'none';
     if (elements.quoteGroup) elements.quoteGroup.style.display = 'none';
+    const spaceCfg = document.getElementById('space-config-group');
+    if (spaceCfg) spaceCfg.style.display = 'none';
   }
 
   // Iqtibos uzunligi tugmalari
@@ -716,6 +733,26 @@ function resetTest() {
   document.body.classList.remove('test-running');
   elements.caret.classList.add('blink');
 
+  // Space rejimi boshqaruvi
+  if (state.mode === 'space') {
+    elements.testSection.style.display = 'none';
+    elements.resultSection.classList.remove('active');
+    const spaceSec = document.getElementById('space-game-section');
+    if (spaceSec) spaceSec.style.display = 'flex';
+    if (window.spaceGame) {
+      window.spaceGame.active = true;
+      window.spaceGame.resizeCanvas();
+      window.spaceGame.showStartOverlay();
+    }
+    return;
+  } else {
+    const spaceSec = document.getElementById('space-game-section');
+    if (spaceSec) spaceSec.style.display = 'none';
+    if (window.spaceGame) {
+      window.spaceGame.stop();
+    }
+  }
+
   // UI elementlarni tiklash
   elements.testSection.style.display = 'flex';
   elements.resultSection.classList.remove('active');
@@ -1047,7 +1084,15 @@ function handleKeyDown(e) {
     }
   }
 
-  // 3. Agar test inputi adashib o'chirilgan bo'lsa, darhol faollashtirish
+  // 3. Kosmik Raketa (Space Rocket) rejimi bo'lsa barcha tugmalarni unga yuborish
+  if (state.mode === 'space') {
+    if (window.spaceGame && window.spaceGame.active) {
+      window.spaceGame.handleKey(e);
+      return;
+    }
+  }
+
+  // 4. Agar test inputi adashib o'chirilgan bo'lsa, darhol faollashtirish
   if (elements.typingInput && elements.typingInput.disabled) {
     elements.typingInput.disabled = false;
   }
@@ -2694,6 +2739,7 @@ function setupEventListeners() {
     { label: "mode: time 60", action: () => { state.mode = 'time'; state.timeLimit = 60; updateConfigUI(); resetTest(); } },
     { label: "mode: words 25", action: () => { state.mode = 'words'; state.wordsLimit = 25; updateConfigUI(); resetTest(); } },
     { label: "mode: words 50", action: () => { state.mode = 'words'; state.wordsLimit = 50; updateConfigUI(); resetTest(); } },
+    { label: "mode: space rocket (kosmik raketa o'yini)", action: () => { state.mode = 'space'; localStorage.setItem('mk_mode', 'space'); updateConfigUI(); resetTest(); } },
     { label: "language: english (200 words)", action: () => { state.language = 'english'; localStorage.setItem('mk_lang', 'english'); updateConfigUI(); resetTest(); } },
     { label: "language: english 1k (1,000 words)", action: () => { state.language = 'english_1k'; localStorage.setItem('mk_lang', 'english_1k'); updateConfigUI(); resetTest(); } },
     { label: "language: english 5k (5,000 words)", action: () => { state.language = 'english_5k'; localStorage.setItem('mk_lang', 'english_5k'); updateConfigUI(); resetTest(); } },
