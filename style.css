@@ -3367,5 +3367,49 @@ header, .config-bar, footer, .restart-btn-wrapper, #virtual-keyboard-wrapper {
   font-family: 'JetBrains Mono', monospace;
 }
 
+.space-cfg-sublabel {
+  font-size: 0.76rem;
+  color: var(--sub-color);
+  text-transform: lowercase;
+  letter-spacing: 0.5px;
+  margin-right: 2px;
+}
+
+.space-cfg-divider {
+  width: 2px;
+  height: 16px;
+  background-color: var(--sub-color);
+  opacity: 0.25;
+  margin: 0 4px;
+}
+
+.space-hud-val.time-warning {
+  color: var(--error-color, #ca4754) !important;
+  animation: pulseTimer 0.6s infinite alternate ease-in-out;
+}
+
+@keyframes pulseTimer {
+  0% { transform: scale(1); text-shadow: 0 0 5px rgba(202, 71, 84, 0.4); }
+  100% { transform: scale(1.15); text-shadow: 0 0 15px rgba(202, 71, 84, 0.9); }
+}
+
+.space-rank-badge {
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  padding: 0.35rem 1.4rem;
+  border-radius: 999px;
+  background: rgba(226, 183, 20, 0.15);
+  border: 2px solid var(--main-color, #e2b714);
+  color: var(--main-color, #e2b714);
+  box-shadow: 0 0 20px rgba(226, 183, 20, 0.35);
+  animation: rankGlow 1.4s infinite alternate ease-in-out;
+}
+
+@keyframes rankGlow {
+  0% { transform: scale(0.98); box-shadow: 0 0 15px rgba(226, 183, 20, 0.25); }
+  100% { transform: scale(1.04); box-shadow: 0 0 30px rgba(226, 183, 20, 0.6); }
+}
+
 
 

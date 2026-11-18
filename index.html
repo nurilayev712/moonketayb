@@ -346,12 +346,21 @@
         <button class="config-btn" data-quote-len="long">uzun</button>
       </div>
 
-      <!-- Kosmik Raketa qiyinlik darajasi -->
+      <!-- Kosmik Raketa vaqt va qiyinlik sozlamalari -->
       <div class="config-group" id="space-config-group" style="display: none;">
-        <button class="config-btn active" data-space-diff="easy" title="Oson tezlik">oson</button>
-        <button class="config-btn" data-space-diff="normal" title="O'rtacha tezlik">o'rtacha</button>
+        <span class="space-cfg-sublabel">vaqt:</span>
+        <button class="config-btn" data-space-time="30" title="30 soniya">30s</button>
+        <button class="config-btn active" data-space-time="60" title="60 soniya">60s</button>
+        <button class="config-btn" data-space-time="120" title="120 soniya">120s</button>
+        <button class="config-btn" data-space-time="endless" title="Cheksiz omon qolish rejimi">♾️ cheksiz</button>
+
+        <div class="space-cfg-divider"></div>
+
+        <span class="space-cfg-sublabel">qiyinlik:</span>
+        <button class="config-btn" data-space-diff="easy" title="Oson tezlik">oson</button>
+        <button class="config-btn active" data-space-diff="normal" title="O'rtacha tezlik">o'rtacha</button>
         <button class="config-btn" data-space-diff="hard" title="Tezkor toshlar">qiyin</button>
-        <button class="config-btn" data-space-diff="endless" title="Cheksiz omon qolish">cheksiz</button>
+        <button class="config-btn" data-space-diff="extreme" title="🔥 Ekstremal (Juda qiyin!)">🔥 ekstremal</button>
       </div>
     </div>
 
@@ -499,6 +508,10 @@
     <section class="space-game-section" id="space-game-section" style="display: none;">
       <!-- Game Top HUD -->
       <div class="space-hud-bar">
+        <div class="space-hud-group" id="space-timer-group">
+          <span class="space-hud-label">vaqt:</span>
+          <span class="space-hud-val" id="space-timer-val">60s</span>
+        </div>
         <div class="space-hud-group">
           <span class="space-hud-label">qalqon:</span>
           <div class="space-shields-display" id="space-shields-display">
@@ -506,6 +519,10 @@
             <span class="space-shield-icon active" id="shield-2">🛡️</span>
             <span class="space-shield-icon active" id="shield-3">🛡️</span>
           </div>
+        </div>
+        <div class="space-hud-group">
+          <span class="space-hud-label">to'lqin:</span>
+          <span class="space-hud-val" id="space-wave-val">WAVE 1</span>
         </div>
         <div class="space-hud-group">
           <span class="space-hud-label">ball:</span>
@@ -584,6 +601,45 @@
                 Qayta O'ynash (Enter)
               </button>
               <button class="action-btn" id="space-exit-btn">Chiqish (Esc)</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Victory (G'alaba) Overlay -->
+        <div class="space-overlay" id="space-victory-overlay" style="display: none;">
+          <div class="space-overlay-box">
+            <div class="space-overlay-icon">🏆</div>
+            <h2 class="space-overlay-title" style="color: var(--main-color, #e2b714);">MISSIYA G'ALABASI!</h2>
+            <div class="space-rank-badge" id="space-victory-rank">S RANK</div>
+            <p class="space-overlay-desc">Barcha toshlar mudofaasi muvaffaqiyatli yakunlandi!</p>
+            <div class="space-results-grid">
+              <div class="space-stat-card">
+                <span class="space-stat-label">Umumiy Ball</span>
+                <span class="space-stat-val" id="space-vic-score">0</span>
+              </div>
+              <div class="space-stat-card">
+                <span class="space-stat-label">Yo'q Qilingan</span>
+                <span class="space-stat-val" id="space-vic-kills">0</span>
+              </div>
+              <div class="space-stat-card">
+                <span class="space-stat-label">Tezlik (WPM)</span>
+                <span class="space-stat-val" id="space-vic-wpm">0</span>
+              </div>
+              <div class="space-stat-card">
+                <span class="space-stat-label">Aniqlik</span>
+                <span class="space-stat-val" id="space-vic-acc">100%</span>
+              </div>
+              <div class="space-stat-card">
+                <span class="space-stat-label">Maks Combo</span>
+                <span class="space-stat-val" id="space-vic-combo">x1</span>
+              </div>
+            </div>
+            <div class="space-overlay-actions">
+              <button class="action-btn primary large" id="space-vic-retry-btn">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+                Yana O'ynash (Enter)
+              </button>
+              <button class="action-btn" id="space-vic-exit-btn">Chiqish (Esc)</button>
             </div>
           </div>
         </div>
