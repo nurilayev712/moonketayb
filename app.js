@@ -2876,16 +2876,127 @@ function setupEventListeners() {
   // Tribe Create Room Capsule Configuration
   let tribeSelectedMode = 'time';
   let tribeSelectedLimit = 30;
-  let tribeSelectedLang = 'uzbek';
+  let tribeSelectedLang = 'english';
+  let tribeSelectedModifiers = { punctuation: false, numbers: false };
+  let tribeSelectedCountdown = 3;
+
+  function renderTribeLimitButtons() {
+    const limitBox = document.getElementById('tribe-create-limit');
+    if (!limitBox) return;
+
+    if (tribeSelectedMode === 'time') {
+      limitBox.innerHTML = `
+        <button type="button" class="tribe-cfg-pill" data-limit="15">15</button>
+        <button type="button" class="tribe-cfg-pill active" data-limit="30">30</button>
+        <button type="button" class="tribe-cfg-pill" data-limit="60">60</button>
+        <button type="button" class="tribe-cfg-pill" data-limit="120">120</button>
+        <button type="button" class="tribe-cfg-pill" id="tribe-custom-limit-btn" data-limit="custom" title="O'zingiz xohlagan vaqtni kiritish">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" style="vertical-align: middle;"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+          <span id="tribe-custom-limit-label">maxsus</span>
+        </button>
+        <div class="tribe-custom-input-box" id="tribe-custom-input-box" style="display: none;">
+          <input type="number" id="tribe-custom-val-input" min="5" max="600" placeholder="soniya" class="tribe-mini-input">
+          <button type="button" id="tribe-custom-apply-btn" class="tribe-mini-apply-btn">saqlash</button>
+        </div>
+      `;
+      tribeSelectedLimit = 30;
+    } else if (tribeSelectedMode === 'words') {
+      limitBox.innerHTML = `
+        <button type="button" class="tribe-cfg-pill" data-limit="10">10</button>
+        <button type="button" class="tribe-cfg-pill active" data-limit="25">25</button>
+        <button type="button" class="tribe-cfg-pill" data-limit="50">50</button>
+        <button type="button" class="tribe-cfg-pill" data-limit="100">100</button>
+        <button type="button" class="tribe-cfg-pill" id="tribe-custom-limit-btn" data-limit="custom" title="O'zingiz xohlagan so'zlar sonini kiritish">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" style="vertical-align: middle;"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+          <span id="tribe-custom-limit-label">maxsus</span>
+        </button>
+        <div class="tribe-custom-input-box" id="tribe-custom-input-box" style="display: none;">
+          <input type="number" id="tribe-custom-val-input" min="5" max="500" placeholder="so'z" class="tribe-mini-input">
+          <button type="button" id="tribe-custom-apply-btn" class="tribe-mini-apply-btn">saqlash</button>
+        </div>
+      `;
+      tribeSelectedLimit = 25;
+    } else if (tribeSelectedMode === 'code') {
+      limitBox.innerHTML = `
+        <button type="button" class="tribe-cfg-pill active" data-limit="15">15 qator</button>
+        <button type="button" class="tribe-cfg-pill" data-limit="30">30 qator</button>
+        <button type="button" class="tribe-cfg-pill" data-limit="50">50 qator</button>
+      `;
+      tribeSelectedLimit = 15;
+    } else if (tribeSelectedMode === 'quote') {
+      limitBox.innerHTML = `
+        <button type="button" class="tribe-cfg-pill active" data-limit="short">qisqa</button>
+        <button type="button" class="tribe-cfg-pill" data-limit="medium">o'rta</button>
+        <button type="button" class="tribe-cfg-pill" data-limit="long">uzun</button>
+      `;
+      tribeSelectedLimit = 25;
+    }
+
+    attachTribeLimitListeners();
+  }
 
   function attachTribeLimitListeners() {
-    document.querySelectorAll('#tribe-create-limit .tribe-cfg-pill').forEach(btn => {
+    const limitBox = document.getElementById('tribe-create-limit');
+    if (!limitBox) return;
+
+    limitBox.querySelectorAll('.tribe-cfg-pill[data-limit]').forEach(btn => {
       btn.addEventListener('click', () => {
-        document.querySelectorAll('#tribe-create-limit .tribe-cfg-pill').forEach(b => b.classList.remove('active'));
+        const val = btn.dataset.limit;
+        if (val === 'custom') {
+          const inputBox = document.getElementById('tribe-custom-input-box');
+          const valInput = document.getElementById('tribe-custom-val-input');
+          if (inputBox) {
+            inputBox.style.display = (inputBox.style.display === 'none') ? 'inline-flex' : 'none';
+            if (inputBox.style.display !== 'none' && valInput) {
+              valInput.focus();
+            }
+          }
+          return;
+        }
+
+        limitBox.querySelectorAll('.tribe-cfg-pill').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        tribeSelectedLimit = parseInt(btn.dataset.limit, 10);
+        const customBox = document.getElementById('tribe-custom-input-box');
+        if (customBox) customBox.style.display = 'none';
+
+        tribeSelectedLimit = parseInt(val, 10) || 30;
       });
     });
+
+    const applyBtn = document.getElementById('tribe-custom-apply-btn');
+    const valInput = document.getElementById('tribe-custom-val-input');
+    const customBtn = document.getElementById('tribe-custom-limit-btn');
+    const customLabel = document.getElementById('tribe-custom-limit-label');
+
+    function applyCustomValue() {
+      if (!valInput) return;
+      const parsed = parseInt(valInput.value, 10);
+      if (!parsed || parsed < 5) {
+        if (window.showToast) window.showToast("⚠️ Kamida 5 kiriting!", "warning");
+        return;
+      }
+      tribeSelectedLimit = parsed;
+      limitBox.querySelectorAll('.tribe-cfg-pill').forEach(b => b.classList.remove('active'));
+      if (customBtn) customBtn.classList.add('active');
+      if (customLabel) {
+        customLabel.textContent = (tribeSelectedMode === 'time') ? `${parsed}s` : `${parsed} so'z`;
+      }
+      const inputBox = document.getElementById('tribe-custom-input-box');
+      if (inputBox) inputBox.style.display = 'none';
+      if (window.showToast) {
+        window.showToast(`✅ Maxsus miqdor o'rnatildi: ${parsed}`, "success");
+      }
+    }
+
+    if (applyBtn) applyBtn.addEventListener('click', applyCustomValue);
+    if (valInput) {
+      valInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          applyCustomValue();
+        }
+      });
+    }
   }
   attachTribeLimitListeners();
 
@@ -2894,26 +3005,7 @@ function setupEventListeners() {
       document.querySelectorAll('#tribe-create-mode .tribe-cfg-pill').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       tribeSelectedMode = btn.dataset.mode;
-
-      const limitBox = document.getElementById('tribe-create-limit');
-      if (limitBox) {
-        if (tribeSelectedMode === 'time') {
-          limitBox.innerHTML = `
-            <button type="button" class="tribe-cfg-pill" data-limit="15">15</button>
-            <button type="button" class="tribe-cfg-pill active" data-limit="30">30</button>
-            <button type="button" class="tribe-cfg-pill" data-limit="60">60</button>
-          `;
-          tribeSelectedLimit = 30;
-        } else {
-          limitBox.innerHTML = `
-            <button type="button" class="tribe-cfg-pill active" data-limit="25">25</button>
-            <button type="button" class="tribe-cfg-pill" data-limit="50">50</button>
-            <button type="button" class="tribe-cfg-pill" data-limit="100">100</button>
-          `;
-          tribeSelectedLimit = 25;
-        }
-        attachTribeLimitListeners();
-      }
+      renderTribeLimitButtons();
     });
   });
 
@@ -2924,6 +3016,41 @@ function setupEventListeners() {
       tribeSelectedLang = btn.dataset.lang;
     });
   });
+
+  // Qo'shimcha modifikatorlar (tinish belgilari, raqamlar)
+  document.querySelectorAll('#tribe-create-modifiers .tribe-cfg-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.classList.toggle('active');
+      const mod = btn.dataset.mod;
+      if (mod === 'punct') {
+        tribeSelectedModifiers.punctuation = btn.classList.contains('active');
+      } else if (mod === 'numbers') {
+        tribeSelectedModifiers.numbers = btn.classList.contains('active');
+      }
+    });
+  });
+
+  // Sanash (countdown delay)
+  document.querySelectorAll('#tribe-create-countdown .tribe-cfg-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#tribe-create-countdown .tribe-cfg-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      tribeSelectedCountdown = parseInt(btn.dataset.countdown, 10);
+    });
+  });
+
+  // Lobby'da Telegram orqali do'stlarni chaqirish
+  const lobbyTgShareBtn = document.getElementById('lobby-tg-share-btn');
+  if (lobbyTgShareBtn) {
+    lobbyTgShareBtn.addEventListener('click', () => {
+      const room = window.multiplayerManager.roomId;
+      if (!room) return;
+      const url = window.location.origin + window.location.pathname + '?room=' + room;
+      const text = `🎮 TYPEX712 Do'stlar bilan poyga!\n⚡ Xona kodi: #${room}\n🚀 Kim tezroq yozadi? Havolani bosing va qo'shiling:`;
+      const tgUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
+      window.open(tgUrl, '_blank');
+    });
+  }
 
   const joinPublicBtn = document.getElementById('join-public-room-btn');
   if (joinPublicBtn) {
@@ -2936,7 +3063,11 @@ function setupEventListeners() {
     createRoomBtn.addEventListener('click', () => {
       window.closeAppModal(multiModal);
       window.openAppModal(lobbyModal);
-      window.multiplayerManager.createRoom(tribeSelectedMode, tribeSelectedLimit, tribeSelectedLang);
+      window.multiplayerManager.createRoom(tribeSelectedMode, tribeSelectedLimit, tribeSelectedLang, {
+        punctuation: tribeSelectedModifiers.punctuation,
+        numbers: tribeSelectedModifiers.numbers,
+        countdown: tribeSelectedCountdown
+      });
     });
   }
 

@@ -10,7 +10,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png?v=12.0">
   <link rel="shortcut icon" href="favicon.ico?v=12.0">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=12.0">
-  <link rel="stylesheet" href="style.css?v=12.2">
+  <link rel="stylesheet" href="style.css?v=12.3">
   <!-- Google Fonts: Roboto Mono, JetBrains Mono, Fira Code, Ubuntu Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -801,6 +801,8 @@
               <div class="tribe-cfg-pills" id="tribe-create-mode">
                 <button type="button" class="tribe-cfg-pill active" data-mode="time">vaqt</button>
                 <button type="button" class="tribe-cfg-pill" data-mode="words">so'zlar</button>
+                <button type="button" class="tribe-cfg-pill" data-mode="code">&lt;&gt; kod</button>
+                <button type="button" class="tribe-cfg-pill" data-mode="quote">“ iqtibos</button>
               </div>
             </div>
             <div class="tribe-config-row">
@@ -809,6 +811,15 @@
                 <button type="button" class="tribe-cfg-pill" data-limit="15">15</button>
                 <button type="button" class="tribe-cfg-pill active" data-limit="30">30</button>
                 <button type="button" class="tribe-cfg-pill" data-limit="60">60</button>
+                <button type="button" class="tribe-cfg-pill" data-limit="120">120</button>
+                <button type="button" class="tribe-cfg-pill" id="tribe-custom-limit-btn" data-limit="custom" title="O'zingiz xohlagan vaqtni kiritish">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" style="vertical-align: middle;"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                  <span id="tribe-custom-limit-label">maxsus</span>
+                </button>
+                <div class="tribe-custom-input-box" id="tribe-custom-input-box" style="display: none;">
+                  <input type="number" id="tribe-custom-val-input" min="5" max="600" placeholder="soniya" class="tribe-mini-input">
+                  <button type="button" id="tribe-custom-apply-btn" class="tribe-mini-apply-btn">saqlash</button>
+                </div>
               </div>
             </div>
             <div class="tribe-config-row">
@@ -820,6 +831,27 @@
                 <button type="button" class="tribe-cfg-pill" data-lang="english_10k">english 10k</button>
                 <button type="button" class="tribe-cfg-pill" data-lang="uzbek">o'zbekcha</button>
                 <button type="button" class="tribe-cfg-pill" data-lang="russian">русский</button>
+              </div>
+            </div>
+            <div class="tribe-config-row">
+              <span class="tribe-cfg-label">qo'shimcha:</span>
+              <div class="tribe-cfg-pills" id="tribe-create-modifiers">
+                <button type="button" class="tribe-cfg-pill" id="tribe-mod-punct" data-mod="punct" title="Tinish belgilari bilan bellashuv">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 4a1.25 1.25 0 0 1 1.25 1.25v6.5a1.25 1.25 0 1 1-2.5 0v-6.5A1.25 1.25 0 0 1 12 4zm0 12.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z"/></svg>
+                  tinish belgilari
+                </button>
+                <button type="button" class="tribe-cfg-pill" id="tribe-mod-numbers" data-mod="numbers" title="Raqamlar bilan bellashuv">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M10 4v3h4V4h2v3h4v2h-4v6h4v2h-4v3h-2v-3h-4v3H8v-3H4v-2h4v-6H4V7h4V4h2zm4 5h-4v6h4V9z"/></svg>
+                  raqamlar
+                </button>
+              </div>
+            </div>
+            <div class="tribe-config-row">
+              <span class="tribe-cfg-label">sanash:</span>
+              <div class="tribe-cfg-pills" id="tribe-create-countdown">
+                <button type="button" class="tribe-cfg-pill" data-countdown="0">darhol</button>
+                <button type="button" class="tribe-cfg-pill active" data-countdown="3">3 soniya</button>
+                <button type="button" class="tribe-cfg-pill" data-countdown="5">5 soniya</button>
               </div>
             </div>
           </div>
@@ -875,6 +907,10 @@
           <button class="tribe-copy-pill" id="copy-room-link-btn" title="xona havolasini nusxalash">
             <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
             havolani nusxalash
+          </button>
+          <button class="tribe-copy-pill tg-share-pill" id="lobby-tg-share-btn" title="Telegram'da do'stlarni poygaga chaqirish">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+            Telegram'da chaqirish
           </button>
         </div>
         <div class="tribe-header-right">
@@ -1649,8 +1685,8 @@
   <script src="words.js?v=10.3"></script>
   <script src="sound.js?v=10.3"></script>
   <script src="auth.js?v=10.3"></script>
-  <script src="multiplayer.js?v=10.3"></script>
+  <script src="multiplayer.js?v=10.4"></script>
   <script src="space-game.js?v=10.3"></script>
-  <script src="app.js?v=10.3"></script>
+  <script src="app.js?v=10.4"></script>
 </body>
 </html>

@@ -151,13 +151,16 @@ class MultiplayerManager {
   }
 
   // 1. Yangi xona yaratish (Host)
-  createRoom(initialMode, initialLimit, initialLang) {
+  createRoom(initialMode, initialLimit, initialLang, options = {}) {
     this.roomId = this.generateRoomCode();
     this.isHost = true;
     this.isReady = true;
     this.roomMode = initialMode || 'time';
     this.roomLimit = initialLimit || (this.roomMode === 'time' ? 30 : 25);
     this.roomLang = initialLang || (window.state && window.state.language) || 'english';
+    this.roomPunctuation = !!(options && options.punctuation);
+    this.roomNumbers = !!(options && options.numbers);
+    this.roomCountdown = (options && options.countdown !== undefined) ? options.countdown : 3;
     this.players = {};
 
     const user = (window.authManager && window.authManager.currentUser) || {
@@ -808,6 +811,7 @@ class MultiplayerManager {
       if (data.roomMode) this.roomMode = data.roomMode;
       if (data.roomLimit) this.roomLimit = data.roomLimit;
       if (data.roomLang && window.state) window.state.language = data.roomLang;
+      if (data.roomCountdown !== undefined) this.roomCountdown = data.roomCountdown;
       this.startCountdownUI();
     }
 
@@ -975,8 +979,20 @@ class MultiplayerManager {
     this.stopHostAnnounceLoop();
 
     const lang = this.roomLang || (window.state && window.state.language) || 'english';
-    const source = (window.WORDS && window.WORDS[lang]) || (window.WORDS && window.WORDS.english) || (window.WORDS && window.WORDS.uzbek) || [];
+    let source = [];
+    if (this.roomMode === 'code') {
+      const codeObj = (window.WORDS && window.WORDS.code) || {};
+      source = codeObj.javascript || [];
+    } else if (this.roomMode === 'quote') {
+      const quotesList = (window.WORDS && window.WORDS.quotes) || [];
+      const chosen = quotesList[Math.floor(Math.random() * quotesList.length)] || { text: "Bilim o'rganishdan to'xtagan kishi qariydi." };
+      source = chosen.text.split(' ');
+    } else {
+      source = (window.WORDS && window.WORDS[lang]) || (window.WORDS && window.WORDS.english) || (window.WORDS && window.WORDS.uzbek) || [];
+    }
+
     const words = [];
+    const punctuationList = [',', '.', '!', '?', ';', ':'];
     
     // Monkeytype 1:1 - Time rejimida so'zlar yetib ortishi uchun (kamida 300 - 800 ta so'z), words rejimida limit miqdoricha
     const count = this.roomMode === 'time' ? Math.max(300, Math.round((this.roomLimit || 30) * 8)) : (this.roomLimit || 25);
@@ -991,6 +1007,17 @@ class MultiplayerManager {
         }
       }
       prev = w;
+
+      if (this.roomNumbers && Math.random() < 0.15) {
+        w = String(Math.floor(Math.random() * 9000) + 10);
+      }
+      if (this.roomPunctuation && Math.random() < 0.25) {
+        if (Math.random() < 0.5) {
+          w = w.charAt(0).toUpperCase() + w.slice(1);
+        }
+        const mark = punctuationList[Math.floor(Math.random() * punctuationList.length)];
+        w += mark;
+      }
       words.push(w);
     }
 
@@ -1002,7 +1029,8 @@ class MultiplayerManager {
       words: words,
       roomMode: this.roomMode,
       roomLimit: this.roomLimit,
-      roomLang: this.roomLang
+      roomLang: this.roomLang,
+      roomCountdown: this.roomCountdown
     });
   }
 
@@ -1011,7 +1039,6 @@ class MultiplayerManager {
     this.isInRace = true;
     const overlay = document.getElementById('race-countdown-overlay');
     const numberEl = document.getElementById('countdown-number');
-    overlay.style.display = 'flex';
 
     if (window.closeAppModal) {
       window.closeAppModal(document.getElementById('multiplayer-lobby-modal'));
@@ -1024,7 +1051,18 @@ class MultiplayerManager {
 
     this.renderRaceTracks();
 
-    let count = 3;
+    let count = (typeof this.roomCountdown === 'number') ? this.roomCountdown : 3;
+
+    if (count <= 0) {
+      overlay.style.display = 'none';
+      if (window.soundManager) window.soundManager.playBeep(true);
+      if (window.startMultiplayerGame) {
+        window.startMultiplayerGame(this.raceWords, this.roomMode, this.roomLimit);
+      }
+      return;
+    }
+
+    overlay.style.display = 'flex';
     numberEl.textContent = count;
     if (window.soundManager) window.soundManager.playBeep(false);
 

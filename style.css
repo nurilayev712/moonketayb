@@ -1775,6 +1775,8 @@ footer {
 .tribe-cfg-pills {
   display: flex;
   gap: 0.35rem;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 .tribe-cfg-pill {
@@ -1787,17 +1789,89 @@ footer {
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tribe-cfg-pill svg {
+  width: 12px;
+  height: 12px;
+  fill: currentColor;
 }
 
 .tribe-cfg-pill:hover {
   color: var(--text-color);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .tribe-cfg-pill.active {
   background: var(--bg-color);
-  color: var(--main-color);
+  color: var(--main-color) !important;
   font-weight: 700;
-  border-color: rgba(226, 183, 20, 0.3);
+  border-color: rgba(246, 110, 13, 0.35);
+  box-shadow: 0 1px 6px rgba(246, 110, 13, 0.15);
+}
+
+/* Tribe Custom Input (Inline) */
+.tribe-custom-input-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 2px;
+  background: var(--bg-color);
+  padding: 2px 4px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: fadeInPill 0.18s ease;
+}
+
+.tribe-mini-input {
+  width: 60px;
+  background: transparent;
+  border: none;
+  color: var(--main-color);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+}
+
+.tribe-mini-input::-webkit-inner-spin-button,
+.tribe-mini-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.tribe-mini-apply-btn {
+  background: var(--main-color);
+  color: #1a1a1a;
+  border: none;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+}
+
+.tribe-mini-apply-btn:hover {
+  opacity: 0.9;
+  transform: scale(1.02);
+}
+
+.tg-share-pill {
+  background: rgba(41, 182, 246, 0.12) !important;
+  border-color: rgba(41, 182, 246, 0.3) !important;
+  color: #29b6f6 !important;
+}
+
+.tg-share-pill:hover {
+  background: rgba(41, 182, 246, 0.22) !important;
+  box-shadow: 0 0 10px rgba(41, 182, 246, 0.3) !important;
+  transform: translateY(-1px);
 }
 
 .tribe-code-wrapper {
