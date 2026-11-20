@@ -831,7 +831,14 @@ class MultiplayerManager {
       if (this.players[data.id]) {
         this.players[data.id].finished = true;
         this.players[data.id].wpm = data.wpm;
+        this.players[data.id].rawWpm = data.rawWpm ?? data.wpm;
         this.players[data.id].accuracy = data.accuracy;
+        this.players[data.id].correctChars = data.correctChars ?? 0;
+        this.players[data.id].incorrectChars = data.incorrectChars ?? 0;
+        this.players[data.id].extraChars = data.extraChars ?? 0;
+        this.players[data.id].missedChars = data.missedChars ?? 0;
+        this.players[data.id].wordsCount = data.wordsCount ?? 0;
+        this.players[data.id].timeElapsed = data.timeElapsed ?? 0;
         this.updateRaceTrackUI();
       }
       if (this.isHost) {
@@ -1106,18 +1113,49 @@ class MultiplayerManager {
   }
 
   // Testni tugatganda
-  sendFinish(wpm, accuracy) {
+  sendFinish(wpmOrStats, accuracy) {
+    let stats = {};
+    if (typeof wpmOrStats === 'object' && wpmOrStats !== null) {
+      stats = { ...wpmOrStats };
+    } else {
+      stats = {
+        wpm: wpmOrStats || 0,
+        rawWpm: wpmOrStats || 0,
+        accuracy: typeof accuracy === 'number' ? accuracy : 100,
+        correctChars: 0,
+        incorrectChars: 0,
+        extraChars: 0,
+        missedChars: 0,
+        wordsCount: 0,
+        timeElapsed: 0
+      };
+    }
+
     if (this.players[this.myId]) {
       this.players[this.myId].finished = true;
-      this.players[this.myId].wpm = wpm;
-      this.players[this.myId].accuracy = accuracy;
+      this.players[this.myId].wpm = stats.wpm;
+      this.players[this.myId].rawWpm = stats.rawWpm ?? stats.wpm;
+      this.players[this.myId].accuracy = stats.accuracy;
+      this.players[this.myId].correctChars = stats.correctChars ?? 0;
+      this.players[this.myId].incorrectChars = stats.incorrectChars ?? 0;
+      this.players[this.myId].extraChars = stats.extraChars ?? 0;
+      this.players[this.myId].missedChars = stats.missedChars ?? 0;
+      this.players[this.myId].wordsCount = stats.wordsCount ?? 0;
+      this.players[this.myId].timeElapsed = stats.timeElapsed ?? 0;
     }
 
     this.sendMessage({
       type: 'FINISH',
       id: this.myId,
-      wpm: wpm,
-      accuracy: accuracy
+      wpm: stats.wpm,
+      rawWpm: stats.rawWpm ?? stats.wpm,
+      accuracy: stats.accuracy,
+      correctChars: stats.correctChars ?? 0,
+      incorrectChars: stats.incorrectChars ?? 0,
+      extraChars: stats.extraChars ?? 0,
+      missedChars: stats.missedChars ?? 0,
+      wordsCount: stats.wordsCount ?? 0,
+      timeElapsed: stats.timeElapsed ?? 0
     });
 
     // Agar o'zi host bo'lsa darhol marrani tekshirish
@@ -1137,6 +1175,19 @@ class MultiplayerManager {
         clearTimeout(this.raceFinishTimeout);
         this.raceFinishTimeout = null;
       }
+      allPlayers.forEach(p => {
+        if (!p.finished) {
+          p.finished = true;
+          p.wpm = p.wpm || 0;
+          p.rawWpm = p.rawWpm || p.wpm || 0;
+          p.accuracy = p.accuracy || 0;
+          p.correctChars = p.correctChars || 0;
+          p.incorrectChars = p.incorrectChars || 0;
+          p.extraChars = p.extraChars || 0;
+          p.missedChars = p.missedChars || 0;
+          p.wordsCount = p.wordsCount || 0;
+        }
+      });
       const sorted = [...allPlayers].sort((a, b) => (b.wpm || 0) - (a.wpm || 0));
 
       this.sendMessage({
@@ -1173,58 +1224,98 @@ class MultiplayerManager {
     }
 
     // Shohsupa (Podium top 3) elementlarini to'ldirish
-    const step1 = document.getElementById('podium-step-1');
-    const step2 = document.getElementById('podium-step-2');
-    const step3 = document.getElementById('podium-step-3');
+    const updatePodiumStep = (stepId, avatarId, nameId, wpmId, subId, player) => {
+      const stepEl = document.getElementById(stepId);
+      if (!stepEl) return;
+      if (player) {
+        stepEl.style.display = 'flex';
+        const avatarEl = document.getElementById(avatarId);
+        const nameEl = document.getElementById(nameId);
+        const wpmEl = document.getElementById(wpmId);
+        const subEl = document.getElementById(subId);
+        if (avatarEl) avatarEl.textContent = player.avatar || '⌨️';
+        if (nameEl) nameEl.textContent = player.name;
+        if (wpmEl) wpmEl.textContent = `${player.wpm || 0} WPM`;
+        if (subEl) {
+          const errs = player.incorrectChars ?? 0;
+          subEl.innerHTML = `<span class="pod-acc">${player.accuracy ?? 100}%</span> • <span class="pod-err ${errs === 0 ? 'clean' : ''}">${errs} xato</span>`;
+        }
+      } else {
+        stepEl.style.display = 'none';
+      }
+    };
 
-    if (leaderboard[0] && step1) {
-      step1.style.display = 'flex';
-      document.getElementById('podium-avatar-1').textContent = leaderboard[0].avatar || '⌨️';
-      document.getElementById('podium-name-1').textContent = leaderboard[0].name;
-      document.getElementById('podium-wpm-1').textContent = `${leaderboard[0].wpm || 0} WPM`;
-    } else if (step1) {
-      step1.style.display = 'none';
-    }
+    updatePodiumStep('podium-step-1', 'podium-avatar-1', 'podium-name-1', 'podium-wpm-1', 'podium-sub-1', leaderboard[0]);
+    updatePodiumStep('podium-step-2', 'podium-avatar-2', 'podium-name-2', 'podium-wpm-2', 'podium-sub-2', leaderboard[1]);
+    updatePodiumStep('podium-step-3', 'podium-avatar-3', 'podium-name-3', 'podium-wpm-3', 'podium-sub-3', leaderboard[2]);
 
-    if (leaderboard[1] && step2) {
-      step2.style.display = 'flex';
-      document.getElementById('podium-avatar-2').textContent = leaderboard[1].avatar || '⌨️';
-      document.getElementById('podium-name-2').textContent = leaderboard[1].name;
-      document.getElementById('podium-wpm-2').textContent = `${leaderboard[1].wpm || 0} WPM`;
-    } else if (step2) {
-      step2.style.display = 'none';
-    }
-
-    if (leaderboard[2] && step3) {
-      step3.style.display = 'flex';
-      document.getElementById('podium-avatar-3').textContent = leaderboard[2].avatar || '⌨️';
-      document.getElementById('podium-name-3').textContent = leaderboard[2].name;
-      document.getElementById('podium-wpm-3').textContent = `${leaderboard[2].wpm || 0} WPM`;
-    } else if (step3) {
-      step3.style.display = 'none';
-    }
-
+    // Monkeytype 1:1 formatidagi batafsil jadval (Leaderboard Table)
+    let rowsHtml = '';
     leaderboard.forEach((player, idx) => {
-      const medals = ["🥇 1-o'rin (G'olib)", "🥈 2-o'rin", "🥉 3-o'rin"];
-      const rankText = medals[idx] || `${idx + 1}-o'rin`;
+      const isMe = player.id === this.myId;
+      const rank = idx + 1;
+      let rankBadge = `${rank}`;
+      if (rank === 1) rankBadge = '🥇 1';
+      else if (rank === 2) rankBadge = '🥈 2';
+      else if (rank === 3) rankBadge = '🥉 3';
 
-      const item = document.createElement('div');
-      item.className = 'leaderboard-item' + (player.id === this.myId ? ' is-me' : '');
-      item.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 0.75rem;">
-          <span style="font-size: 1.5rem;">${player.avatar || '⌨️'}</span>
-          <div>
-            <div style="font-weight: 700; color: var(--text-color);">${escapeHtml(player.name)} ${player.id === this.myId ? '<span style="color:var(--main-color);">(siz)</span>' : ''}</div>
-            <div style="font-size: 0.8rem; color: var(--main-color);">${rankText}</div>
-          </div>
-        </div>
-        <div style="text-align: right;">
-          <div style="font-size: 1.5rem; font-weight: 700; color: var(--main-color);">${player.wpm || 0} WPM</div>
-          <div style="font-size: 0.75rem; color: var(--sub-color);">${player.accuracy || 100}% aniqlik</div>
-        </div>
+      const wpm = player.wpm ?? 0;
+      const rawWpm = player.rawWpm ?? wpm;
+      const acc = player.accuracy ?? 100;
+      const correct = player.correctChars ?? 0;
+      const incorrect = player.incorrectChars ?? 0;
+      const extra = player.extraChars ?? 0;
+      const words = player.wordsCount || (correct > 0 ? Math.round(correct / 5) : 0);
+
+      const errBadge = incorrect === 0
+        ? `<span class="err-badge clean">0 xato ✨</span>`
+        : `<span class="err-badge dirty">${incorrect} ta xato</span>`;
+
+      rowsHtml += `
+        <tr class="monkey-table-row ${isMe ? 'is-me' : ''}">
+          <td class="col-rank"><span class="rank-chip rank-${rank}">${rankBadge}</span></td>
+          <td class="col-player">
+            <div class="player-cell">
+              <span class="player-avatar">${player.avatar || '⌨️'}</span>
+              <span class="player-name">${escapeHtml(player.name)}</span>
+              ${isMe ? '<span class="you-badge">(siz)</span>' : ''}
+            </div>
+          </td>
+          <td class="col-wpm"><span class="val-wpm">${wpm}</span></td>
+          <td class="col-raw"><span class="val-raw">${rawWpm}</span></td>
+          <td class="col-acc"><span class="val-acc">${acc}%</span></td>
+          <td class="col-chars">
+            <span class="chars-breakdown" title="to'g'ri / xato / qo'shimcha">
+              <span class="c-ok" title="To'g'ri">${correct}</span>/<span class="c-err" title="Xato">${incorrect}</span>/<span class="c-ext" title="Ortiqcha">${extra}</span>
+            </span>
+          </td>
+          <td class="col-err">${errBadge}</td>
+          <td class="col-words"><span class="val-words">${words} ta</span></td>
+        </tr>
       `;
-      list.appendChild(item);
     });
+
+    list.innerHTML = `
+      <div class="monkey-results-table-container">
+        <table class="monkey-results-table">
+          <thead>
+            <tr>
+              <th class="th-rank">#</th>
+              <th class="th-player">o'yinchi</th>
+              <th class="th-wpm">wpm</th>
+              <th class="th-raw">raw</th>
+              <th class="th-acc">aniqlik</th>
+              <th class="th-chars" title="to'g'ri / xato / ortiqcha belgilar">belgilar</th>
+              <th class="th-err">xatolar</th>
+              <th class="th-words">so'zlar</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+      </div>
+    `;
 
     if (window.openAppModal) {
       window.openAppModal(modal);

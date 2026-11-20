@@ -2429,7 +2429,25 @@ footer {
   font-size: 1.15rem;
   font-weight: 800;
   color: var(--main-color);
+  margin-bottom: 0.2rem;
+}
+
+.podium-sub {
+  font-size: 0.72rem;
+  color: var(--sub-color);
   margin-bottom: 0.5rem;
+  font-family: 'Roboto Mono', monospace;
+}
+.podium-sub .pod-acc {
+  color: var(--text-color);
+  font-weight: 600;
+}
+.podium-sub .pod-err {
+  color: #ca4754;
+  font-weight: 600;
+}
+.podium-sub .pod-err.clean {
+  color: #4ade80;
 }
 
 .podium-pedestal {
@@ -2464,12 +2482,13 @@ footer {
   color: #f59e0b;
 }
 
-/* Shohsupa (Leaderboard List) */
+/* Shohsupa (Leaderboard List & Monkeytype Table) */
 .race-leaderboard-list {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
   margin: 1rem 0;
+  width: 100%;
 }
 
 .leaderboard-item {
@@ -2485,6 +2504,150 @@ footer {
 .leaderboard-item.is-me {
   border-color: var(--main-color);
   background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Monkeytype Serika Dark 1:1 Race Results Table */
+.monkey-results-table-container {
+  width: 100%;
+  overflow-x: auto;
+  background: var(--bg-color);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  margin-top: 0.5rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.monkey-results-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.88rem;
+  text-align: left;
+}
+
+.monkey-results-table th {
+  padding: 0.75rem 0.9rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--sub-color);
+  text-transform: lowercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.015);
+  white-space: nowrap;
+}
+
+.monkey-results-table td {
+  padding: 0.85rem 0.9rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.monkey-table-row {
+  transition: background 0.15s ease;
+}
+
+.monkey-table-row:hover {
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.monkey-table-row.is-me {
+  background: rgba(226, 183, 20, 0.07);
+}
+
+.monkey-table-row.is-me td:first-child {
+  border-left: 3px solid var(--main-color);
+}
+
+.rank-chip {
+  font-weight: 700;
+  font-size: 0.85rem;
+  display: inline-block;
+  padding: 0.15rem 0.4rem;
+  border-radius: 6px;
+}
+.rank-chip.rank-1 { color: #e2b714; }
+.rank-chip.rank-2 { color: #cbd5e1; }
+.rank-chip.rank-3 { color: #d97706; }
+
+.player-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+.player-avatar {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+.player-name {
+  font-weight: 700;
+  color: var(--text-color);
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.you-badge {
+  font-size: 0.7rem;
+  color: var(--main-color);
+  font-weight: 600;
+  margin-left: 0.2rem;
+}
+
+.val-wpm {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--main-color);
+}
+.val-raw {
+  color: var(--sub-color);
+  font-size: 0.9rem;
+}
+.val-acc {
+  color: var(--text-color);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.chars-breakdown {
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+}
+.chars-breakdown .c-ok {
+  color: var(--text-color);
+  font-weight: 600;
+}
+.chars-breakdown .c-err {
+  color: #ca4754;
+  font-weight: 700;
+}
+.chars-breakdown .c-ext {
+  color: var(--sub-color);
+}
+
+.err-badge {
+  display: inline-block;
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+.err-badge.clean {
+  background: rgba(74, 222, 128, 0.12);
+  color: #4ade80;
+  border: 1px solid rgba(74, 222, 128, 0.25);
+}
+.err-badge.dirty {
+  background: rgba(202, 71, 84, 0.14);
+  color: #ca4754;
+  border: 1px solid rgba(202, 71, 84, 0.3);
+}
+
+.val-words {
+  font-size: 0.82rem;
+  color: var(--sub-color);
 }
 
 /* ==================================================== */

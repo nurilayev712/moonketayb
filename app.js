@@ -3887,12 +3887,23 @@ finishTest = function() {
     const minutes = Math.max(state.timeElapsed, 1) / 60;
     const netWpm = Math.max(0, Math.round((state.correctChars / 5) / minutes));
     const totalTyped = state.correctChars + state.incorrectChars + state.extraChars + (state.missedChars || 0);
+    const rawWpm = Math.max(0, Math.round((totalTyped / 5) / minutes));
     const accuracy = totalTyped > 0 ? Math.round((state.correctChars / totalTyped) * 100) : 0;
     elements.resultSection.classList.remove('active');
     elements.testSection.style.display = 'flex';
 
     window.multiplayerManager.sendProgress(100, netWpm, state.currentWordIndex, state.currentLetterIndex);
-    window.multiplayerManager.sendFinish(netWpm, accuracy);
+    window.multiplayerManager.sendFinish({
+      wpm: netWpm,
+      rawWpm: rawWpm,
+      accuracy: accuracy,
+      correctChars: state.correctChars || 0,
+      incorrectChars: state.incorrectChars || 0,
+      extraChars: state.extraChars || 0,
+      missedChars: state.missedChars || 0,
+      wordsCount: state.currentWordIndex + (state.currentLetterIndex > 0 ? 1 : 0),
+      timeElapsed: Math.round(state.timeElapsed * 10) / 10
+    });
     document.getElementById('main-config-bar').style.display = 'flex';
   }
 };
